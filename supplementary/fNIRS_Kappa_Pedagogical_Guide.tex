@@ -32,7 +32,7 @@
 \maketitle
 
 \begin{abstract}
-This pedagogical guide introduces undergraduate physics students to functional near-infrared spectroscopy (fNIRS) and the $\kappa$-correction framework for recovering quantitative hemoglobin concentration measurements. The guide provides complete derivations, physical intuition, worked examples, and step-by-step implementations. We explain why the Modified Beer-Lambert Law (MBLL) systematically underestimates cortical hemoglobin changes by up to $10\times$ in layered tissues, and how three multiplicative correction factors ($\kappa_{\mathrm{DPF}}$, $\kappa_{\mathrm{PV}}$, and $\kappa_{\mathrm{SSR}}$) compensate for differential pathlength error, partial volume dilution, and residual superficial contamination. The framework is grounded in the diffusion approximation to light transport and the Kienle et al.~(1998) semi-analytical solution for two-layer tissue geometry.
+This pedagogical guide introduces undergraduate physics students to functional near-infrared spectroscopy (fNIRS) and the $\kappa$-correction framework for recovering quantitative hemoglobin concentration measurements. The guide provides complete derivations, physical intuition, worked examples, and step-by-step implementations. We explain why the Modified Beer-Lambert Law (MBLL) systematically underestimates cortical hemoglobin changes by up to $10\times$ in layered tissues, and how two multiplicative correction factors applied at the optical-density level ($\kappa_{\mathrm{DPF}}$ and the dominant $\kappa_{\mathrm{PV}}$) compensate for differential pathlength error and partial volume dilution, while a short-separation-regression variance-removal diagnostic ($V_{\mathrm{SSR}}$) is reported per wavelength but never applied as an amplitude factor. The framework is grounded in the diffusion approximation to light transport and the Kienle et al.~(1998) semi-analytical solution for two-layer tissue geometry.
 \end{abstract}
 
 \newpage
@@ -167,7 +167,7 @@ These contaminate the measured signal with noise that is \emph{not task-related}
 
 Short-Separation Regression (SSR) addresses this by placing an additional detector very close to the source (SDS $< 15$~mm). At this short separation, the detected light barely reaches the cortex; it samples almost exclusively the superficial layer. By regressing the short-channel signal out of the long-channel signal, SSR removes the shared superficial component.
 
-However, SSR has a limitation: if cortical and superficial signals happen to be partially correlated (e.g., task-evoked systemic responses), SSR may inadvertently remove some cortical signal along with the contamination. The $\kappa_{\text{SSR}}$ factor corrects for this inadvertent attenuation.
+However, SSR has a limitation: if cortical and superficial signals happen to be partially correlated (e.g., task-evoked systemic responses), SSR may inadvertently remove some cortical signal along with the contamination. We quantify how much long-channel variance the short channel removed with a per-wavelength diagnostic, $V_{\text{SSR}}(\lambda) = 1/(1-R^2_{\text{SS}})$, but we \emph{report} it rather than applying it as a correction --- $R^2_{\text{SS}}$ cannot separate removed cortical signal from removed systemic signal (see Section~\ref{sec:vssr}).
 
 \section{From Beer's Law to the Modified Beer-Lambert Law}
 
@@ -422,7 +422,7 @@ where $\Delta\text{OD}_{\text{SSR}}(\lambda)$ is the short-separation-regression
 \begin{itemize}
 \item $\kappa_{\text{DPF}}$: corrects for DPF mismatch (wavelength-independent factor, often = 1 in modern pipelines)
 \item $\kappa_{\text{PV}}(\lambda) = 1/f_{\text{cortex}}(\lambda)$: corrects for partial volume dilution (wavelength-dependent; the dominant factor)
-\item $\kappa_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$: computed \emph{per wavelength} and reported as a \emph{diagnostic} of residual superficial contamination; it is \emph{not} applied to the data, because applying it on top of $\kappa_{\text{PV}}$ would double-count the dilution (see the $\kappa_{\text{SSR}}$ box later in this guide)
+\item $V_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$: an \emph{inverse residual-variance ratio}, computed \emph{per wavelength} and \textbf{reported as a variance-removal diagnostic only} --- it is \emph{never} applied to the data. It is not an amplitude factor: the residual standard deviation (amplitude) scales as $\sqrt{1 - R^2_{\text{SS}}}$, and $R^2_{\text{SS}}$ alone cannot identify how much of the removed variance was cortical (see the $V_{\text{SSR}}$ box later in this guide). Only $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ is applied.
 \end{itemize}
 
 Then MBLL inversion is applied to the corrected $\Delta\text{OD}_{\text{corrected}}(\lambda)$ using wavelength-specific DPF values.
@@ -511,57 +511,48 @@ In this analogy:
 
 Now consider the real fNIRS case at 30~mm SDS, where $f_{\text{cortex}} = 0.063$. This is like a group of \emph{sixteen} students where only one studied: just $\sim$6\% of the answers come from the diligent student, and the rest are random guesses. The observed group score might be only $6/100$, and the correction factor $\kappa_{\text{PV}} = 1/0.063 = 16$ would recover the true individual score: $6 \times 16 \approx 100$. But notice the catch: if the diligent student's $6$ points are barely distinguishable from the lucky guesses of the others (the ``noise''), multiplying by 16 also multiplies that ambiguity. This is exactly why, at short separations where the cortical contribution is so small, the correction can amplify noise instead of signal, and why we apply it only at long separations where the cortical share is larger ($\sim$11\% at 40~mm, $\kappa_{\text{PV}}\approx9$).
 
-\subsection{Factor 3: $\kappa_{\text{SSR}}(\lambda)$, Correction for SSR Signal Loss}
+\subsection{Factor 3: $V_{\text{SSR}}(\lambda)$, the SSR Variance-Removal Diagnostic (reported, not applied)}
+\label{sec:vssr}
 
-Short-separation regression removes superficial contamination, but it does so by subtracting the short-channel signal from the long-channel signal:
+Short-separation regression removes superficial contamination by subtracting a scaled short-channel signal from the long-channel signal:
 
 \begin{equation}
 \Delta\text{OD}_{\text{long, SSR-cleaned}}(\lambda) = \Delta\text{OD}_{\text{long}}(\lambda) - \beta(\lambda) \cdot \Delta\text{OD}_{\text{short}}(\lambda)
 \end{equation}
 
-where $\beta(\lambda)$ is the regression coefficient (or slope) minimizing the residual power.
+where $\beta(\lambda)$ is the regression coefficient minimizing the residual power.
 
-If the short-channel signal contains some cortical contribution (though small), the regression will inadvertently remove some true cortical signal. The amount of cortical signal removed depends on the correlation between long and short channels in the cortical component.
+Define $R^2_{\mathrm{SS}}(\lambda)$ as the fraction of variance in the \emph{uncorrected} long-channel $\Delta\mathrm{OD}$ explained by the short-channel regressor. Equivalently, $R^2_{\mathrm{SS}}$ is the coefficient of determination of the SSR fit itself, \emph{not} of a post-hoc regression on the SSR residual. (By construction of ordinary least squares, the SSR residual is orthogonal to the short-channel regressor, so regressing the residual on the short channel would always return $R^2 \approx 0$.) If $R^2_{\mathrm{SS}} = 0$, the short and long channels are uncorrelated (ideal case); if $R^2_{\mathrm{SS}} = 1$, they are perfectly correlated.
 
-Define $R^2_{\mathrm{SS}}(\lambda)$ as the fraction of variance in the \emph{uncorrected} long-channel $\Delta\mathrm{OD}$ that is explained by regressing it on the short-channel $\Delta\mathrm{OD}$. Equivalently, $R^2_{\mathrm{SS}}$ is the coefficient of determination of the SSR fit itself, \emph{not} of a post-hoc regression on the SSR residual. (By construction of ordinary least squares, the SSR residual is orthogonal to the short-channel regressor, so regressing the residual on the short channel would always return $R^2 \approx 0$ and therefore $\kappa_{\mathrm{SSR}} \approx 1$, i.e., no correction, an incorrect result.) If $R^2_{\mathrm{SS}} = 0$, the short and long channels are uncorrelated (ideal case). If $R^2_{\mathrm{SS}} = 1$, they are perfectly correlated.
-
-The attenuation factor due to SSR is:
+We report the \emph{inverse residual-variance ratio}
 
 \begin{equation}
-A_{\mathrm{SSR}} = 1 - R^2_{\mathrm{SS}}(\lambda)
+V_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
+\label{eq:vssr}
 \end{equation}
 
-and the correction is:
+as a per-wavelength \textbf{diagnostic of how much long-channel variance the short channel removed}. It is deliberately \emph{not} a correction, and it is never multiplied into the data.
 
-\begin{equation}
-\kappa_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)} = \frac{1}{A_{\mathrm{SSR}}}
-\label{eq:kappa_ssr}
-\end{equation}
-
-At the OD level, we multiply by the attenuation factor (not its reciprocal):
-
-\begin{equation}
-\Delta\text{OD}_{\text{SSR-attenuation corrected}}(\lambda) = (1 - R^2_{\mathrm{SS}}(\lambda))^{-1} \times \Delta\text{OD}_{\text{SSR-cleaned}}(\lambda)
-\end{equation}
+\begin{keyinsight}
+\textbf{$V_{\mathrm{SSR}}$ is a variance ratio, not an amplitude factor.} Under the ordinary-least-squares variance decomposition, $1 - R^2_{\mathrm{SS}}$ is the ratio of the \emph{residual variance} to the original variance. The corresponding change in \emph{amplitude} (standard deviation) is therefore $\sqrt{1 - R^2_{\mathrm{SS}}}$, not $1 - R^2_{\mathrm{SS}}$ --- so $1/(1-R^2_{\mathrm{SS}})$ is the reciprocal of a \emph{variance} ratio and has the wrong units to be an amplitude restoration. More fundamentally, $R^2_{\mathrm{SS}}$ pools superficial variance, cortical--systemic covariance, measurement noise, and any short-channel cortical sensitivity; it \emph{cannot} identify how much of the removed variance was cortical. There is no way to convert $V_{\mathrm{SSR}}$ into a cortical-amplitude correction without a physiological or forward model of the regressed components, which we do not assume.
+\end{keyinsight}
 
 \begin{workexample}
-Suppose at 760~nm the SSR regression explains $R^2_{\mathrm{SS}}(760) = 0.589$ of the variance in the long-channel signal (the value found in the real finger-tapping dataset analysed later). What is the attenuation and $\kappa_{\mathrm{SSR}}$?
-
+In the five-subject finger-tapping data (upgraded contralateral analysis), the nearest short channel explains $R^2_{\mathrm{SS}}(760) \approx 0.44$ of the long-channel variance at 760~nm, so
 \begin{align}
-A_{\mathrm{SSR}}(760) &= 1 - 0.589 = 0.411 \\
-\kappa_{\mathrm{SSR}}(760) &= \frac{1}{0.411} = 2.433
+V_{\mathrm{SSR}}(760) &= \frac{1}{1-0.44} \approx 1.78, \\
+\text{amplitude ratio} &= \sqrt{1-0.44} \approx 0.75 .
 \end{align}
-
-This means SSR removes about 58.9\% of the signal variance. The formula $1/(1-R^2_{\mathrm{SS}})$ treats \emph{all} of that removed variance as cortical signal to be restored.
+The interpretation is a \emph{report}: ``at 760~nm the short channel removed about 44\% of the long-channel variance, leaving roughly 75\% of the amplitude.'' At 850~nm the systemic oscillations dominate the long-channel variance, so $R^2_{\mathrm{SS}}(850)\approx0.57$ and $V_{\mathrm{SSR}}(850)\approx2.34$ --- a much larger diagnostic value, which is precisely why $V_{\mathrm{SSR}}$ is reported \emph{per wavelength} and never averaged across wavelengths. Neither number is multiplied into the recovered concentration.
 \end{workexample}
 
 \begin{keyinsight}
-\textbf{Why we report $\kappa_{\mathrm{SSR}}$ but do not apply it.} Equation~\eqref{eq:kappa_ssr} assumes the entire variance SSR removed was cortical. In reality SSR removes mostly the \emph{superficial} (systemic) signal, which is exactly what it is supposed to discard. So $1/(1-R^2_{\mathrm{SS}})$ is an \emph{upper bound} on the restoration, not the true cortical loss. The cortical signal that survives SSR is already recovered, in full, by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ alone (because $f_{\text{cortex}}$ is defined on the post-SSR sensitivity). If we applied both $\kappa_{\mathrm{SSR}}$ \emph{and} the (correctly large) $\kappa_{\text{PV}}$, we would double-count the dilution and inflate the real-data response to $\sim$2.7~$\mu$M (above the physiological range). Therefore, in the final pipeline we \textbf{report $\kappa_{\mathrm{SSR}}$ as a diagnostic} of how much variance SSR removed (a flag for residual superficial contamination) but \textbf{apply only $\kappa_{\text{DPF}}$ and $\kappa_{\text{PV}}$}. This keeps the corrected amplitude physiological ($\sim$1.1~$\mu$M).
+\textbf{Why we report $V_{\mathrm{SSR}}$ but never apply it.} $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ corrects the optical dilution of the cortical component that \emph{survives} SSR; it does not, and cannot, reconstruct any cortical signal SSR already subtracted. $V_{\mathrm{SSR}}$ flags channels where SSR removed a large share of the long-channel variance (so the surviving cortical estimate should be read with caution), but converting it into an amplitude multiplier would require assuming the entire removed variance was cortical --- which is false, since SSR is designed to remove the \emph{superficial} systemic signal. Earlier drafts of this study labelled the quantity $\kappa_{\mathrm{SSR}}$ and speculated that applying it would roughly double the recovered amplitude; that counterfactual has been removed as unjustified. The applied correction is $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ only.
 \end{keyinsight}
 
 \subsection{Two correlations that look identical: $R$ vs.\ $\rho$}
 
-A point that trips up almost everyone the first time: the regression statistic $R$ in $\kappa_{\mathrm{SSR}}=1/(1-R^2)$ is \emph{not} the same as the cortical--systemic correlation, even though both are computed with the identical Pearson formula. The formula is the same; the two signals you feed into it are different.
+A point that trips up almost everyone the first time: the regression statistic $R$ in $V_{\mathrm{SSR}}=1/(1-R^2)$ is \emph{not} the same as the cortical--systemic correlation, even though both are computed with the identical Pearson formula. The formula is the same; the two signals you feed into it are different.
 
 A Pearson correlation is just a normalized dot product, geometrically, the cosine of the angle between two signal vectors:
 \begin{equation}
@@ -576,7 +567,7 @@ Write the long channel as $y = c + s$ (true cortical signal $c$ plus systemic/su
 Here is the crux. $y$ contains $s$, and $x$ \emph{is} (approximately) $s$. So correlating $y$ with $x$ means correlating $(c+s)$ with $s$, and $s$ appears in both, so you get a large $R$ \emph{even if $c$ and $s$ have nothing to do with each other} ($\rho=0$). In words: $R$ mostly measures ``how much of the long channel is systemic,'' while $\rho$ measures ``do the cortical and systemic responses rise and fall together.'' Different questions, different numbers, same formula.
 
 \begin{keyinsight}
-This is exactly why $\kappa_{\mathrm{SSR}}=1/(1-R^2)$ over-restores. In real data $R^2\approx0.6$--$0.7$, but that is large because the long channel is \emph{systemic-dominated} (lots of $s$), not because SSR removed 60--70\% of the cortex. The cortex SSR actually nicks is governed by $\rho$ (small for a well-designed, externally paced task), so $1/(1-R^2)$ hands back far more than was lost, the double-counting we avoid by reporting $\kappa_{\mathrm{SSR}}$ as a diagnostic. If you remember one thing: \emph{$R$ is between the two channels you record; $\rho$ is between the two tissue signals you can't separate.}
+This is exactly why $V_{\mathrm{SSR}}=1/(1-R^2)$ must \emph{not} be read as an amount of cortex to hand back. In real data $R^2\approx0.4$--$0.6$, but that is large because the long channel is \emph{systemic-dominated} (lots of $s$), not because SSR removed that fraction of the cortex. The cortex SSR actually nicks is governed by $\rho$ (small for a well-designed, externally paced task), so a hypothetical $1/(1-R^2)$ amplitude restoration would hand back far more than was lost --- which is precisely why we report $V_{\mathrm{SSR}}$ as a variance diagnostic and never apply it. If you remember one thing: \emph{$R$ is between the two channels you record; $\rho$ is between the two tissue signals you can't separate.}
 \end{keyinsight}
 
 \section{Processing Order: Why OD-Level Corrections Matter}
@@ -587,8 +578,8 @@ The order of operations is critical:
 \begin{enumerate}
 \item \textbf{Raw OD measurement}: $\Delta\text{OD}_{\text{measured}}(\lambda, t)$ at each time point
 \item \textbf{Short-separation regression} (at OD level): Regress long-channel OD against short-channel OD to remove superficial contamination
-\item \textbf{Partial volume correction} (at OD level): Divide by $f_{\text{cortex}}(\lambda)$
-\item \textbf{SSR attenuation correction} (at OD level): Multiply by $\kappa_{\mathrm{SSR}}(\lambda)$
+\item \textbf{Partial volume correction} (at OD level): Divide by $f_{\text{cortex}}(\lambda)$ (this is the only amplitude correction applied)
+\item \textbf{$V_{\mathrm{SSR}}(\lambda)$ diagnostic} (computed, not applied): Record $1/(1-R^2_{\mathrm{SS}}(\lambda))$ as a per-wavelength flag of how much long-channel variance the short channel removed
 \item \textbf{MBLL inversion}: Apply the extinction matrix and wavelength-specific DPF to convert corrected ODs to concentrations
 \end{enumerate}
 
@@ -597,7 +588,7 @@ The order of operations is critical:
 A tempting alternative is to apply all corrections after MBLL inversion, directly on the concentration estimates. This fails because:
 
 1. MBLL is a spectroscopic inversion mixing the two wavelengths
-2. Wavelength-dependent corrections ($\kappa_{\text{PV}}(\lambda)$ and $\kappa_{\mathrm{SSR}}(\lambda)$) are separate at each wavelength
+2. The wavelength-dependent correction $\kappa_{\text{PV}}(\lambda)$ (and the per-wavelength $V_{\mathrm{SSR}}(\lambda)$ diagnostic) are computed separately at each wavelength
 3. If applied after inversion, the wavelength dependence is lost and the corrections cannot properly disentangle HbO$_2$ and HbR
 
 \begin{workexample}
@@ -1083,22 +1074,22 @@ Compute diagnostic factors:
 \end{equation}
 
 \begin{equation}
-\kappa_{\text{PV}} = \frac{1}{f_{\text{cortex}}} \quad \text{mean across wavelengths} = \frac{3.456 + 3.594}{2} = 3.523
+\kappa_{\text{PV}} = \frac{1}{f_{\text{cortex}}} \quad \text{mean across wavelengths} = \frac{15.9 + 15.2}{2} = 15.55
 \end{equation}
 
 \begin{equation}
-\kappa_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
+V_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
 \end{equation}
 
-At 760~nm: $\kappa_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.128} = \frac{1}{0.872} = 1.147$
+At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.16} = \frac{1}{0.84} = 1.19$
 
-At 850~nm: $\kappa_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.894} = \frac{1}{0.106} = 9.427$
+At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.902} = \frac{1}{0.098} = 10.16$
 
-The two wavelengths differ by nearly an order of magnitude ($1.147$ vs $9.427$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $\kappa_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a diagnostic only.
+The two wavelengths differ by nearly an order of magnitude ($1.19$ vs $10.16$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
 
-Applied correction (the $\kappa_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
+Applied correction (the $V_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
 \begin{equation}
-\kappa_{\text{applied}} = \kappa_{\text{DPF}} \times \kappa_{\text{PV}} = 1.000 \times 3.523 = 3.523
+\kappa_{\text{applied}} = \kappa_{\text{DPF}} \times \kappa_{\text{PV}} = 1.000 \times 15.55 = 15.55
 \end{equation}
 
 \subsection{Step 6: Error Evaluation}
@@ -1179,21 +1170,24 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 \begin{center}
 \begin{tabular}{ccccc}
 \hline
-\textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}$ & $\kappa_{\mathrm{SSR}}(760)$ & $\kappa_{\mathrm{SSR}}(850)$ \\
+\textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}$ & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ \\
 \hline
-25 & 0.043 & 23.42 & 1.17 & 9.82 \\
-30 & 0.064 & 15.54 & 1.19 & 10.15 \\
-35 & 0.091 & 11.02 & 1.22 & 10.52 \\
-40 & 0.110 & 9.12 & 1.21 & 10.52 \\
+25 & 0.043 & 23.50 & 1.17 & 9.83 \\
+30 & 0.064 & 15.69 & 1.19 & 10.16 \\
+35 & 0.088 & 11.57 & 1.22 & 10.54 \\
+38 & 0.101 & 10.04 & 1.22 & 10.65 \\
+40 & 0.110 & 9.22 & 1.21 & 10.52 \\
 \hline
 \end{tabular}
 \end{center}
 
-\paragraph{Note on $\kappa_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $\kappa_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a diagnostic of residual superficial contamination, not multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $\kappa_{\mathrm{SSR}}$ box above (applying it would double-count the dilution).
+\noindent (Values are the converged Monte-Carlo fractions from \texttt{fcortex\_production.json}; see the single-source-of-truth note in Appendix~A.)
+
+\paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic of residual superficial contamination, never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
 
 \subsection{Physical Interpretation}
 
-\paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is large at 850\,nm ($\kappa_{\mathrm{SSR}}(850)\approx9.8$). \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
+\paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is large at 850\,nm ($V_{\mathrm{SSR}}(850)\approx9.8$). \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
 
 \paragraph{Moderate-to-long separations (35--40 mm):} The cortical fraction rises to $\sim$9--11\%, so $\kappa_{\text{PV}}$ falls to $\sim$9--11 and, crucially, the cortical signal climbs above the noise floor. This is the regime where the correction is reliable (HbO$_2$ RMSE reduced by $\sim$44\% at 38--40~mm). The recommended operating point is SDS~$\geq$~38~mm.
 
@@ -1219,29 +1213,31 @@ This ordering is crucial for achieving the reported low RMSE.
 \hline
 \textbf{SDS (mm)} & $\textbf{RMSE}_{\text{MBLL}}$ & $\textbf{RMSE}_{\text{corr}}$ & \textbf{Error reduction} \\
 \hline
-25 & 0.618 & 0.073 & 88.2\% \\
-30 & 0.517 & 0.079 & 84.7\% \\
-35 & 0.339 & 0.110 & 67.5\% \\
-40 & 0.101 & 0.127 & $-$26.2\% \\
+25 & 0.681 & 0.395 & 42.0\% \\
+30 & 0.669 & 0.222 & 66.8\% \\
+35 & 0.653 & 0.163 & 75.0\% \\
+38 & 0.643 & 0.104 & 83.8\% \\
+40 & 0.635 & 0.112 & 82.4\% \\
 \hline
 \end{tabular}
 \end{center}
 
-HbR is corrected effectively at short-to-moderate separations (88.2\% at 25~mm, 84.7\% at 30~mm), but the benefit declines as SDS increases and becomes a slight \emph{worsening} at 40~mm ($-26.2\%$). This mirrors the HbO$_2$ pattern but is more pronounced for HbR: at long separations the cortical signal is already large (small $\kappa_{\text{PV}}$), so the correction adds little while the low-amplitude HbR channel is more easily dominated by amplified measurement noise. HbR therefore benefits most from correction precisely where partial-volume dilution is largest, at short separations.
+With the converged sensitivity fractions, the overall HbR RMSE improves from 0.657 to 0.226~$\mu$M (65.6\%), and unlike HbO$_2$ the HbR correction stays positive across the full separation range, rising from 42.0\% at 25~mm to 83.8\% at 38~mm and holding at 82--84\% at 38--40~mm. The apparent HbR advantage at short separations is a secondary noise-propagation artifact of the $2\times2$ MBLL inverse (the extinction matrix maps the two-wavelength OD noise onto HbO$_2$ and HbR with different gains, and here the propagated noise is smaller in the HbR estimate), \emph{not} a reason to use short separations. Because the framework is scoped to long SDS by the HbO$_2$ noise-floor limit, we report the long-SDS HbR improvement (82--84\%), where both chromophores genuinely benefit.
 
-\section{Wavelength Dependence of $\kappa_{\mathrm{SSR}}$}
+\section{Wavelength Dependence of $V_{\mathrm{SSR}}$}
 
-A critical finding: $\kappa_{\mathrm{SSR}}$ differs significantly between wavelengths:
+A critical finding: the $V_{\mathrm{SSR}}$ diagnostic differs significantly between wavelengths (synthetic validation, means across subjects):
 
 \begin{center}
 \begin{tabular}{cccc}
 \hline
-\textbf{SDS (mm)} & $\kappa_{\mathrm{SSR}}(760)$ & $\kappa_{\mathrm{SSR}}(850)$ & \textbf{Ratio} \\
+\textbf{SDS (mm)} & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ & \textbf{Ratio} \\
 \hline
-25 & 1.154 & 9.521 & 8.25 \\
-30 & 1.147 & 9.427 & 8.22 \\
-35 & 1.114 & 8.451 & 7.58 \\
-40 & 1.009 & 3.025 & 3.00 \\
+25 & 1.17 & 9.83 & 8.40 \\
+30 & 1.19 & 10.16 & 8.54 \\
+35 & 1.22 & 10.54 & 8.64 \\
+38 & 1.22 & 10.65 & 8.73 \\
+40 & 1.21 & 10.52 & 8.69 \\
 \hline
 \end{tabular}
 \end{center}
@@ -1251,13 +1247,13 @@ A critical finding: $\kappa_{\mathrm{SSR}}$ differs significantly between wavele
 This pattern is driven by the wavelength-dependent extinction coefficients rather than by penetration depth alone. The systemic (superficial) signal has a characteristic HbO$_2$/HbR composition, and how strongly it appears in the long-channel $\Delta\mathrm{OD}$ (and hence how much of that variance the short channel can explain) depends on the absorption weighting at each wavelength:
 
 \begin{itemize}
-\item At 850~nm, where HbO$_2$ absorption dominates ($\varepsilon_{\mathrm{HbO_2}} > \varepsilon_{\mathrm{HbR}}$), the systemic signal accounts for a large fraction of the long-channel $\Delta\mathrm{OD}$, so the short channel explains most of its variance ($R^2_{\mathrm{SS}} \approx 0.83$, giving $\kappa_{\mathrm{SSR}} \approx 7$).
-\item At 760~nm, where HbR absorption dominates ($\varepsilon_{\mathrm{HbR}} \gg \varepsilon_{\mathrm{HbO_2}}$), the short channel explains comparatively little of the long-channel variance ($R^2_{\mathrm{SS}} \approx 0.08$, giving $\kappa_{\mathrm{SSR}} \approx 1$).
+\item At 850~nm, where HbO$_2$ absorption dominates ($\varepsilon_{\mathrm{HbO_2}} > \varepsilon_{\mathrm{HbR}}$), the systemic signal accounts for a large fraction of the long-channel $\Delta\mathrm{OD}$, so the short channel explains most of its variance ($R^2_{\mathrm{SS}} \approx 0.90$, giving $V_{\mathrm{SSR}} \approx 10$).
+\item At 760~nm, where HbR absorption dominates ($\varepsilon_{\mathrm{HbR}} \gg \varepsilon_{\mathrm{HbO_2}}$), the short channel explains comparatively little of the long-channel variance ($R^2_{\mathrm{SS}} \approx 0.16$, giving $V_{\mathrm{SSR}} \approx 1.2$).
 \end{itemize}
 
-Because the contamination structure differs so strongly between the two wavelengths, a single scalar $\bar{\kappa}_{\mathrm{SSR}}$ applied to both would misestimate the correction.
+Because the contamination structure differs so strongly between the two wavelengths, no single scalar $\bar{V}_{\mathrm{SSR}}$ (and no cross-wavelength mean) is formed; the diagnostic is reported per wavelength.
 
-\textbf{Critical implication}: Applying a scalar average $\bar{\kappa}_{\mathrm{SSR}}$ to both wavelengths introduces error. The correct approach is to apply wavelength-specific $\kappa_{\mathrm{SSR}}(\lambda)$ at the OD level before spectroscopic inversion.
+\textbf{Critical implication}: Because $V_{\mathrm{SSR}}$ differs so much between wavelengths, collapsing it to a single cross-wavelength number would be meaningless. This is why $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a diagnostic --- and, for the same reason its two-wavelength values are not comparable as amplitudes, it is not applied to the data at all.
 
 \section{Sensitivity and Robustness Analysis}
 
@@ -1329,45 +1325,47 @@ The results are reassuring:
 \hline
 \textbf{Error in $f_{\text{cortex}}$} & \textbf{RMSE improvement (HbO$_2$)} & \textbf{RMSE improvement (HbR)} \\
 \hline
-$\pm 10\%$ & 64--72\% & 30--44\% \\
-$\pm 30\%$ & 35--66\% & $-3$--48\% \\
+$\pm 10\%$ & 63--71\% & 29--43\% \\
+$\pm 30\%$ & 34--66\% & $-3$--47\% \\
 \hline
 \end{tabular}
 \end{center}
 
 \begin{keyinsight}
-Even with $\pm 30\%$ error in $f_{\text{cortex}}$ (substantial anatomical uncertainty), the correction still improves HbO$_2$ RMSE by 35--66\% at long SDS (HbR is more sensitive, turning marginally negative only at the $-30\%$ extreme). Performance is best when $f_{\text{cortex}}$ is accurate and degrades on either side, faster for underestimates (where the inflated $\kappa_{\text{PV}}$ overcorrects and amplifies noise). The practical message: once a \emph{converged} forward model places $f_{\text{cortex}}$ in the right band, an approximate value is far better than none, so researchers who lack subject-specific MRI can still benefit from population-averaged anatomy, \emph{provided they work at long separations}.
+Even with $\pm 30\%$ error in $f_{\text{cortex}}$ (substantial anatomical uncertainty), the correction still improves HbO$_2$ RMSE by 34--66\% at long SDS (HbR is more sensitive, turning marginally negative only at the $-30\%$ extreme). Performance is best when $f_{\text{cortex}}$ is accurate and degrades on either side, faster for underestimates (where the inflated $\kappa_{\text{PV}}$ overcorrects and amplifies noise). The practical message: once a \emph{converged} forward model places $f_{\text{cortex}}$ in the right band, an approximate value is far better than none, so researchers who lack subject-specific MRI can still benefit from population-averaged anatomy, \emph{provided they work at long separations}.
 \end{keyinsight}
 
 \subsection{Three-Layer CSF Effects}
 
-A more realistic three-layer model inserts a thin cerebrospinal fluid (CSF) layer between the skull and the cortex, matching the Monte Carlo used in the study:
+A more realistic three-layer model inserts a thin cerebrospinal fluid (CSF) layer between the skull and the cortex, evaluated within the \emph{same} production Monte Carlo (\texttt{mc\_production.py}) that supplies the two-layer fractions, using the wavelength-specific scalp and cortex optical properties (Appendix~A) and inserting a CSF layer:
 \begin{itemize}
-\item Layer 1 (scalp + skull): 10 mm, $\mu_a = 0.015$~mm$^{-1}$, $\mu_s' = 1.0$~mm$^{-1}$
-\item Layer 2 (CSF): 2 mm, $\mu_a = 0.004$~mm$^{-1}$, $\mu_s' = 0.25$~mm$^{-1}$ (very low scattering)
-\item Layer 3 (cortex): semi-infinite, $\mu_a = 0.020$~mm$^{-1}$, $\mu_s' = 0.80$~mm$^{-1}$
+\item Layer 1 (scalp + skull): 10 mm, wavelength-specific (760~nm: $\mu_a = 0.0128$, $\mu_s' = 1.08$~mm$^{-1}$; 850~nm: $\mu_a = 0.0165$, $\mu_s' = 0.86$~mm$^{-1}$)
+\item Layer 2 (CSF): 2 mm, $\mu_a = 0.004$~mm$^{-1}$, $\mu_s' = 0.25$~mm$^{-1}$ (very low scattering; 0.24 at 850~nm)
+\item Layer 3 (cortex): semi-infinite, wavelength-specific (760~nm: $\mu_a = 0.0192$, $\mu_s' = 0.82$~mm$^{-1}$; 850~nm: $\mu_a = 0.0212$, $\mu_s' = 0.76$~mm$^{-1}$)
 \end{itemize}
+(The total superficial depth is held at 12~mm so the cortical boundary is unchanged; a 1~mm CSF thickness check is also emitted, giving a smaller $\gamma\approx1.3$--$1.4$.)
 
 Because CSF scatters very weakly ($\mu_s' \approx 0.25$~mm$^{-1}$, versus $1.0$~mm$^{-1}$ for skull), it behaves as a low-scattering channel that lets light traverse it with little attenuation and reach cortex that would otherwise be absorbed superficially, the classic CSF ``light-piping'' effect. A white Monte Carlo of the three-layer geometry (the diffusion approximation is invalid in the near-transparent CSF layer) shows that inserting the CSF layer \emph{increases} the cortical sensitivity fraction:
 
 \begin{center}
 \begin{tabular}{ccccc}
 \hline
-\textbf{SDS (mm)} & $f_{\text{cortex}}^{\text{2L}}$ & $\gamma$ (MC) & $f_{\text{cortex}}^{\text{3L}}$ & Change \\
+\textbf{SDS (mm)} & $f_{\text{cortex}}^{\text{2L}}$ & $\gamma$ (MC, 760~nm) & $f_{\text{cortex}}^{\text{3L}}$ & Change \\
 \hline
-25 & 0.041 & 1.80 & 0.074 & $+$80\% \\
-30 & 0.063 & 1.73 & 0.109 & $+$73\% \\
-35 & 0.086 & 1.63 & 0.140 & $+$63\% \\
+25 & 0.042 & 1.84 & 0.077 & $+$84\% \\
+30 & 0.064 & 1.66 & 0.107 & $+$66\% \\
+35 & 0.088 & 1.57 & 0.138 & $+$57\% \\
+40 & 0.110 & 1.44 & 0.158 & $+$44\% \\
 \hline
 \end{tabular}
 \end{center}
 
-The Monte Carlo finds that the explicit CSF layer \emph{increases} $f_{\text{cortex}}$ by 40--80\% relative to the two-layer approximation ($\gamma = f^{\text{3L}}/f^{\text{2L}} \approx 1.4$--$1.8$, decreasing with SDS), in agreement with the light-piping literature.
+The Monte Carlo finds that the explicit CSF layer \emph{increases} $f_{\text{cortex}}$ by 44--84\% relative to the two-layer approximation ($\gamma = f^{\text{3L}}/f^{\text{2L}} \approx 1.44$--$1.84$, decreasing with SDS), in agreement with the light-piping literature.
 
 \begin{caution}
 \textbf{Warning: ignoring the CSF layer degrades (but at long SDS does not reverse) the correction.}
 
-If the true tissue contains a CSF layer but corrections are computed with a two-layer model, the two-layer model \emph{underestimates} $f_{\text{cortex}}$ (e.g., $\approx$0.10 versus $\approx$0.15 at 38~mm). Its $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ is therefore too \emph{large} and partially overcorrects. At long separations the net effect is a reduced but still positive benefit (HbO$_2$ improvement $+34\%$ vs.\ $+70\%$ matched; HbR $+14\%$ vs.\ $+39\%$). The framework degrades gracefully rather than catastrophically, but including CSF (via the ratio $\gamma$) is recommended when anatomy is known.
+If the true tissue contains a CSF layer but corrections are computed with a two-layer model, the two-layer model \emph{underestimates} $f_{\text{cortex}}$ (e.g., $\approx$0.10 versus $\approx$0.15 at 38~mm). Its $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ is therefore too \emph{large} and partially overcorrects. At long separations the net effect is a reduced but still positive benefit (HbO$_2$ improvement $+34.0\%$ vs.\ $+69.1\%$ matched; HbR $+14.7\%$ vs.\ $+37.8\%$). The framework degrades gracefully rather than catastrophically, but including CSF (via the ratio $\gamma$) is recommended when anatomy is known.
 \end{caution}
 
 \begin{caution}
@@ -1422,8 +1420,8 @@ This computation takes $\sim$0.1 s per channel on a modern laptop and can be don
 \item Measure raw OD at two wavelengths, long and short channels
 \item Apply bandpass filter (0.01--0.1~Hz) to remove high-frequency noise
 \item Perform SSR: regress long-channel OD against short-channel OD at each wavelength
-\item Apply wavelength-specific $\kappa_{\text{PV}}$ at OD level
-\item Apply wavelength-specific $\kappa_{\mathrm{SSR}}$ factor (if desired; alternative is to use simplified scalar approach)
+\item Apply wavelength-specific $\kappa_{\text{PV}}$ at OD level (the only amplitude correction)
+\item Compute and record the per-wavelength $V_{\mathrm{SSR}}(\lambda)$ diagnostic (do \emph{not} apply it)
 \item Invert with MBLL using wavelength-specific DPF
 \item Extract HbO$_2$ and HbR concentrations and peak values
 \end{enumerate}
@@ -1478,11 +1476,11 @@ Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm causes 30\% error 
 \end{caution}
 
 \begin{caution}
-\textbf{Pitfall 5: Not accounting for wavelength dependence in SSR correction.}
+\textbf{Pitfall 5: Treating the SSR $R^2$ as an amplitude correction, or averaging it across wavelengths.}
 
-Applying a scalar $\bar{\kappa}_{\mathrm{SSR}}$ to both wavelengths ignores the 2--3$\times$ difference in $\kappa_{\mathrm{SSR}}$ between 760 and 850~nm.
+$V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph{variance} ratio, not an amplitude factor (the amplitude ratio is $\sqrt{1-R^2_{\mathrm{SS}}}$), and its value differs by nearly an order of magnitude between 760 and 850~nm, so a cross-wavelength average is meaningless.
 
-\textbf{Fix}: Compute and apply wavelength-specific $\kappa_{\mathrm{SSR}}(\lambda)$ from the SSR regression coefficients.
+\textbf{Fix}: Report $V_{\mathrm{SSR}}(\lambda)$ per wavelength as a variance-removal \emph{diagnostic} and never multiply it into the recovered concentration; apply only $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$.
 \end{caution}
 
 \section{Limitations and Future Directions}
@@ -1494,7 +1492,7 @@ Applying a scalar $\bar{\kappa}_{\mathrm{SSR}}$ to both wavelengths ignores the 
 
 \item \textbf{Assumes homogeneous layers}: Real tissue has spatial variation (e.g., bone density variations in skull). Monte Carlo simulation would capture this but is much slower.
 
-\item \textbf{Assumes task-evoked, not systemic signals}: If a cognitive task causes global blood pressure changes (task-evoked systemic response), SSR may remove some cortical signal. The $\kappa_{\mathrm{SSR}}$ diagnostic flags channels where this is likely (high $R^2_{\mathrm{SS}}$), but cannot by itself disentangle the ambiguity.
+\item \textbf{Assumes task-evoked, not systemic signals}: If a cognitive task causes global blood pressure changes (task-evoked systemic response), SSR may remove some cortical signal. The $V_{\mathrm{SSR}}$ diagnostic flags channels where this is likely (high $R^2_{\mathrm{SS}}$), but cannot by itself disentangle the ambiguity.
 
 \item \textbf{Requires anatomical knowledge}: Thickness and optical properties must be known or estimated. Subject-specific anatomical imaging (MRI, ultrasound) is not always available.
 
@@ -1506,18 +1504,18 @@ Application of the pipeline to the publicly available BIDS-NIRS-Tapping finger-t
 
 \begin{enumerate}
 \item \textbf{Short-separation regression (SSR):} Per-wavelength OD-level regression against the short-channel reference removes systemic (extracerebral) signal components.
-\item \textbf{$\kappa_{\text{SSR}}(\lambda)$ diagnostic:} The regression $R^2$ yields $\kappa_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$ ($760$: 2.433, $850$: 3.303 for this dataset). This is \emph{reported as a diagnostic of residual superficial contamination but not applied} (see the $\kappa_{\mathrm{SSR}}$ box earlier): applying it would double-count the dilution.
-\item \textbf{Partial-volume ($\kappa_{\text{PV}}$) correction (the applied amplitude correction):} The two-layer Monte Carlo gives $f_{\text{cortex}}\approx0.10$ at 38~mm. But a \emph{real} adult head also contains a thin cerebrospinal-fluid (CSF) layer, which scatters light very weakly and ``pipes'' it down toward the cortex (see the CSF section). This raises the cortical fraction by the light-piping factor $\gamma\approx1.5$, to a three-layer value $f_{\text{cortex}}^{\mathrm{3L}}\approx0.15$. Because these are real heads, we use this CSF-augmented value, giving $\kappa_{\text{PV}}\approx6.5$ ($760$~nm: $1/0.153=6.56$; $850$~nm: $1/0.156=6.43$).
+\item \textbf{$V_{\text{SSR}}(\lambda)$ diagnostic:} The regression $R^2$ yields $V_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$ (group means $760$: 1.78, $850$: 2.34 for this dataset). This is \emph{reported as a variance-removal diagnostic of residual superficial contamination but never applied} (see the $V_{\mathrm{SSR}}$ box earlier): $R^2_{\text{SS}}$ cannot identify the cortical component of the removed variance, so it is not converted into an amplitude factor.
+\item \textbf{Partial-volume ($\kappa_{\text{PV}}$) correction (the applied amplitude correction):} The two-layer Monte Carlo gives $f_{\text{cortex}}\approx0.10$ at 38~mm. But a \emph{real} adult head also contains a thin cerebrospinal-fluid (CSF) layer, which scatters light very weakly and ``pipes'' it down toward the cortex (see the CSF section). This raises the cortical fraction by the light-piping factor $\gamma\approx1.5$, to a three-layer value $f_{\text{cortex}}^{\mathrm{3L}}\approx0.15$--$0.16$. Because these are real heads, we use this CSF-augmented value, giving a per-channel $\kappa_{\text{PV}}\approx6.8$ ($760$~nm: $1/0.151\approx6.6$; $850$~nm: $1/0.148\approx6.8$).
 \item \textbf{MBLL inversion:} Standard dual-wavelength conversion from corrected $\Delta$OD to $\Delta[\text{HbO}_2]$ and $\Delta[\text{HbR}]$.
 \end{enumerate}
 
-Applying $\kappa_{\text{PV}} = 6.5$ to the SSR-denoised data produces net amplification factors of 3.58$\times$ for HbO$_2$ (uncorrected peak $+0.265\,\mu$M $\rightarrow$ corrected $+0.95\,\mu$M) and 3.15$\times$ for HbR (uncorrected $-0.058\,\mu$M $\rightarrow$ corrected $-0.18\,\mu$M); across all five subjects the group-mean corrected HbO$_2$ is $1.13 \pm 0.41\,\mu$M ($4.6\times$). These magnitudes are physiologically plausible for a finger-tapping task. (Using the two-layer $f_{\text{cortex}}\approx0.10$ instead (ignoring CSF) gives the larger $\kappa_{\text{PV}}\approx9.7$ and $\approx1.7\,\mu$M, an upper bound; the physiological estimate is thus bracketed $\approx1.1$--$1.7\,\mu$M.) This is the payoff of two key choices: using a \emph{converged}, CSF-augmented $f_{\text{cortex}}$ (an under-converged $\approx 0.78$ would make $\kappa_{\text{PV}}$ do almost nothing), and treating $\kappa_{\text{SSR}}$ as a diagnostic (applying it as well would inflate the response to $\sim$2.7~$\mu$M by double-counting the dilution).
+Applying the per-channel $\kappa_{\text{PV}}$ to the SSR-denoised data recovers physiologically plausible amplitudes. For Subject~01 (contralateral, window-mean) the uncorrected HbO$_2$ of $+0.144\,\mu$M rises to $+0.649\,\mu$M ($\kappa_{\text{PV}}=6.71$) and HbR from $-0.030$ to $-0.181\,\mu$M; across all five subjects the group-mean corrected HbO$_2$ is $0.92 \pm 0.34\,\mu$M ($\sim$7$\times$ the uncorrected $0.124\,\mu$M) and HbR $-0.047\rightarrow-0.343\,\mu$M. These magnitudes are physiologically plausible for a finger-tapping task. (Using the two-layer $f_{\text{cortex}}\approx0.10$ instead (ignoring CSF) gives the larger $\kappa_{\text{PV}}\approx9.7$ and $\approx1.3\,\mu$M, an upper bound; the physiological estimate is thus bracketed $\approx0.9$--$1.3\,\mu$M.) This is the payoff of using a \emph{converged}, CSF-augmented $f_{\text{cortex}}$: an under-converged $\approx0.78$ would make $\kappa_{\text{PV}}$ do almost nothing. Consistent with the statistical clarification, $V_{\text{SSR}}$ is reported as a variance diagnostic and is \emph{not} applied.
 
 \subsection{Future Directions}
 
 \begin{enumerate}
 \item \textbf{Three-layer Kienle solution} with CSF layer for full anatomical accuracy.
-\item \textbf{Hybrid CSF correction}: A particularly promising approach is to compute $f_{\text{cortex}}$ rapidly using the two-layer Hankel transform ($\sim$0.1~s per channel) and then multiply by an SDS-dependent correction factor $\gamma(d_{\text{SDS}}, d_{\text{CSF}})$ from a precomputed lookup table. The adjusted sensitivity $f_{\text{cortex}}^{\text{adj}} = \gamma \times f_{\text{cortex}}^{\text{2L}}$ would retain the speed of the analytical two-layer solution while accounting for the CSF light-guiding effect. Our three-layer analysis shows that $\gamma$ varies systematically: approximately 2.3 at 25~mm, 2.0 at 30~mm, 1.8 at 35~mm, and 1.6 at 40~mm SDS.
+\item \textbf{Hybrid CSF correction}: A particularly promising approach is to compute $f_{\text{cortex}}$ rapidly using the two-layer Hankel transform ($\sim$0.1~s per channel) and then multiply by an SDS-dependent correction factor $\gamma(d_{\text{SDS}}, d_{\text{CSF}})$ from a precomputed lookup table. The adjusted sensitivity $f_{\text{cortex}}^{\text{adj}} = \gamma \times f_{\text{cortex}}^{\text{2L}}$ would retain the speed of the analytical two-layer solution while accounting for the CSF light-guiding effect. Our three-layer analysis shows that $\gamma$ varies systematically: approximately 1.84 at 25~mm, 1.66 at 30~mm, 1.57 at 35~mm, and 1.44 at 40~mm SDS (760~nm).
 \item \textbf{Adaptive thickness estimation} from temporal statistics of SSR.
 \item \textbf{Bayesian inference} combining MBLL data with prior distributions on tissue properties.
 \item \textbf{Machine learning models} trained on Monte Carlo forward models to predict $f_{\text{cortex}}$ given measurement geometry and partial optical property measurements.
@@ -1537,10 +1535,10 @@ These problems work through the core ideas of the framework. Try each before rea
 \textit{Solution:} At 25~mm $f_{\text{cortex}}\approx0.04$, so the cortical optical-density signal ($\sim10^{-3}$) sits at or below the measurement-noise floor (SNR $<1$). Multiplying by $\kappa_{\text{PV}}\approx24$ amplifies the noise as much as the signal, so the ``corrected'' estimate is dominated by amplified noise rather than recovered cortex.
 
 \paragraph{3. The CSF correction.} The two-layer model gives $f_{\text{cortex}}=0.10$ at 38~mm, and the CSF light-piping ratio is $\gamma=1.5$. (a)~What is the three-layer $f_{\text{cortex}}$? (b)~How does $\kappa_{\text{PV}}$ change? (c)~Does the recovered amplitude go up or down?\\
-\textit{Solution:} (a)~$0.10\times1.5=0.15$. (b)~$\kappa_{\text{PV}}$ drops from $1/0.10=10$ to $1/0.15\approx6.7$. (c)~Down: a smaller $\kappa_{\text{PV}}$ multiplies the signal by less, so the recovered amplitude decreases (in the paper, $\approx1.6\to\approx1.1~\mu$M).
+\textit{Solution:} (a)~$0.10\times1.5=0.15$. (b)~$\kappa_{\text{PV}}$ drops from $1/0.10=10$ to $1/0.15\approx6.7$. (c)~Down: a smaller $\kappa_{\text{PV}}$ multiplies the signal by less, so the recovered amplitude decreases (in the paper, the two-layer $\approx1.3~\mu$M upper bound drops to the CSF-augmented $\approx0.9~\mu$M).
 
 \paragraph{4. $R$ vs.\ $\rho$.} A subject's long and short channels have $R^2_{\text{SS}}=0.64$. A classmate concludes that SSR must have removed 64\% of the \emph{cortical} signal. Are they right?\\
-\textit{Solution:} No. $R^2_{\text{SS}}=0.64$ means the short channel explains 64\% of the \emph{long-channel} variance, mostly because the long channel is dominated by the same systemic signal the short channel sees. The cortical loss is set by $\rho$ (the cortical--systemic correlation), not by $R^2$, and is usually much smaller. This is exactly why $\kappa_{\text{SSR}}=1/(1-R^2)$ over-restores and is reported as a diagnostic.
+\textit{Solution:} No. $R^2_{\text{SS}}=0.64$ means the short channel explains 64\% of the \emph{long-channel} variance, mostly because the long channel is dominated by the same systemic signal the short channel sees. The cortical loss is set by $\rho$ (the cortical--systemic correlation), not by $R^2$, and is usually much smaller. This is exactly why $V_{\text{SSR}}=1/(1-R^2)$ is reported as a variance-removal diagnostic and never applied as an amplitude restoration.
 
 \paragraph{5. Wavelength bookkeeping.} Why must $\kappa_{\text{PV}}(\lambda)$ be applied to each wavelength's $\Delta$OD \emph{before} the MBLL inversion, rather than to the final $\Delta[\text{HbO}_2]$?\\
 \textit{Solution:} The MBLL inversion mixes the two wavelengths to separate HbO$_2$ from HbR. Because $f_{\text{cortex}}$ differs at 760 and 850~nm, the correction is wavelength-specific; applying it \emph{after} the inversion would discard the per-wavelength information and could not properly disentangle the two chromophores (Section~\ref{sec:order} on processing order).
@@ -1549,7 +1547,7 @@ These problems work through the core ideas of the framework. Try each before rea
 \textit{Solution:} No. Converged Monte Carlo and atlas studies (e.g.\ Strangman et al.\ 2013) put the brain sensitivity fraction at $\sim$4--8\% at 25--30~mm, an order of magnitude smaller. A value of $0.55$ is a red flag for an under-converged analytical calculation (the trap discussed in the numerical cautionary tale).
 
 \paragraph{7. Putting it together.} In one paragraph, summarize the full corrected pipeline for a single long channel: what is removed, what is multiplied in, what is only reported, and why the result is trustworthy only at long SDS.\\
-\textit{Solution:} Band-pass the optical density; regress out the short channel (SSR) to remove systemic contamination; multiply the SSR-cleaned $\Delta$OD by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ (CSF-augmented) at each wavelength to undo partial-volume dilution; invert with the MBLL using wavelength-specific DPFs. $\kappa_{\text{SSR}}$ is computed and reported as a diagnostic of residual contamination but \emph{not} applied. The result is trustworthy only at long SDS ($\geq$38~mm), because there the cortical signal is above the noise floor; at short SDS the same correction amplifies noise.
+\textit{Solution:} Band-pass the optical density; regress out the short channel (SSR) to remove systemic contamination; multiply the SSR-cleaned $\Delta$OD by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ (CSF-augmented) at each wavelength to undo partial-volume dilution; invert with the MBLL using wavelength-specific DPFs. $V_{\text{SSR}}$ is computed and reported as a variance-removal diagnostic of residual contamination but \emph{not} applied. The result is trustworthy only at long SDS ($\geq$38~mm), because there the cortical signal is above the noise floor; at short SDS the same correction amplifies noise.
 
 \newpage
 \appendix
@@ -1598,6 +1596,14 @@ Cortex (grey matter) & 2--4 & 1.40 & Neuronal tissue \\
 \end{tabular}
 \end{center}
 
+\subsection{Monte-Carlo settings and the single source of truth}
+
+All cortical sensitivity fractions used anywhere in this study come from \emph{one} converged production Monte Carlo, written to a single versioned file that both the synthetic and the real-data pipelines read:
+\[
+\texttt{mc\_production.py}\;\rightarrow\;\texttt{fcortex\_production.json}\;\rightarrow\;\texttt{fcortex\_source.py}\;\rightarrow\;\text{both pipelines.}
+\]
+No analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent photon batches (not a seed-level bootstrap); the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
+
 \section{Appendix B: Glossary of Symbols}
 
 \begin{center}
@@ -1626,12 +1632,12 @@ $d_{\text{sup}}$ & Superficial layer thickness & mm (10--14 typical) \\
 \hline
 $\Phi(\mathbf{r})$ & Photon fluence (radiance integrated over angles) & W/mm$^2$ (relative) \\
 $J(\mathbf{r})$ & Jacobian (sensitivity) & Relative units \\
-$f_{\text{cortex}}$ & Cortical sensitivity fraction & Dimensionless (0.1--0.9) \\
+$f_{\text{cortex}}$ & Cortical sensitivity fraction (converged Monte Carlo) & Dimensionless (0.04--0.16) \\
 \hline
 $\kappa_{\text{DPF}}$ & DPF correction factor & Dimensionless ($\sim 1$) \\
-$\kappa_{\text{PV}}$ & Partial volume correction factor & Dimensionless (1.1--7.5) \\
-$\kappa_{\mathrm{SSR}}(\lambda)$ & SSR attenuation correction (wavelength-specific) & Dimensionless (1.5--10) \\
-$\kappa_{\text{applied}}$ & Applied composite, $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ ($\kappa_{\mathrm{SSR}}$ is a per-wavelength diagnostic, not applied) & Dimensionless \\
+$\kappa_{\text{PV}}$ & Partial volume correction factor & Dimensionless ($\sim$6--24) \\
+$V_{\mathrm{SSR}}(\lambda)$ & SSR variance-removal diagnostic, $1/(1-R^2_{\mathrm{SS}})$ (reported, never applied) & Dimensionless ($\sim$1--10) \\
+$\kappa_{\text{applied}}$ & Applied composite, $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ ($V_{\mathrm{SSR}}$ is a per-wavelength diagnostic, not applied) & Dimensionless \\
 \hline
 $R^2_{\mathrm{SS}}$ & Variance of the uncorrected long-channel $\Delta\mathrm{OD}$ explained by the short channel (SSR fit $R^2$) & Dimensionless (0--1) \\
 $\beta(\lambda)$ & SSR regression coefficient & Dimensionless \\
