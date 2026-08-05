@@ -26,24 +26,27 @@ applied correction = kappa_DPF x kappa_PV        (kappa_SSR is a DIAGNOSTIC, not
 - **kappa_DPF** corrects differential-pathlength-factor mismatch (= 1 by construction
   in the synthetic validation, which uses the true DPF in both the forward model
   and the inversion).
-- **kappa_SSR = 1 / (1 − R²_SS)** is computed and **reported** per wavelength as a
-  diagnostic of residual superficial contamination, but is **not applied**, because
-  applying it on top of the (correct, large) kappa_PV would double-count the dilution.
+- **kappa_SSR = 1 / (1 − R²_SS)** is an **inverse residual-variance ratio**, not an
+  amplitude-restoration factor (the amplitude ratio would be √(1−R²_SS)). It is
+  **reported** per wavelength as a variance-removal diagnostic but **not applied**:
+  R²_SS cannot identify cortical loss, and applying it on top of the (correct, large)
+  kappa_PV would inflate the amplitude roughly twofold.
 
 Two methodological cautions are the core contribution:
 
 1. **Numerical:** `f_cortex` must come from a *converged* forward model. The analytical
-   two-layer Kienle Jacobian evaluated by fixed-point Hankel transform is **not**
-   quadrature-converged for this integral and overstates `f_cortex` by ~10x. The
-   package therefore calibrates `f_cortex` with a converged Monte Carlo
-   (`code/mc_2layer.py`), cross-checked against a finite-difference solver and the
-   published Colin27 atlas Monte Carlo.
-2. **Statistical:** `kappa_SSR` over-restores and belongs in a report, not in the
-   correction.
+   two-layer Kienle Jacobian evaluated by a fixed-point (fixed-grid) Hankel quadrature
+   is **not** converged for this integral and overstates `f_cortex` by ~10x (a property
+   of that quadrature, not of the Kienle model). The package calibrates `f_cortex` with
+   a converged, multi-seed Monte Carlo (`code/mc_2layer.py`, `code/mc_uncertainty.py`),
+   cross-checked against a finite-difference solver and the Colin27 atlas Monte Carlo.
+2. **Statistical:** the SSR R² is a variance-removal diagnostic, not an amplitude
+   factor — `1/(1−R²_SS)` belongs in a report, not in the correction.
 
-A practical consequence: the correction is reliable **only at long source–detector
-separations (≥ 38 mm)**. At short separations the diluted cortical signal falls
-below the measurement-noise floor and kappa_PV amplifies noise.
+A practical consequence: under the simulated measurement noise (σ_OD = 10⁻³), the
+correction is reliable **only at long source–detector separations (≥ 38 mm)**; at
+short separations the diluted cortical signal falls below the noise floor and kappa_PV
+amplifies noise. This threshold is noise-conditional, not universal.
 
 ---
 
@@ -67,17 +70,23 @@ below the measurement-noise floor and kappa_PV amplifies noise.
 │       └── figure7_group_block_average.png
 │
 ├── code/
-│   ├── fnirs_kappa_synthetic_validation.py   Synthetic validation (Tables of §Results;
+│   ├── fnirs_kappa_synthetic_validation.py   Synthetic validation (Results tables;
 │   │                                         Figs 1–3; SNR, robustness, convergence,
 │   │                                         CSF, model-mismatch analyses)
-│   ├── fnirs_kappa_realdata_analysis.py      Single-subject real-data pipeline
-│   │                                         (Subject 01; Figs 4–6; Table 6)
-│   ├── fnirs_kappa_group_analysis.py         Five-subject group analysis
-│   │                                         (Fig 7; Table 7; group_summary.{csv,json})
+│   ├── fnirs_kappa_realdata_v2.py            PRIMARY in-vivo pipeline: per-channel
+│   │                                         SDS/f_cortex, TDDR+SCI QC, nearest-short
+│   │                                         SSR, contralateral condition-resolved,
+│   │                                         window-mean (Figs 4–7; Tables 5–6)
+│   ├── mc_uncertainty.py                     Multi-seed anisotropic MC: f_cortex ± CI,
+│   │                                         N_eff, DPF (both λ) + CSF γ (thicknesses)
+│   ├── fnirs_kappa_realdata_analysis.py      Earlier single-subject pipeline (reference)
+│   ├── fnirs_kappa_group_analysis.py         Earlier five-subject group pipeline (reference)
 │   ├── fnirs_invivo_demo.py                  Single-channel pipeline walkthrough
 │   ├── mc_2layer.py                          Converged two-layer MC → f_cortex, kappa_PV
-│   └── mc_csf.py                             White MC for the CSF light-piping ratio γ
+│   └── mc_csf.py                             Isotropic CSF cross-check (legacy)
 │
+├── results/                                 Raw MC + real-data outputs (JSON/CSV)
+├── REVISION_RESPONSE.md                     Point-by-point response to the review
 └── supplementary/
     ├── fnirs_kappa_beginner_notebook.ipynb  Annotated Jupyter walkthrough
     └── fNIRS_Kappa_Pedagogical_Guide.tex    LaTeX pedagogical companion
@@ -98,7 +107,7 @@ pdflatex main.tex
 pdflatex main.tex        # second pass resolves cross-references
 ```
 
-This produces `main.pdf` (43 pages). To submit, upload the contents of
+This produces `main.pdf` (44 pages). To submit, upload the contents of
 `arxiv_submission/` (i.e. `main.tex` and the `figures/` folder) as the arXiv
 source. Suggested categories: **physics.med-ph** (primary), cross-list
 **physics.optics** and **q-bio.NC**.
