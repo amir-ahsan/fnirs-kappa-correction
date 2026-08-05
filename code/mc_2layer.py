@@ -97,7 +97,8 @@ def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
         m=det&(np.abs(exit_r-sds)<=half_width); ww=w[m]
         out[str(sds)]=dict(sum_wLcortex=float((ww*Lcortex[m]).sum()),
                            sum_wLtot=float((ww*Ltot[m]).sum()),
-                           sum_w=float(ww.sum()), count=int(m.sum()))
+                           sum_w=float(ww.sum()), sum_w2=float((ww**2).sum()),
+                           count=int(m.sum()))
     out['_meta']=dict(N=N,seed=seed,g=g,detected=int(det.sum()),
                       mean_Ltot=float(Ltot[det].mean()) if det.any() else 0)
     return out

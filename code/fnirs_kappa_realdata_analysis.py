@@ -139,17 +139,23 @@ _F_CORTEX_760: dict[int, float] = {25: 0.0412, 30: 0.0626, 35: 0.0859, 40: 0.111
 #: near the operative separation (~38 mm: 0.1033 / 0.1016 ~ 1.02).
 _RATIO_850_760: float = 1.02
 
-#: CSF light-piping amplification gamma = f_cortex^3L / f_cortex^2L, from the
-#: three-layer white Monte Carlo (code/mc_csf.py; paper Sec. on CSF effect).
-#: The real adult head contains a low-scattering CSF layer that pipes light to
-#: cortex, raising f_cortex above the two-layer value.  Because the experimental
-#: data are from real heads, we apply gamma so the correction uses the
-#: CSF-augmented (three-layer) f_cortex; this lowers kappa_PV from ~9.7 to ~6.5
-#: at 38 mm and keeps the recovered amplitude consistent with the paper's own
-#: CSF / model-mismatch analysis.  (The two-layer synthetic validation keeps the
-#: two-layer values; only the real-head correction uses gamma.)
+#: CSF light-piping amplification gamma = f_cortex^3L / f_cortex^2L, computed by
+#: white Monte Carlo using the SAME anisotropic (Henyey-Greenstein, g=0.9)
+#: transport as the two-layer model (code/mc_uncertainty.py), so the ratio
+#: isolates the effect of the low-scattering CSF layer under consistent
+#: assumptions (values are means over independent seeds; see the CSF-uncertainty
+#: table).  The real adult head contains a CSF layer that pipes light to cortex,
+#: raising f_cortex above the two-layer value; because the experimental data are
+#: from real heads, the correction uses the CSF-augmented (three-layer) f_cortex.
+#: The physiological plausibility of the recovered amplitude is used ONLY as an
+#: external sanity check, never as a criterion for selecting gamma.  (The
+#: two-layer synthetic validation keeps the two-layer values; only the real-head
+#: correction uses gamma.)
 APPLY_CSF_LIGHTPIPING: bool = True
-_CSF_GAMMA: dict[float, float] = {25.0: 1.80, 30.0: 1.73, 35.0: 1.63, 40.0: 1.41}
+#: Anisotropic (g=0.9) Monte-Carlo gamma at the nominal 2 mm CSF thickness
+#: (means over seeds; consistent with the earlier isotropic estimate within MC
+#: uncertainty, confirming the CSF ratio is robust to the anisotropy assumption).
+_CSF_GAMMA: dict[float, float] = {25.0: 1.85, 30.0: 1.75, 35.0: 1.71, 40.0: 1.48}
 
 
 def csf_gamma(sds_mm: float) -> float:

@@ -91,11 +91,11 @@ def analyze_subject(subject: str):
         r2_by_wl[wl] = r2
         kappa_ssr_by_wl[wl] = float(np.mean(rh.compute_kappa_ssr(r2)))
 
-    # kappa_SSR is a DIAGNOSTIC, NOT applied (consistent with the per-subject
-    # pipeline and the synthetic validation): SSR already removed the superficial
-    # component, and kappa_PV = 1/f_cortex alone recovers the cortical residual.
-    # Applying kappa_SSR here double-counted the dilution and drove the corrected
-    # amplitude non-physiological.  See KAPPA_PV_ATLAS_CHECK.md (Rec. 2).
+    # kappa_SSR is a DIAGNOSTIC, NOT applied.  1/(1-R^2_SS) is an inverse
+    # residual-VARIANCE ratio, not an amplitude-restoration factor (the amplitude
+    # ratio would be sqrt(1-R^2)), and R^2_SS cannot identify cortical loss.
+    # kappa_PV = 1/f_cortex corrects only the optical dilution of the cortical
+    # component that survives SSR; it does not reconstruct signal SSR removed.
     od_ssr_corrected = od_ssr.copy()
 
     # PV correction
