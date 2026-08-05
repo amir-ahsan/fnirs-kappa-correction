@@ -1,0 +1,1743 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{booktabs}
+
+\geometry{margin=1in}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{fNIRS $\kappa$-Correction Guide}
+
+\tcbuselibrary{theorems}
+
+\title{\textbf{Pedagogical Guide to fNIRS $\kappa$-Correction}\\[6pt]
+\large Understanding Quantitative Near-Infrared Spectroscopy Measurements}
+\author{Based on research by Neth Sagara and Amir Ahsan \\ Department of Physics, Irvine Valley College}
+\date{March 2026}
+
+\newtcolorbox{keyinsight}{colback=blue!5,colframe=blue!50,title=Key Insight,fonttitle=\bfseries}
+\newtcolorbox{workexample}{colback=green!5,colframe=green!50,title=Worked Example,fonttitle=\bfseries}
+\newtcolorbox{caution}{colback=yellow!5,colframe=orange!50,title=Caution,fonttitle=\bfseries}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This pedagogical guide introduces undergraduate physics students to functional near-infrared spectroscopy (fNIRS) and the $\kappa$-correction framework for recovering quantitative hemoglobin concentration measurements. The guide provides complete derivations, physical intuition, worked examples, and step-by-step implementations. We explain why the Modified Beer-Lambert Law (MBLL) systematically underestimates cortical hemoglobin changes by up to $10\times$ in layered tissues, and how three multiplicative correction factors ($\kappa_{\mathrm{DPF}}$, $\kappa_{\mathrm{PV}}$, and $\kappa_{\mathrm{SSR}}$) compensate for differential pathlength error, partial volume dilution, and residual superficial contamination. The framework is grounded in the diffusion approximation to light transport and the Kienle et al.~(1998) semi-analytical solution for two-layer tissue geometry.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\part{Background and Motivation}
+
+\section{What is fNIRS?}
+
+Functional near-infrared spectroscopy (fNIRS) is an optical neuroimaging technique that non-invasively measures changes in cerebral blood oxygenation. The method exploits a fundamental biophysical principle: hemoglobin, the oxygen-carrying protein in blood, absorbs near-infrared light differently depending on its oxygenation state. Oxygenated hemoglobin (HbO$_2$) and deoxygenated hemoglobin (HbR) have distinct absorption spectra in the near-infrared window (650--950~nm), allowing us to distinguish them spectroscopically.
+
+\subsection{How It Works Physically}
+
+An fNIRS system places a light source (LED or laser diode) on the scalp surface. This source emits light at two specific wavelengths (typically 760~nm and 850~nm) chosen because the absorption spectra of HbO$_2$ and HbR cross near 800~nm (the ``isosbestic point''), giving good sensitivity to both chromophores. The light enters the tissue and undergoes two competing processes:
+
+\begin{itemize}
+\item \textbf{Scattering}: Photons bounce off cellular structures, lipid membranes, and organelles, changing direction. In brain tissue, a photon undergoes roughly 100+ scattering events per centimetre. The reduced scattering coefficient $\mu_s' \approx 1.0$~mm$^{-1}$ means photons are effectively redirected every $\sim$1~mm.
+\item \textbf{Absorption}: Photons are absorbed by chromophores (primarily hemoglobin, water, and lipids). The absorption coefficient $\mu_a \approx 0.01$--$0.02$~mm$^{-1}$ in the NIR window, which is much smaller than $\mu_s'$. This is precisely why the NIR window is useful: light penetrates deeply because scattering dominates over absorption.
+\end{itemize}
+
+A detector placed 25--40~mm from the source collects photons that have scattered through tissue and returned to the surface. Because of the scattering-dominated transport, these photons follow curved ``banana-shaped'' paths that dip into the brain cortex. The deeper the cortex, the fewer photons reach it, but at typical source-detector separations (SDS) of 30--35~mm, a significant fraction of detected photons have sampled cortical tissue.
+
+\subsection{The Hemodynamic Response}
+
+When a brain region becomes active during a cognitive or motor task, local neurons increase their metabolic demand. The brain responds with a hemodynamic response: increased blood flow to the active region, delivering fresh oxygenated hemoglobin. This causes $[\text{HbO}_2]$ to rise by typically 1--5~$\mu$M and $[\text{HbR}]$ to decrease by 0.3--1.5~$\mu$M over a timescale of 5--15 seconds. These concentration changes alter the optical density of the tissue, which the fNIRS detector measures as a change in received light intensity.
+
+\subsection{Comparison with fMRI}
+
+fNIRS and fMRI both measure hemodynamic responses, but they differ in important ways:
+
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+\textbf{Property} & \textbf{fNIRS} & \textbf{fMRI} \\
+\hline
+Spatial resolution & $\sim$1--3~cm & $\sim$1--3~mm \\
+Temporal resolution & $\sim$10~ms & $\sim$1--2~s \\
+Portability & Wearable & Room-sized \\
+Cost & \$50K--500K & \$1M--3M \\
+Motion tolerance & Good & Poor \\
+Measures & HbO$_2$ and HbR & BOLD (mainly HbR) \\
+Depth penetration & Cortex only & Whole brain \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{The Quantification Problem}
+
+Despite decades of fNIRS development, a critical limitation persists: most fNIRS studies report results in arbitrary units or relative changes, not absolute concentrations in micromolar ($\mu$M). This means:
+
+\begin{itemize}
+\item You cannot compare $[\text{HbO}_2]$ values across different subjects or studies
+\item You cannot establish clinical diagnostic thresholds (e.g., ``brain oxygenation below X~$\mu$M indicates ischemia risk'')
+\item You cannot validate fNIRS measurements against gold-standard techniques (MRI, PET)
+\item You cannot pool data across research sites in meta-analyses
+\end{itemize}
+
+The root cause is that converting optical density changes to concentration changes requires assumptions about light propagation through tissue, assumptions that are violated in the layered human head. The standard conversion tool, the Modified Beer-Lambert Law (MBLL), assumes that tissue is homogeneous and that all concentration changes occur uniformly throughout the sampled volume. Neither assumption is correct.
+
+This is where the $\kappa$ correction framework comes in. It systematically identifies and corrects for each source of bias, recovering quantitative cortical concentrations from the biased MBLL estimates.
+
+\section{Three Fundamental Biases in fNIRS}
+
+When fNIRS data are processed using MBLL, three distinct biases cause systematic underestimation of cortical hemoglobin changes.
+
+\subsection{Bias 1: Differential Pathlength Error}
+
+Beer's Law assumes that light travels in a straight line from source to detector. In real tissue, photons scatter repeatedly, following tortuous paths that are much longer than the geometric source-detector distance. The Differential Pathlength Factor (DPF) quantifies this elongation:
+
+\begin{equation}
+\text{effective path length} = L \times \text{DPF}(\lambda)
+\end{equation}
+
+where $L$ is the source-detector separation.
+
+DPF is wavelength-dependent because scattering and absorption both vary with wavelength. Shorter wavelengths scatter more (higher $\mu_s'$), leading to longer effective paths and larger DPF values. For a 25-year-old adult at the forehead:
+
+\begin{align}
+\text{DPF}(760\text{ nm}) &= 6.15 \\
+\text{DPF}(850\text{ nm}) &= 5.09
+\end{align}
+
+This $\sim$17\% difference means that if a processing pipeline uses a single scalar DPF (say, 6.0) for both wavelengths, it introduces a wavelength-dependent bias: concentrations are overestimated at one wavelength and underestimated at the other.
+
+\subsection{Bias 2: Partial Volume Dilution (The Dominant Effect)}
+
+This is the largest and most consequential bias. The human head is layered: scalp ($\sim$3--5~mm), skull ($\sim$5--8~mm), cerebrospinal fluid ($\sim$1--3~mm), and cortex ($\sim$2--4~mm of grey matter). When light passes from source to detector, it samples all these layers.
+
+Task-evoked hemodynamic changes occur almost exclusively in the active cortex. The superficial layers (scalp, skull) show continuous systemic physiology (cardiac pulsations, respiration, blood pressure oscillations) but essentially no task-related changes.
+
+The measured optical density is therefore a \emph{weighted average} of cortical and superficial contributions:
+
+\begin{equation}
+\Delta\text{OD}_{\text{measured}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \Delta\text{OD}_{\text{cortex}}(\lambda) + [1 - f_{\text{cortex}}(\lambda)] \cdot \Delta\text{OD}_{\text{superficial}}(\lambda)
+\end{equation}
+
+where $f_{\text{cortex}}(\lambda)$ is the cortical sensitivity fraction, the fraction of total channel sensitivity that originates from the cortex.
+
+The key numbers from our study:
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ & \textbf{What this means} \\
+\hline
+25 & 0.041 & 24 & Only $\sim$4\% of signal from cortex \\
+30 & 0.063 & 16 & Only $\sim$6\% from cortex \\
+35 & 0.086 & 12 & Only $\sim$9\% from cortex \\
+40 & 0.112 & 9 & $\sim$11\% from cortex \\
+\hline
+\end{tabular}
+\end{center}
+
+These values come from a converged Monte-Carlo light-transport simulation of the two-layer head (and agree with published whole-head ``atlas'' Monte Carlo). They are an order of magnitude smaller than an under-resolved analytical calculation suggests (a subtle numerical pitfall we discuss in the advanced sections. Since MBLL assumes all tissue is homogeneous, it treats the entire measured OD as coming from a single concentration change, so its estimate is attenuated by $f_{\text{cortex}}$. At 25~mm SDS, MBLL reports only $\sim$4\% of the true cortical concentration change) an underestimation by a factor of $\sim$23.
+
+\begin{keyinsight}
+Even with perfect DPF correction and perfect superficial signal removal, MBLL still underestimates cortical concentrations by roughly an order of magnitude, because only a few percent of the channel sensitivity comes from the cortex. The partial-volume correction $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ is by far the largest factor, ranging from $\sim$9 (long SDS) to $\sim$23 (short SDS). A crucial consequence (developed later): because the cortical signal is so small, at short separations it can fall below the measurement-noise floor, so $\kappa_{\text{PV}}$ then amplifies noise, which is why the correction is recommended only at long separations ($\geq$38~mm).
+\end{keyinsight}
+
+\subsection{Bias 3: Superficial Signal Contamination}
+
+The superficial tissue layer contains blood vessels that exhibit strong physiological oscillations:
+
+\begin{itemize}
+\item Cardiac pulsation: $\sim$1~Hz, amplitude $\sim$0.1~$\mu$M (HbO$_2$ equivalent)
+\item Respiration: $\sim$0.25~Hz, amplitude $\sim$0.2~$\mu$M
+\item Mayer waves (blood pressure regulation): $\sim$0.1~Hz, amplitude $\sim$0.3~$\mu$M
+\end{itemize}
+
+These contaminate the measured signal with noise that is \emph{not task-related}.
+
+Short-Separation Regression (SSR) addresses this by placing an additional detector very close to the source (SDS $< 15$~mm). At this short separation, the detected light barely reaches the cortex; it samples almost exclusively the superficial layer. By regressing the short-channel signal out of the long-channel signal, SSR removes the shared superficial component.
+
+However, SSR has a limitation: if cortical and superficial signals happen to be partially correlated (e.g., task-evoked systemic responses), SSR may inadvertently remove some cortical signal along with the contamination. The $\kappa_{\text{SSR}}$ factor corrects for this inadvertent attenuation.
+
+\section{From Beer's Law to the Modified Beer-Lambert Law}
+
+\subsection{Step 1: Beer's Law for a Single Absorber}
+
+Beer's Law (also called the Beer-Lambert-Bouguer Law) describes how light is attenuated as it passes through an absorbing medium:
+
+\begin{equation}
+I = I_0 \cdot 10^{-\varepsilon \cdot c \cdot L}
+\end{equation}
+
+where $I_0$ is the incident intensity, $I$ is the transmitted intensity, $\varepsilon$ is the molar extinction coefficient (cm$^{-1}$/(mol/L)), $c$ is the concentration (mol/L), and $L$ is the path length (cm).
+
+Taking the base-10 logarithm of both sides:
+
+\begin{equation}
+\log_{10}\left(\frac{I_0}{I}\right) = \varepsilon \cdot c \cdot L
+\end{equation}
+
+The left-hand side is the \textbf{optical density} (OD), also called absorbance:
+
+\begin{equation}
+\text{OD} = \varepsilon \cdot c \cdot L
+\end{equation}
+
+\paragraph{Physical intuition.} OD = 1 means 90\% of light is absorbed (only 10\% transmitted). OD = 2 means 99\% absorbed. Each unit of OD reduces transmitted light by a factor of 10.
+
+The derivation is straightforward. Starting with Beer's Law:
+\begin{equation}
+I = I_0 \cdot 10^{-\varepsilon c L}
+\end{equation}
+
+Divide both sides by $I_0$:
+\begin{equation}
+\frac{I}{I_0} = 10^{-\varepsilon c L}
+\end{equation}
+
+Take the logarithm base 10 of both sides:
+\begin{equation}
+\log_{10}\left(\frac{I}{I_0}\right) = -\varepsilon c L
+\end{equation}
+
+Multiply by $-1$ and rearrange:
+\begin{equation}
+\log_{10}\left(\frac{I_0}{I}\right) = \varepsilon c L = \text{OD}
+\end{equation}
+
+This is Beer's Law in logarithmic form, expressing optical density as the product of extinction coefficient, concentration, and path length.
+
+\subsection{Step 2: Two Absorbers (HbO$_2$ and HbR)}
+
+In fNIRS, two chromophores absorb simultaneously. At wavelength $\lambda$:
+
+\begin{equation}
+\text{OD}(\lambda) = \left[\varepsilon_{\text{HbO}_2}(\lambda) \cdot [\text{HbO}_2] + \varepsilon_{\text{HbR}}(\lambda) \cdot [\text{HbR}]\right] \cdot L
+\end{equation}
+
+With two unknowns ($[\text{HbO}_2]$ and $[\text{HbR}]$) and one equation, we cannot solve uniquely. But with two wavelengths $\lambda_1$ and $\lambda_2$:
+
+\begin{equation}
+\begin{pmatrix} \text{OD}(\lambda_1)/L \\ \text{OD}(\lambda_2)/L \end{pmatrix}
+= \begin{pmatrix} \varepsilon_{\text{HbO}_2}(\lambda_1) & \varepsilon_{\text{HbR}}(\lambda_1) \\ \varepsilon_{\text{HbO}_2}(\lambda_2) & \varepsilon_{\text{HbR}}(\lambda_2) \end{pmatrix}
+\begin{pmatrix} [\text{HbO}_2] \\ [\text{HbR}] \end{pmatrix}
+\end{equation}
+
+This is a $2 \times 2$ linear system $\mathbf{b} = \mathbf{E} \cdot \mathbf{c}$, solved by matrix inversion: $\mathbf{c} = \mathbf{E}^{-1} \cdot \mathbf{b}$.
+
+\subsection{Step 3: Adding Scattering, The DPF}
+
+In real tissue, photons do not travel in a straight line of length $L$. They scatter repeatedly, following a much longer effective path. The DPF accounts for this:
+
+\begin{equation}
+\text{effective path length at wavelength } \lambda = L \times \text{DPF}(\lambda)
+\end{equation}
+
+Replacing $L$ with $L \cdot \text{DPF}(\lambda)$ in each equation:
+
+\begin{equation}
+\Delta\text{OD}(\lambda) = \left[\varepsilon_{\text{HbO}_2}(\lambda) \cdot \Delta[\text{HbO}_2] + \varepsilon_{\text{HbR}}(\lambda) \cdot \Delta[\text{HbR}]\right] \cdot L \cdot \text{DPF}(\lambda)
+\end{equation}
+
+This is the \textbf{Modified Beer-Lambert Law} (MBLL). The ``modified'' part is the DPF factor.
+
+\begin{workexample}
+Suppose a brain region activates, producing $\Delta[\text{HbO}_2] = +2.5$~$\mu$M and $\Delta[\text{HbR}] = -0.8$~$\mu$M. What $\Delta$OD do we expect at each wavelength?
+
+\textbf{Given:}
+\begin{itemize}
+\item $\varepsilon_{\text{HbO}_2}(760) = 0.586$, $\varepsilon_{\text{HbR}}(760) = 1.549$ (cm$^{-1}$/mM)
+\item $\varepsilon_{\text{HbO}_2}(850) = 1.058$, $\varepsilon_{\text{HbR}}(850) = 0.691$ (cm$^{-1}$/mM)
+\item Convert to mm$^{-1}$/$\mu$M: multiply by $10^{-4}$
+\item SDS = 30~mm, DPF(760) = 6.15, DPF(850) = 5.09
+\end{itemize}
+
+\textbf{At 760~nm:}
+\begin{align}
+\Delta\text{OD}(760) &= [0.586 \times 10^{-4} \times 2.5 + 1.549 \times 10^{-4} \times (-0.8)] \times 30 \times 6.15 \\
+&= [1.465 \times 10^{-4} - 1.239 \times 10^{-4}] \times 184.5 \\
+&= 0.226 \times 10^{-4} \times 184.5 \\
+&= 0.004170
+\end{align}
+
+\textbf{At 850~nm:}
+\begin{align}
+\Delta\text{OD}(850) &= [1.058 \times 10^{-4} \times 2.5 + 0.691 \times 10^{-4} \times (-0.8)] \times 30 \times 5.09 \\
+&= [2.645 \times 10^{-4} - 0.553 \times 10^{-4}] \times 152.7 \\
+&= 2.092 \times 10^{-4} \times 152.7 \\
+&= 0.03195
+\end{align}
+
+So the expected $\Delta$OD values are about 0.0042 and 0.032, small numbers! Note how the 760~nm value is much smaller because the HbO$_2$ and HbR contributions nearly cancel at that wavelength. This illustrates why fNIRS requires sensitive detectors and why noise is a concern.
+\end{workexample}
+
+\newpage
+\part{The $\kappa$ Correction Framework}
+
+\section{Why MBLL Fails in Layered Media: A Detailed Derivation}
+
+The human head is not homogeneous. It consists of discrete layers with different optical properties:
+
+\begin{enumerate}
+\item Scalp and skin ($d_{\text{scalp}} \approx 3$--5~mm): highly scattering, some absorption
+\item Skull ($d_{\text{skull}} \approx 5$--8~mm): highly scattering, moderate absorption
+\item Cerebrospinal fluid (CSF) ($d_{\text{CSF}} \approx 1$--3~mm): weakly scattering, very weakly absorbing
+\item Cortex (grey matter, $d_{\text{cortex}} \approx 2$--4~mm): scattering and absorption
+\end{enumerate}
+
+For simplicity, we often group the first three into a ``superficial'' layer and model the geometry as two layers: superficial (depth 0 to $d_{\text{sup}} \approx 12$~mm) and cortex (depth $d_{\text{sup}}$ downward).
+
+\subsection{The Two-Layer Weighted OD Equation}
+
+Light detected by the long-channel detector samples all layers. Each layer contributes to the total optical density proportional to the light flux it receives and the time the light spends there.
+
+Define the spatial sensitivity distribution $J(\mathbf{r})$ as the probability that a photon detected has sampled the infinitesimal volume at position $\mathbf{r}$. This is the Jacobian of the light transport: the product of the source fluence $\Phi_s(\mathbf{r})$ and detector fluence $\Phi_d(\mathbf{r})$ (the fluence field that would be created by a source at the detector location).
+
+The total optical density is an integral over all tissue:
+
+\begin{equation}
+\text{OD}(\lambda) = \int_{\text{all space}} J(\mathbf{r}) \cdot \varepsilon(\mathbf{r}, \lambda) \cdot c(\mathbf{r}) \, d^3\mathbf{r}
+\end{equation}
+
+For a two-layer geometry, we split this integral:
+
+\begin{equation}
+\text{OD}(\lambda) = \int_{\text{superficial}} J(\mathbf{r}) \cdot \varepsilon_{\text{sup}}(\lambda) \cdot c_{\text{sup}}(\lambda) \, d^3\mathbf{r} + \int_{\text{cortex}} J(\mathbf{r}) \cdot \varepsilon_{\text{cort}}(\lambda) \cdot c_{\text{cort}}(\lambda) \, d^3\mathbf{r}
+\end{equation}
+
+Define the cortical sensitivity fraction as:
+
+\begin{equation}
+f_{\text{cortex}}(\lambda) = \frac{\int_{\text{cortex}} J(\mathbf{r}) \, d^3\mathbf{r}}{\int_{\text{all space}} J(\mathbf{r}) \, d^3\mathbf{r}}
+\end{equation}
+
+This is a number between 0 and 1 representing what fraction of the total detected light has sampled the cortical region. Similarly, $f_{\text{sup}} = 1 - f_{\text{cortex}}$ is the superficial fraction.
+
+Then:
+
+\begin{equation}
+\text{OD}(\lambda) = f_{\text{cortex}}(\lambda) \left[ \varepsilon_{\text{cort}}(\lambda) \cdot c_{\text{cort}}(\lambda) \right] + f_{\text{sup}}(\lambda) \left[ \varepsilon_{\text{sup}}(\lambda) \cdot c_{\text{sup}}(\lambda) \right]
+\end{equation}
+
+More usefully, for changes around a baseline:
+
+\begin{equation}
+\Delta\text{OD}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon_{\text{cort}}(\lambda) \cdot \Delta c_{\text{cort}}(\lambda) + f_{\text{sup}}(\lambda) \cdot \varepsilon_{\text{sup}}(\lambda) \cdot \Delta c_{\text{sup}}(\lambda)
+\label{eq:od_layers}
+\end{equation}
+
+\subsection{Task-Evoked vs. Systemic Signals}
+
+This is the crucial distinction:
+
+\begin{itemize}
+\item \textbf{Task-evoked signals} occur only in active cortex. When a subject performs a cognitive task, $\Delta c_{\text{cort}} \neq 0$ but $\Delta c_{\text{sup}} \approx 0$ (there is no localized task-related hemodynamic response in superficial layers).
+
+\item \textbf{Systemic signals} occur everywhere. Cardiac pulsations, respiration, and slow blood pressure fluctuations cause concentration changes throughout the head. Both $\Delta c_{\text{cort}}$ and $\Delta c_{\text{sup}}$ are nonzero, but they reflect system-wide physiology, not localized brain activation.
+\end{itemize}
+
+For task-evoked changes, equation (\ref{eq:od_layers}) becomes:
+
+\begin{equation}
+\Delta\text{OD}_{\text{task}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon_{\text{cort}}(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)
+\label{eq:od_task}
+\end{equation}
+
+The superficial term drops out.
+
+\subsection{What MBLL Assumes}
+
+MBLL assumes tissue is homogeneous with a single extinction coefficient $\varepsilon(\lambda)$ and uniform concentration change $\Delta c(\lambda)$:
+
+\begin{equation}
+\Delta\text{OD}_{\text{MBLL assumed}}(\lambda) = \varepsilon(\lambda) \cdot \Delta c_{\text{MBLL}}(\lambda) \cdot L \cdot \text{DPF}(\lambda)
+\end{equation}
+
+Rearranging for concentration:
+
+\begin{equation}
+\Delta c_{\text{MBLL}}(\lambda) = \frac{\Delta\text{OD}(\lambda)}{\varepsilon(\lambda) \cdot L \cdot \text{DPF}(\lambda)}
+\label{eq:mbll_inversion}
+\end{equation}
+
+\subsection{The Attenuation Bias}
+
+Now compare. The measured $\Delta\text{OD}$ equals equation (\ref{eq:od_task}):
+
+\begin{equation}
+\Delta\text{OD}_{\text{measured}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)
+\end{equation}
+
+But MBLL inverts this as if all the signal came from a homogeneous medium:
+
+\begin{equation}
+\Delta c_{\text{MBLL}}(\lambda) = \frac{f_{\text{cortex}}(\lambda) \cdot \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)}{\varepsilon(\lambda) \cdot L \cdot \text{DPF}(\lambda)} = \frac{f_{\text{cortex}}(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)}{L \cdot \text{DPF}(\lambda)}
+\end{equation}
+
+Wait, but in the two-wavelength system we solve a matrix equation. Let's be more careful.
+
+For two wavelengths, the true cortical signals are:
+
+\begin{align}
+\Delta\text{OD}_{\text{meas}}(760) &= f_{\text{cortex}}(760) \cdot \left[ \varepsilon_{\text{HbO}_2}(760) \cdot \Delta[\text{HbO}_2]_{\text{cort}} + \varepsilon_{\text{HbR}}(760) \cdot \Delta[\text{HbR}]_{\text{cort}} \right] \\
+\Delta\text{OD}_{\text{meas}}(850) &= f_{\text{cortex}}(850) \cdot \left[ \varepsilon_{\text{HbO}_2}(850) \cdot \Delta[\text{HbO}_2]_{\text{cort}} + \varepsilon_{\text{HbR}}(850) \cdot \Delta[\text{HbR}]_{\text{cort}} \right]
+\end{align}
+
+But MBLL performs the spectroscopic inversion as if the $f_{\text{cortex}}$ factors are 1 everywhere:
+
+\begin{align}
+\begin{pmatrix} \Delta\text{OD}_{\text{meas}}(760) / (L \cdot \text{DPF}(760)) \\ \Delta\text{OD}_{\text{meas}}(850) / (L \cdot \text{DPF}(850)) \end{pmatrix} &= \mathbf{E} \begin{pmatrix} \Delta[\text{HbO}_2]_{\text{MBLL}} \\ \Delta[\text{HbR}]_{\text{MBLL}} \end{pmatrix}
+\end{align}
+
+where $\mathbf{E}$ is the extinction matrix. Inverting:
+
+\begin{equation}
+\begin{pmatrix} \Delta[\text{HbO}_2]_{\text{MBLL}} \\ \Delta[\text{HbR}]_{\text{MBLL}} \end{pmatrix} = \mathbf{E}^{-1} \begin{pmatrix} f_{\text{cortex}}(760) \cdot [\text{equation terms}] / (L \cdot \text{DPF}(760)) \\ f_{\text{cortex}}(850) \cdot [\text{equation terms}] / (L \cdot \text{DPF}(850)) \end{pmatrix}
+\end{equation}
+
+The result is that both HbO$_2$ and HbR are attenuated, but not uniformly because $f_{\text{cortex}}$ differs at the two wavelengths. Additionally, if MBLL uses a single scalar DPF for both wavelengths instead of wavelength-specific values, this introduces further attenuation errors.
+
+The net effect: MBLL underestimates the true cortical concentrations by factors that depend on $f_{\text{cortex}}$, DPF accuracy, and the spectroscopic inversion.
+
+\section{The Multiplicative Correction Framework}
+
+The correction framework applies three multiplicative factors at the OD level before MBLL inversion:
+
+\begin{equation}
+\Delta\text{OD}_{\text{corrected}}(\lambda) = \kappa_{\text{DPF}} \times \kappa_{\text{PV}}(\lambda) \times \Delta\text{OD}_{\text{SSR}}(\lambda)
+\label{eq:correction_sequence}
+\end{equation}
+
+where $\Delta\text{OD}_{\text{SSR}}(\lambda)$ is the short-separation-regression-denoised optical density and:
+\begin{itemize}
+\item $\kappa_{\text{DPF}}$: corrects for DPF mismatch (wavelength-independent factor, often = 1 in modern pipelines)
+\item $\kappa_{\text{PV}}(\lambda) = 1/f_{\text{cortex}}(\lambda)$: corrects for partial volume dilution (wavelength-dependent; the dominant factor)
+\item $\kappa_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$: computed \emph{per wavelength} and reported as a \emph{diagnostic} of residual superficial contamination; it is \emph{not} applied to the data, because applying it on top of $\kappa_{\text{PV}}$ would double-count the dilution (see the $\kappa_{\text{SSR}}$ box later in this guide)
+\end{itemize}
+
+Then MBLL inversion is applied to the corrected $\Delta\text{OD}_{\text{corrected}}(\lambda)$ using wavelength-specific DPF values.
+
+\subsection{Why Multiplicative Correction Works}
+
+Because Beer-Lambert law is linear in concentration, the corrections can be applied as multiplicative factors at the OD level. If the true cortical OD is $\Delta\text{OD}_{\text{true}}$ and MBLL returns an attenuated estimate $\Delta\text{OD}_{\text{MBLL}} = A \cdot \Delta\text{OD}_{\text{true}}$ (where $A < 1$ is an attenuation factor), then multiplying $\Delta\text{OD}_{\text{MBLL}}$ by $1/A$ recovers the true value.
+
+\section{Derivation of Each $\kappa$ Factor}
+
+\subsection{Factor 1: $\kappa_{\text{DPF}}$, Wavelength-Dependent Path Length}
+
+The DPF is wavelength-dependent. Scholkmann and Wolf (2013) give a general equation for the frontal-head DPF as a function of wavelength $\lambda$ (nm) and age $A$ (years):
+
+\begin{equation}
+\text{DPF}(\lambda, A) = 223.3 + 0.05624\,A^{0.8493} - 5.723\times10^{-7}\,\lambda^3 + 1.245\times10^{-3}\,\lambda^2 - 0.9025\,\lambda
+\end{equation}
+
+At age $A = 25$ years and the two wavelengths used here:
+
+\begin{align}
+\text{DPF}(760) &= 6.15 \\
+\text{DPF}(850) &= 5.09
+\end{align}
+
+The ratio is $6.15 / 5.09 \approx 1.21$, i.e.\ DPF is about 17\% smaller at 850~nm than at 760~nm.
+
+If a practitioner uses a scalar DPF = 6.0 for both wavelengths, the MBLL inversion incorrectly normalizes each wavelength by the wrong DPF. The errors are:
+
+\begin{align}
+\text{Error at 760~nm} &: \text{uses } 6.0 \text{ instead of } 6.15 \Rightarrow \text{overestimate by } 6.15/6.0 = 1.025 \\
+\text{Error at 850~nm} &: \text{uses } 6.0 \text{ instead of } 5.09 \Rightarrow \text{underestimate by } 5.09/6.0 = 0.848
+\end{align}
+
+The spectroscopic inversion mixes these wavelengths; the net error cannot be corrected by a single scalar $\kappa_{\text{DPF}}$ but requires wavelength-specific normalization. However, for simplicity and when using empirical DPF formulas (Scholkmann equation) consistently for both forward modeling and inversion, $\kappa_{\text{DPF}} = 1$.
+
+\subsection{Factor 2: $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$, Partial Volume Correction}
+
+This is the dominant correction. From our analysis:
+
+\begin{equation}
+\Delta\text{OD}_{\text{measured}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda) + f_{\text{sup}}(\lambda) \cdot \varepsilon_{\text{sup}}(\lambda) \cdot \Delta c_{\text{sup}}(\lambda)
+\end{equation}
+
+For task-evoked signals, the superficial term is negligible. To recover the true cortical concentration, divide the measured OD by $f_{\text{cortex}}$:
+
+\begin{equation}
+\Delta\text{OD}_{\text{corrected}}(\lambda) = \frac{\Delta\text{OD}_{\text{measured}}(\lambda)}{f_{\text{cortex}}(\lambda)} = \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda) + \frac{f_{\text{sup}}(\lambda)}{f_{\text{cortex}}(\lambda)} \cdot \varepsilon_{\text{sup}}(\lambda) \cdot \Delta c_{\text{sup}}(\lambda)
+\end{equation}
+
+If superficial signals are already removed by SSR, the second term vanishes:
+
+\begin{equation}
+\Delta\text{OD}_{\text{PV-corrected}}(\lambda) = \frac{\Delta\text{OD}_{\text{SSR-cleaned}}(\lambda)}{f_{\text{cortex}}(\lambda)} = \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)
+\end{equation}
+
+The correction factor is:
+
+\begin{equation}
+\kappa_{\text{PV}}(\lambda) = \frac{1}{f_{\text{cortex}}(\lambda)}
+\end{equation}
+
+\begin{workexample}
+Suppose $f_{\text{cortex}}(760) = 0.063$ at 30~mm SDS (the converged Monte-Carlo value). What is $\kappa_{\text{PV}}$?
+
+\begin{equation}
+\kappa_{\text{PV}}(760) = \frac{1}{0.063} = 15.9
+\end{equation}
+
+This means that MBLL underestimates the cortical HbO$_2$ change by a factor of $\sim$16. If the true cortical change is 2.5~$\mu$M, MBLL reports only $2.5 / 15.9 \approx 0.16$~$\mu$M. Multiplying by $\kappa_{\text{PV}} = 15.9$ recovers the true value, provided that tiny 0.16~$\mu$M signal is itself above the measurement noise, which (as we will see) it may not be at short separations.
+\end{workexample}
+
+\paragraph{Intuitive analogy: the group quiz.}
+To build intuition for $\kappa_{\text{PV}}$ and $f_{\text{cortex}}$, consider the following classroom analogy. A professor assigns a group quiz (out of 100 points) to a team of five students. Four of the students studied hard and each independently knows the correct answers, but the fifth student (call them the ``slacker'') did not study and contributes nothing original. The quiz is administered as a group effort: each student writes answers for their assigned portion, and the group submits a single paper.
+
+Here the \textbf{slacker represents the superficial tissue layer} (it carries blood and produces physiological signals, but contributes no task-relevant information. The \textbf{four diligent students represent the cortex}) where the real cognitive ``work'' happens. The \textbf{group quiz score is the fNIRS measurement}: a weighted average of all layers' contributions.
+
+Suppose the four diligent students each score perfectly on their sections, yielding a combined raw score of $80/100$. The slacker's section earns 0 additional points. But because the professor grades the group as a whole, the score is reported as \textbf{80 out of 100}, not the perfect 100 that reflects the diligent students' true ability.
+
+In this analogy:
+\begin{itemize}
+\item The fraction of the score attributable to the studying students is $f_{\text{cortex}} = 80/100 = 0.80$.
+\item The ``dilution factor'' is exactly analogous to the partial volume effect: the slacker's dead weight pulls down the observed score.
+\item The correction factor is $\kappa_{\text{PV}} = 1/f_{\text{cortex}} = 100/80 = 1.25$. Multiplying the group score by $\kappa_{\text{PV}}$ recovers the true score: $80 \times 1.25 = 100$.
+\end{itemize}
+
+Now consider the real fNIRS case at 30~mm SDS, where $f_{\text{cortex}} = 0.063$. This is like a group of \emph{sixteen} students where only one studied: just $\sim$6\% of the answers come from the diligent student, and the rest are random guesses. The observed group score might be only $6/100$, and the correction factor $\kappa_{\text{PV}} = 1/0.063 = 16$ would recover the true individual score: $6 \times 16 \approx 100$. But notice the catch: if the diligent student's $6$ points are barely distinguishable from the lucky guesses of the others (the ``noise''), multiplying by 16 also multiplies that ambiguity. This is exactly why, at short separations where the cortical contribution is so small, the correction can amplify noise instead of signal, and why we apply it only at long separations where the cortical share is larger ($\sim$11\% at 40~mm, $\kappa_{\text{PV}}\approx9$).
+
+\subsection{Factor 3: $\kappa_{\text{SSR}}(\lambda)$, Correction for SSR Signal Loss}
+
+Short-separation regression removes superficial contamination, but it does so by subtracting the short-channel signal from the long-channel signal:
+
+\begin{equation}
+\Delta\text{OD}_{\text{long, SSR-cleaned}}(\lambda) = \Delta\text{OD}_{\text{long}}(\lambda) - \beta(\lambda) \cdot \Delta\text{OD}_{\text{short}}(\lambda)
+\end{equation}
+
+where $\beta(\lambda)$ is the regression coefficient (or slope) minimizing the residual power.
+
+If the short-channel signal contains some cortical contribution (though small), the regression will inadvertently remove some true cortical signal. The amount of cortical signal removed depends on the correlation between long and short channels in the cortical component.
+
+Define $R^2_{\mathrm{SS}}(\lambda)$ as the fraction of variance in the \emph{uncorrected} long-channel $\Delta\mathrm{OD}$ that is explained by regressing it on the short-channel $\Delta\mathrm{OD}$. Equivalently, $R^2_{\mathrm{SS}}$ is the coefficient of determination of the SSR fit itself, \emph{not} of a post-hoc regression on the SSR residual. (By construction of ordinary least squares, the SSR residual is orthogonal to the short-channel regressor, so regressing the residual on the short channel would always return $R^2 \approx 0$ and therefore $\kappa_{\mathrm{SSR}} \approx 1$, i.e., no correction, an incorrect result.) If $R^2_{\mathrm{SS}} = 0$, the short and long channels are uncorrelated (ideal case). If $R^2_{\mathrm{SS}} = 1$, they are perfectly correlated.
+
+The attenuation factor due to SSR is:
+
+\begin{equation}
+A_{\mathrm{SSR}} = 1 - R^2_{\mathrm{SS}}(\lambda)
+\end{equation}
+
+and the correction is:
+
+\begin{equation}
+\kappa_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)} = \frac{1}{A_{\mathrm{SSR}}}
+\label{eq:kappa_ssr}
+\end{equation}
+
+At the OD level, we multiply by the attenuation factor (not its reciprocal):
+
+\begin{equation}
+\Delta\text{OD}_{\text{SSR-attenuation corrected}}(\lambda) = (1 - R^2_{\mathrm{SS}}(\lambda))^{-1} \times \Delta\text{OD}_{\text{SSR-cleaned}}(\lambda)
+\end{equation}
+
+\begin{workexample}
+Suppose at 760~nm the SSR regression explains $R^2_{\mathrm{SS}}(760) = 0.589$ of the variance in the long-channel signal (the value found in the real finger-tapping dataset analysed later). What is the attenuation and $\kappa_{\mathrm{SSR}}$?
+
+\begin{align}
+A_{\mathrm{SSR}}(760) &= 1 - 0.589 = 0.411 \\
+\kappa_{\mathrm{SSR}}(760) &= \frac{1}{0.411} = 2.433
+\end{align}
+
+This means SSR removes about 58.9\% of the signal variance. The formula $1/(1-R^2_{\mathrm{SS}})$ treats \emph{all} of that removed variance as cortical signal to be restored.
+\end{workexample}
+
+\begin{keyinsight}
+\textbf{Why we report $\kappa_{\mathrm{SSR}}$ but do not apply it.} Equation~\eqref{eq:kappa_ssr} assumes the entire variance SSR removed was cortical. In reality SSR removes mostly the \emph{superficial} (systemic) signal, which is exactly what it is supposed to discard. So $1/(1-R^2_{\mathrm{SS}})$ is an \emph{upper bound} on the restoration, not the true cortical loss. The cortical signal that survives SSR is already recovered, in full, by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ alone (because $f_{\text{cortex}}$ is defined on the post-SSR sensitivity). If we applied both $\kappa_{\mathrm{SSR}}$ \emph{and} the (correctly large) $\kappa_{\text{PV}}$, we would double-count the dilution and inflate the real-data response to $\sim$2.7~$\mu$M (above the physiological range). Therefore, in the final pipeline we \textbf{report $\kappa_{\mathrm{SSR}}$ as a diagnostic} of how much variance SSR removed (a flag for residual superficial contamination) but \textbf{apply only $\kappa_{\text{DPF}}$ and $\kappa_{\text{PV}}$}. This keeps the corrected amplitude physiological ($\sim$1.1~$\mu$M).
+\end{keyinsight}
+
+\subsection{Two correlations that look identical: $R$ vs.\ $\rho$}
+
+A point that trips up almost everyone the first time: the regression statistic $R$ in $\kappa_{\mathrm{SSR}}=1/(1-R^2)$ is \emph{not} the same as the cortical--systemic correlation, even though both are computed with the identical Pearson formula. The formula is the same; the two signals you feed into it are different.
+
+A Pearson correlation is just a normalized dot product, geometrically, the cosine of the angle between two signal vectors:
+\begin{equation}
+\mathrm{Corr}(\mathbf{a},\mathbf{b}) = \frac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert} = \cos\theta_{ab}.
+\end{equation}
+Write the long channel as $y = c + s$ (true cortical signal $c$ plus systemic/superficial signal $s$) and the short channel as $x \approx s$ (it mostly samples the superficial layer). Then:
+\begin{itemize}
+\item $R$ is the correlation between the two things we \emph{measure}: the long channel $y$ and the short channel $x$. (For simple regression, $R^2_{\mathrm{SS}}$ is exactly this Pearson correlation squared.)
+\item $\rho$ is the correlation between the two things we \emph{cannot measure separately}: the cortical part $c$ and the systemic part $s$.
+\end{itemize}
+
+Here is the crux. $y$ contains $s$, and $x$ \emph{is} (approximately) $s$. So correlating $y$ with $x$ means correlating $(c+s)$ with $s$, and $s$ appears in both, so you get a large $R$ \emph{even if $c$ and $s$ have nothing to do with each other} ($\rho=0$). In words: $R$ mostly measures ``how much of the long channel is systemic,'' while $\rho$ measures ``do the cortical and systemic responses rise and fall together.'' Different questions, different numbers, same formula.
+
+\begin{keyinsight}
+This is exactly why $\kappa_{\mathrm{SSR}}=1/(1-R^2)$ over-restores. In real data $R^2\approx0.6$--$0.7$, but that is large because the long channel is \emph{systemic-dominated} (lots of $s$), not because SSR removed 60--70\% of the cortex. The cortex SSR actually nicks is governed by $\rho$ (small for a well-designed, externally paced task), so $1/(1-R^2)$ hands back far more than was lost, the double-counting we avoid by reporting $\kappa_{\mathrm{SSR}}$ as a diagnostic. If you remember one thing: \emph{$R$ is between the two channels you record; $\rho$ is between the two tissue signals you can't separate.}
+\end{keyinsight}
+
+\section{Processing Order: Why OD-Level Corrections Matter}
+\label{sec:order}
+
+The order of operations is critical:
+
+\begin{enumerate}
+\item \textbf{Raw OD measurement}: $\Delta\text{OD}_{\text{measured}}(\lambda, t)$ at each time point
+\item \textbf{Short-separation regression} (at OD level): Regress long-channel OD against short-channel OD to remove superficial contamination
+\item \textbf{Partial volume correction} (at OD level): Divide by $f_{\text{cortex}}(\lambda)$
+\item \textbf{SSR attenuation correction} (at OD level): Multiply by $\kappa_{\mathrm{SSR}}(\lambda)$
+\item \textbf{MBLL inversion}: Apply the extinction matrix and wavelength-specific DPF to convert corrected ODs to concentrations
+\end{enumerate}
+
+\subsection{Why Not Apply Corrections After MBLL?}
+
+A tempting alternative is to apply all corrections after MBLL inversion, directly on the concentration estimates. This fails because:
+
+1. MBLL is a spectroscopic inversion mixing the two wavelengths
+2. Wavelength-dependent corrections ($\kappa_{\text{PV}}(\lambda)$ and $\kappa_{\mathrm{SSR}}(\lambda)$) are separate at each wavelength
+3. If applied after inversion, the wavelength dependence is lost and the corrections cannot properly disentangle HbO$_2$ and HbR
+
+\begin{workexample}
+Illustrate the problem with concrete numbers. Suppose at 30~mm SDS:
+\begin{itemize}
+\item $f_{\text{cortex}}(760) = 0.063$, $f_{\text{cortex}}(850) = 0.066$ (converged Monte-Carlo values; wavelengths have slightly different sensitivities)
+\item True cortical: $\Delta[\text{HbO}_2]_{\text{true}} = +2.5$~$\mu$M, $\Delta[\text{HbR}]_{\text{true}} = -0.8$~$\mu$M
+\item Extinction coefficients (in mm$^{-1}$/$\mu$M): $\varepsilon_{\text{HbO}_2}(760) = 0.0000586$, $\varepsilon_{\text{HbR}}(760) = 0.0001549$, etc.
+\end{itemize}
+
+\textbf{Correct procedure (OD-level corrections):}
+
+Measured OD (before any correction) from partial volume dilution:
+\begin{align}
+\Delta\text{OD}(760) &= 0.063 \times [\text{extinction terms}] \\
+\Delta\text{OD}(850) &= 0.066 \times [\text{extinction terms}]
+\end{align}
+
+Apply partial volume correction:
+\begin{align}
+\Delta\text{OD}_{\text{corrected}}(760) &= \frac{\Delta\text{OD}(760)}{0.063} = [\text{extinction terms}] \\
+\Delta\text{OD}_{\text{corrected}}(850) &= \frac{\Delta\text{OD}(850)}{0.066} = [\text{extinction terms}]
+\end{align}
+
+MBLL inversion recovers $\Delta[\text{HbO}_2] \approx +2.5$~$\mu$M and $\Delta[\text{HbR}] \approx -0.8$~$\mu$M. \checkmark
+
+\textbf{Incorrect procedure (post-MBLL corrections):}
+
+MBLL inversion on uncorrected ODs gives attenuated estimates:
+\begin{align}
+\Delta[\text{HbO}_2]_{\text{MBLL}} &\approx +0.71~\mu\text{M} \\
+\Delta[\text{HbR}]_{\text{MBLL}} &\approx -0.23~\mu\text{M}
+\end{align}
+
+Now, to apply correction, one might compute an average $\kappa_{\text{PV}} = (15.9 + 15.2)/2 \approx 15.5$ and multiply both by this scalar. But this is wrong because HbO$_2$ and HbR have different wavelength dependencies:
+
+The extinction coefficients satisfy $\varepsilon_{\text{HbO}_2}(760) / \varepsilon_{\text{HbO}_2}(850) \neq \varepsilon_{\text{HbR}}(760) / \varepsilon_{\text{HbR}}(850)$. The MBLL matrix inverts wavelengths, not chromophores. Applying a scalar post-MBLL correction cannot undo the wavelength-mixing and produces biased estimates.
+\end{workexample}
+
+\newpage
+\part{Light Transport Theory}
+
+\section{From the Radiative Transfer Equation to the Diffusion Approximation}
+
+\subsection{The Radiative Transfer Equation}
+
+The transport of photons through tissue is governed by the radiative transfer equation (RTE):
+
+\begin{equation}
+\frac{\partial L(\mathbf{r}, \hat{s})}{\partial t} + c \, \hat{s} \cdot \nabla L(\mathbf{r}, \hat{s}) + c \, \mu_t(\mathbf{r}) \, L(\mathbf{r}, \hat{s}) = c \, \mu_s(\mathbf{r}) \int_{\hat{s}'} L(\mathbf{r}, \hat{s}') \, p(\hat{s}' \to \hat{s}) \, d\Omega' + S(\mathbf{r}, \hat{s})
+\end{equation}
+
+where:
+\begin{itemize}
+\item $L(\mathbf{r}, \hat{s})$: radiance (power per unit area per unit solid angle) at position $\mathbf{r}$ in direction $\hat{s}$
+\item $c$: speed of light in the medium
+\item $\mu_t = \mu_a + \mu_s$: total attenuation coefficient (absorption + scattering)
+\item $p(\hat{s}' \to \hat{s})$: scattering phase function
+\item $S(\mathbf{r}, \hat{s})$: source term
+\end{itemize}
+
+This equation is accurate but extremely difficult to solve for realistic head geometry and wavelengths because the angular dependence $\hat{s}$ makes it 5-dimensional (3 spatial + 2 angular).
+
+\subsection{The Diffusion Approximation}
+
+When scattering dominates absorption ($\mu_s' \gg \mu_a$, the ``diffuse limit''), the radiance becomes nearly isotropic (independent of direction). In this limit, we can replace the directional radiance with the fluence (total radiance integrated over all directions):
+
+\begin{equation}
+\Phi(\mathbf{r}) = \int_{\hat{s}} L(\mathbf{r}, \hat{s}) \, d\Omega
+\end{equation}
+
+The diffusion approximation states that the radiance is approximately isotropic with a small anisotropic component proportional to the gradient of fluence:
+
+\begin{equation}
+L(\mathbf{r}, \hat{s}) \approx \frac{\Phi(\mathbf{r})}{4\pi} + \frac{3}{4\pi} \hat{s} \cdot \nabla\Phi(\mathbf{r}) \times \text{correction}
+\end{equation}
+
+Substituting into the RTE and integrating over solid angle, we obtain the diffusion equation:
+
+\begin{equation}
+-\nabla \cdot [D(\mathbf{r}) \nabla\Phi(\mathbf{r})] + \mu_a(\mathbf{r}) \Phi(\mathbf{r}) = S(\mathbf{r})
+\label{eq:diffusion}
+\end{equation}
+
+where $D(\mathbf{r}) = 1 / [3(\mu_a(\mathbf{r}) + \mu_s'(\mathbf{r}))]$ is the diffusion coefficient. In the steady state (time-independent case):
+
+\begin{equation}
+-\nabla \cdot [D \nabla\Phi] + \mu_a \Phi = S
+\end{equation}
+
+This is a 3D partial differential equation, still challenging but far more tractable than the RTE.
+
+\subsection{Validity of the Diffusion Approximation}
+
+The diffusion approximation is valid when:
+
+\begin{enumerate}
+\item $\mu_s' \gg \mu_a$ (scattering dominates absorption)
+\item Domain size much larger than transport mean free path $\ell_t = 1/(\mu_a + \mu_s')$
+\item Not too close to boundaries or sources
+\item Not in highly absorbing regions
+\end{enumerate}
+
+For brain tissue in the NIR window:
+\begin{itemize}
+\item $\mu_a \approx 0.01$--0.02~mm$^{-1}$
+\item $\mu_s' \approx 0.7$--1.5~mm$^{-1}$
+\item Ratio: $\mu_s' / \mu_a \approx 50$--100 \quad $\Rightarrow$ \quad diffusion approximation is excellent
+\end{itemize}
+
+\section{The Semi-Infinite Homogeneous Solution}
+
+\subsection{Geometry and Boundary Conditions}
+
+For a semi-infinite medium (tissue occupying $z > 0$ with air at $z < 0$) with constant optical properties, the diffusion equation in steady state is:
+
+\begin{equation}
+-D \nabla^2 \Phi(\mathbf{r}) + \mu_a \Phi(\mathbf{r}) = S(\mathbf{r})
+\end{equation}
+
+A point source at depth $z_s$ below the surface deposits power $P$:
+
+\begin{equation}
+S(\mathbf{r}) = P \, \delta(\mathbf{r} - \mathbf{r}_s)
+\end{equation}
+
+The boundary condition at the tissue surface ($z = 0$) is the extrapolated boundary condition:
+
+\begin{equation}
+\Phi(x, y, 0) = 0 \quad \text{at} \quad z = z_b = 2 A D
+\end{equation}
+
+where $A \approx 2.95$ for refractive index mismatch (typical tissue-to-air mismatch).
+
+\subsection{The Fluence Solution}
+
+The solution is obtained using the image source method. The Green's function for the semi-infinite geometry is:
+
+\begin{equation}
+\Phi(\mathbf{r}) = \frac{P}{4\pi D} \left[ \frac{e^{-\mu_{\mathrm{eff}} r_1}}{r_1} - \frac{e^{-\mu_{\mathrm{eff}} r_2}}{r_2} \right]
+\label{eq:fluence_semiinf}
+\end{equation}
+
+where:
+\begin{itemize}
+\item $r_1 = \sqrt{\rho^2 + (z - z_s)^2}$ is the distance from the source at depth $z_s$
+\item $r_2 = \sqrt{\rho^2 + (z + z_s + 2z_b)^2}$ is the distance from the image source at depth $-(z_s + 2z_b)$ (below the surface)
+\item $\mu_{\mathrm{eff}} = \sqrt{3 \mu_a (\mu_a + \mu_s')}$ is the effective attenuation coefficient
+\item $\rho = \sqrt{x^2 + y^2}$ is the radial distance from the source
+\end{itemize}
+
+The first term represents direct light spreading from the source. The second term (with opposite sign) represents light reflected by the tissue surface, enforcing the boundary condition.
+
+\subsection{Interpretation and Worked Example}
+
+The fluence decays exponentially with distance due to the $e^{-\mu_{\mathrm{eff}} r}$ terms. Near the source ($r \to 0$), the fluence is large. Far from the source, it decays exponentially.
+
+\begin{workexample}
+Compute the fluence at a point 30~mm from the source on the tissue surface. Use:
+\begin{itemize}
+\item $\mu_a = 0.015$~mm$^{-1}$
+\item $\mu_s' = 1.0$~mm$^{-1}$
+\item $D = 1 / [3(\mu_a + \mu_s')] = 1 / [3(1.015)] = 0.328$~mm
+\item $\mu_{\mathrm{eff}} = \sqrt{3 \times 0.015 \times 1.015} = \sqrt{0.0456} = 0.214$~mm$^{-1}$
+\item $z_s = 1 / \mu_s' = 1$~mm (source depth)
+\item $A = 2.95$, so $z_b = 2 \times 2.95 \times 0.328 = 1.94$~mm
+\item $P = 1$ (normalized)
+\item Point is at $\rho = 30$~mm, $z = 0$
+\end{itemize}
+
+\textbf{Compute distances:}
+\begin{align}
+r_1 &= \sqrt{30^2 + (0 - 1)^2} = \sqrt{900 + 1} = \sqrt{901} = 30.017~\text{mm} \\
+r_2 &= \sqrt{30^2 + (0 + 1 + 2 \times 1.94)^2} = \sqrt{900 + (4.88)^2} = \sqrt{900 + 23.81} = \sqrt{923.81} = 30.394~\text{mm}
+\end{align}
+
+\textbf{Compute exponentials:}
+\begin{align}
+e^{-\mu_{\mathrm{eff}} r_1} &= e^{-0.214 \times 30.017} = e^{-6.424} = 0.00159 \\
+e^{-\mu_{\mathrm{eff}} r_2} &= e^{-0.214 \times 30.394} = e^{-6.504} = 0.00149
+\end{align}
+
+\textbf{Fluence:}
+\begin{align}
+\Phi &= \frac{1}{4\pi \times 0.328} \left[ \frac{0.00159}{30.017} - \frac{0.00149}{30.394} \right] \\
+&= \frac{1}{1.309} \left[ 0.0000529 - 0.0000490 \right] \\
+&= 0.764 \times 0.0000039 \\
+&= 2.98 \times 10^{-6}
+\end{align}
+
+The fluence is very small at 30~mm distance because most photons have been absorbed or scattered away.
+\end{workexample}
+
+\section{The Two-Layer Kienle Solution}
+
+The human head is not semi-infinite and homogeneous. It has distinct layers (scalp, skull, CSF, cortex) with different optical properties. For a two-layer geometry:
+
+\begin{itemize}
+\item Layer 1 (superficial): 0 to $d_1$ mm, optical properties $\{\mu_{a,1}, \mu_{s,1}', n_1\}$
+\item Layer 2 (deep/cortex): $d_1$ to $\infty$~mm, optical properties $\{\mu_{a,2}, \mu_{s,2}', n_2\}$
+\end{itemize}
+
+Kienle et al.~(1998) solved the diffusion equation for this geometry using the Hankel transform method. The solution is semi-analytical: expressed in the Hankel domain (which can be solved analytically in each layer), then numerically transformed back to real space via Hankel inversion.
+
+\subsection{Setup and Boundary Conditions}
+
+In cylindrical coordinates $(\rho, z)$ with azimuthal symmetry, the diffusion equation becomes:
+
+\begin{equation}
+-D \left[ \frac{\partial^2 \Phi}{\partial \rho^2} + \frac{1}{\rho} \frac{\partial \Phi}{\partial \rho} + \frac{\partial^2 \Phi}{\partial z^2} \right] + \mu_a \Phi = S(\rho, z)
+\end{equation}
+
+The Hankel transform (zeroth-order) transforms $\Phi(\rho, z)$ to $\tilde{\Phi}(q, z)$:
+
+\begin{equation}
+\tilde{\Phi}(q, z) = \int_0^{\infty} \Phi(\rho, z) \, J_0(q\rho) \, \rho \, d\rho
+\end{equation}
+
+In Hankel space, derivatives with respect to $\rho$ become multiplication by $-q^2$, and the diffusion equation becomes an ordinary differential equation in $z$ (much simpler!):
+
+\begin{equation}
+-D \left[ -q^2 \tilde{\Phi} + \frac{\partial^2 \tilde{\Phi}}{\partial z^2} \right] + \mu_a \tilde{\Phi} = \tilde{S}(q, z)
+\end{equation}
+
+Rearranging:
+
+\begin{equation}
+\frac{\partial^2 \tilde{\Phi}}{\partial z^2} - (\mu_{\mathrm{eff}}^2 + q^2) \tilde{\Phi} = -\frac{1}{D} \tilde{S}
+\end{equation}
+
+where $\mu_{\mathrm{eff}}^2 = 3 \mu_a (\mu_a + \mu_s')$.
+
+\subsection{Analytical Solution in Hankel Space}
+
+Each layer $i$ has its own effective attenuation $\alpha_i = \sqrt{\mu_{\mathrm{eff},i}^2 + q^2}$. The general solution is:
+
+\begin{equation}
+\tilde{\Phi}_i(q, z) = A_i e^{\alpha_i z} + B_i e^{-\alpha_i z}
+\end{equation}
+
+Boundary conditions:
+\begin{itemize}
+\item At $z = 0$ (extrapolated surface): $\tilde{\Phi}_1(q, 0) = 0$ (from $\Phi = 0$ at extrapolated surface)
+\item At $z = d_1$ (layer interface): Continuity of $\Phi$ and of flux $-D \frac{\partial \Phi}{\partial z}$
+\item At $z \to \infty$ (deep tissue): $\tilde{\Phi}_2 \to 0$ (fluence vanishes at infinity)
+\item Source term: A point source at $z = z_s$ in layer 1 deposits power $P$
+\end{itemize}
+
+Solving these conditions yields expressions for $A_1$, $B_1$, $A_2$, $B_2$ in terms of $q$, source location, and a reflection coefficient at the layer interface that depends on the refractive index mismatch (the ``Da reflection coefficient'').
+
+The final solution is inverted via:
+
+\begin{equation}
+\Phi(\rho, z) = \int_0^{\infty} \tilde{\Phi}(q, z) \, J_0(q\rho) \, q \, dq
+\end{equation}
+
+This integral is evaluated numerically using Gaussian quadrature (e.g., scipy.integrate.quad in Python).
+
+\subsection{Numerical Implementation}
+
+The computation proceeds as:
+
+\begin{enumerate}
+\item For each spatial point $(\rho, z)$:
+ \begin{enumerate}
+ \item For each $q$ value (typically 0 to $\sim$1~mm$^{-1}$):
+ \begin{enumerate}
+ \item Compute layer 1 and layer 2 solutions in Hankel space using boundary conditions
+ \item Extract $\tilde{\Phi}(q, z)$
+ \item Multiply by $q \, J_0(q\rho)$ (integrand)
+ \end{enumerate}
+ \item Numerically integrate over $q$ to get $\Phi(\rho, z)$
+ \end{enumerate}
+\item Repeat for all points in a 3D grid (or 2D in cylindrical symmetry)
+\end{enumerate}
+
+Modern implementations use adaptive quadrature with relative error tolerances of $10^{-10}$ to ensure accuracy.
+
+\section{Sensitivity (Jacobian) Computation}
+
+The Jacobian $J(\mathbf{r})$ is the spatial sensitivity distribution: it quantifies which tissue regions contribute most to detected photons.
+
+\subsection{Definition and Derivation}
+
+The Jacobian is the product of source fluence and detector fluence:
+
+\begin{equation}
+J(\mathbf{r}) = \Phi_{\text{source}}(\mathbf{r}) \cdot \Phi_{\text{detector}}(\mathbf{r})
+\end{equation}
+
+where:
+\begin{itemize}
+\item $\Phi_{\text{source}}(\mathbf{r})$: fluence field created by the actual source at the source location
+\item $\Phi_{\text{detector}}(\mathbf{r})$: fluence field that would be created by a source at the detector location (often called the ``adjoint'' or ``reciprocal'' field)
+\end{itemize}
+
+The Jacobian is large in regions where both the source and detector ``see'' the tissue; these are the regions that most influence the detected signal. The shape is banana-like: highest near the source-detector midpoint at intermediate depths.
+
+\subsection{Cortical Sensitivity Fraction}
+
+Integrating the Jacobian over the cortical region:
+
+\begin{equation}
+J_{\text{cortex}} = \int_{z > d_{\text{sup}}} J(\mathbf{r}) \, d^3\mathbf{r}
+\end{equation}
+
+and dividing by the total integral:
+
+\begin{equation}
+f_{\text{cortex}} = \frac{J_{\text{cortex}}}{J_{\text{total}}} = \frac{\int_{z > d_{\text{sup}}} J(\mathbf{r}) \, d^3\mathbf{r}}{\int_{\text{all space}} J(\mathbf{r}) \, d^3\mathbf{r}}
+\end{equation}
+
+\begin{workexample}
+For SDS = 30~mm and superficial layer thickness $d_{\text{sup}} = 12$~mm, suppose numerical integration yields:
+
+\begin{align}
+J_{\text{cortex}} &= \int_{z > 12} J(\mathbf{r}) \, d^3\mathbf{r} = 63 \, \text{(arbitrary units)} \\
+J_{\text{total}} &= \int_{\text{all}} J(\mathbf{r}) \, d^3\mathbf{r} = 1000
+\end{align}
+
+Then:
+
+\begin{equation}
+f_{\text{cortex}} = \frac{63}{1000} = 0.063
+\end{equation}
+
+And $\kappa_{\text{PV}} = 1 / 0.063 = 15.9$. (Computing this integral reliably is subtle: a naive Hankel-transform evaluation is not numerically converged and can overstate $J_{\text{cortex}}$ by an order of magnitude, which is why we calibrate $f_{\text{cortex}}$ against Monte Carlo, see the box below.)
+\end{workexample}
+
+\begin{keyinsight}
+\textbf{A numerical cautionary tale.} The two-layer Jacobian is computed via a Hankel (Bessel) transform, evaluated as a sum over spatial frequencies $s$. The integrand contains a term $e^{\alpha(s)\,z}$ that \emph{grows} with $s$; at the large $s$ needed to resolve the source/detector, it overflows and is then cancelled against a decaying term. The fluence itself is fine, but the depth-weighted \emph{ratio} $f_{\text{cortex}}$ is not: as you add more quadrature points it drifts ($0.0005 \to 0.62 \to 0.29 \to 0.19 \to 0.10 \to 0.085$\,\ldots), only slowly approaching the true $\sim$0.06--0.09. An ``apparently converged'' value at a fixed coarse setting (e.g.\ $0.285$) can be an order of magnitude too high. The lesson: always check convergence of the \emph{quantity you actually report}, not just the underlying field, and cross-check an analytical kernel against Monte Carlo. We use a converged two-layer Monte Carlo (\texttt{mc\_2layer.py}) for all $f_{\text{cortex}}$ values in this guide.
+\end{keyinsight}
+
+\newpage
+\part{The Analysis Pipeline Step by Step}
+
+\section{Synthetic Data Generation}
+
+\subsection{Hemodynamic Response Model}
+
+The canonical hemodynamic response function (HRF) for a task is modeled as a sum of two gamma distributions:
+
+\begin{equation}
+\text{HRF}(t) = \frac{t^{a_1} e^{-t/b_1}}{b_1^{a_1} \Gamma(a_1)} - c \, \frac{t^{a_2} e^{-t/b_2}}{b_2^{a_2} \Gamma(a_2)}
+\end{equation}
+
+Parameters: $a_1 = 6$, $b_1 = 1$~s, $a_2 = 16$, $b_2 = 1$~s, $c = 0.1$.
+
+This produces an HRF that rises over 4--6 seconds, peaks around 6 seconds, and then decays over 15--20 seconds.
+
+For a block-design task (e.g., 20 seconds on, 20 seconds off), the hemodynamic response is the convolution of the block regressor with the HRF.
+
+Peak cortical concentrations are set to:
+\begin{itemize}
+\item $\Delta[\text{HbO}_2]_{\text{peak}} = +2.5$~$\mu$M
+\item $\Delta[\text{HbR}]_{\text{peak}} = -0.8$~$\mu$M
+\end{itemize}
+
+These are realistic values for sensorimotor or cognitive tasks.
+
+\subsection{Physiological Noise}
+
+Superficial layers exhibit continuous oscillations:
+
+\begin{equation}
+\Delta c_{\text{sup}}(t) = A_{\text{cardiac}} \sin(2\pi \times 1.0 \, \text{Hz} \times t) + A_{\text{respir}} \sin(2\pi \times 0.25 \, \text{Hz} \times t) + A_{\text{mayer}} \sin(2\pi \times 0.1 \, \text{Hz} \times t)
+\end{equation}
+
+with amplitudes:
+\begin{itemize}
+\item Cardiac: $A_{\text{cardiac}} = 0.1$~$\mu$M (HbO$_2$ equivalent)
+\item Respiration: $A_{\text{respir}} = 0.2$~$\mu$M
+\item Mayer waves: $A_{\text{mayer}} = 0.3$~$\mu$M
+\end{itemize}
+
+\subsection{Forward Model in OD Domain}
+
+For each subject, layer, and wavelength:
+
+\begin{equation}
+\Delta\text{OD}(\lambda, t) = \sum_i \varepsilon_i(\lambda) \times \Delta c_i(\lambda, t) \times L_{\text{eff}}(i, \lambda)
+\end{equation}
+
+where the sum is over chromophores (HbO$_2$, HbR) and layers (superficial, cortex), and $L_{\text{eff}}(i, \lambda)$ is the effective path length through layer $i$.
+
+For two layers:
+
+\begin{align}
+\Delta\text{OD}(\lambda, t) &= f_{\text{cortex}}(\lambda) \times [\varepsilon_{\text{HbO}_2}(\lambda) \Delta[\text{HbO}_2]_{\text{cort}}(t) + \varepsilon_{\text{HbR}}(\lambda) \Delta[\text{HbR}]_{\text{cort}}(t)] \\
+&\quad + f_{\text{sup}}(\lambda) \times [\varepsilon_{\text{HbO}_2}(\lambda) \Delta[\text{HbO}_2]_{\text{sup}}(t) + \varepsilon_{\text{HbR}}(\lambda) \Delta[\text{HbR}]_{\text{sup}}(t)]
+\end{align}
+
+Noise is added at the OD level: $\Delta\text{OD}_{\text{noisy}} = \Delta\text{OD}_{\text{clean}} + \mathcal{N}(0, \sigma_{\text{OD}}^2)$, where $\sigma_{\text{OD}} \approx 10^{-4}$ (realistic instrumental noise).
+
+\subsection{Short-Separation Channel}
+
+A parallel short-channel (SDS $\approx$ 10~mm) is also generated with much higher superficial weight:
+
+\begin{equation}
+\Delta\text{OD}_{\text{short}}(\lambda, t) \approx 0.95 \times [\text{superficial terms}] + 0.05 \times [\text{cortical terms}]
+\end{equation}
+
+This short-channel will be used for SSR.
+
+\section{The Six-Step Pipeline}
+
+We illustrate the pipeline at 30~mm SDS for one representative subject.
+
+\subsection{Step 1: Raw MBLL Inversion (Biased Baseline)}
+
+Apply MBLL directly to the measured $\Delta\text{OD}(\lambda)$ without any correction:
+
+\begin{equation}
+\begin{pmatrix} \Delta[\text{HbO}_2]_{\text{MBLL}} \\ \Delta[\text{HbR}]_{\text{MBLL}} \end{pmatrix} = \mathbf{E}^{-1} \begin{pmatrix} \Delta\text{OD}(760) / (L \times \text{DPF}(760)) \\ \Delta\text{OD}(850) / (L \times \text{DPF}(850)) \end{pmatrix}
+\end{equation}
+
+Results at 30~mm SDS (peak task-evoked signal):
+\begin{itemize}
+\item $\Delta[\text{HbO}_2]_{\text{MBLL, peak}} = 0.71$~$\mu$M (true: 2.5~$\mu$M) $\Rightarrow$ 71.5\% error
+\item $\Delta[\text{HbR}]_{\text{MBLL, peak}} = -0.23$~$\mu$M (true: -0.8~$\mu$M) $\Rightarrow$ 71.2\% error
+\end{itemize}
+
+The underestimation is consistent across both chromophores at this SDS.
+
+\subsection{Step 2: Short-Separation Regression (SSR)}
+
+Regress the short-channel OD against the long-channel OD at each wavelength independently:
+
+\begin{equation}
+\Delta\text{OD}_{\text{long, SSR-cleaned}}(\lambda) = \Delta\text{OD}_{\text{long}}(\lambda) - \beta(\lambda) \times \Delta\text{OD}_{\text{short}}(\lambda)
+\end{equation}
+
+Compute the regression coefficient $\beta(\lambda)$ by minimizing the residual variance. A measure of systemic contamination is:
+
+\begin{equation}
+R^2_{\mathrm{SS}}(\lambda) = 1 - \frac{\text{Var}[\Delta\text{OD}_{\text{long, SSR-cleaned}}]}{\text{Var}[\Delta\text{OD}_{\text{long}}]}
+\end{equation}
+
+For our synthetic data:
+\begin{itemize}
+\item $R^2_{\mathrm{SS}}(760) = 0.658$
+\item $R^2_{\mathrm{SS}}(850) = 0.712$
+\end{itemize}
+
+These values indicate that SSR removes about 65--71\% of the signal variance due to shared superficial contamination.
+
+\subsection{Step 3: Partial Volume Correction (OD Level)}
+
+Divide the SSR-cleaned OD by $f_{\text{cortex}}(\lambda)$ at each wavelength:
+
+\begin{equation}
+\Delta\text{OD}_{\text{PV-corrected}}(\lambda) = \frac{\Delta\text{OD}_{\text{SSR-cleaned}}(\lambda)}{f_{\text{cortex}}(\lambda)}
+\end{equation}
+
+At 30~mm SDS: $f_{\text{cortex}}(760) = 0.063$, $f_{\text{cortex}}(850) = 0.066$ (converged Monte Carlo).
+
+\begin{equation}
+\kappa_{\text{PV}}(760) = \frac{1}{0.063} = 15.9, \quad \kappa_{\text{PV}}(850) = \frac{1}{0.066} = 15.2
+\end{equation}
+
+\subsection{Step 4: MBLL Inversion on Corrected ODs}
+
+Apply MBLL to the corrected ODs using wavelength-specific DPF values:
+
+\begin{equation}
+\begin{pmatrix} \Delta[\text{HbO}_2]_{\text{corrected}} \\ \Delta[\text{HbR}]_{\text{corrected}} \end{pmatrix} = \mathbf{E}^{-1} \begin{pmatrix} \Delta\text{OD}_{\text{PV-corrected}}(760) / (L \times 6.15) \\ \Delta\text{OD}_{\text{PV-corrected}}(850) / (L \times 5.09) \end{pmatrix}
+\end{equation}
+
+Results (peak task-evoked signal):
+\begin{itemize}
+\item $\Delta[\text{HbO}_2]_{\text{corrected, peak}} = 2.47$~$\mu$M (true: 2.5~$\mu$M) $\Rightarrow$ 1.2\% error
+\item $\Delta[\text{HbR}]_{\text{corrected, peak}} = -0.78$~$\mu$M (true: -0.8~$\mu$M) $\Rightarrow$ 2.5\% error
+\end{itemize}
+
+Tremendous improvement!
+
+\subsection{Step 5: Correction Factor Computation}
+
+Compute diagnostic factors:
+
+\begin{equation}
+\kappa_{\text{DPF}} = 1.000 \quad \text{(by design, using true DPF for both forward and inverse)}
+\end{equation}
+
+\begin{equation}
+\kappa_{\text{PV}} = \frac{1}{f_{\text{cortex}}} \quad \text{mean across wavelengths} = \frac{3.456 + 3.594}{2} = 3.523
+\end{equation}
+
+\begin{equation}
+\kappa_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
+\end{equation}
+
+At 760~nm: $\kappa_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.128} = \frac{1}{0.872} = 1.147$
+
+At 850~nm: $\kappa_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.894} = \frac{1}{0.106} = 9.427$
+
+The two wavelengths differ by nearly an order of magnitude ($1.147$ vs $9.427$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $\kappa_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a diagnostic only.
+
+Applied correction (the $\kappa_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
+\begin{equation}
+\kappa_{\text{applied}} = \kappa_{\text{DPF}} \times \kappa_{\text{PV}} = 1.000 \times 3.523 = 3.523
+\end{equation}
+
+\subsection{Step 6: Error Evaluation}
+
+Compute root-mean-square error (RMSE) between estimated and ground-truth peak concentrations:
+
+\begin{align}
+\text{RMSE}_{\text{MBLL}} &= 1.592~\mu\text{M} \\
+\text{RMSE}_{\text{corrected}} &= 0.161~\mu\text{M}
+\end{align}
+
+Improvement:
+\begin{equation}
+\frac{\text{RMSE}_{\text{MBLL}} - \text{RMSE}_{\text{corrected}}}{\text{RMSE}_{\text{MBLL}}} \times 100\% = \frac{1.592 - 0.161}{1.592} \times 100\% = 89.9\%
+\end{equation}
+
+\section{Computational Implementation}
+
+\subsection{Matrix Pseudoinverse}
+
+The MBLL inversion is a least-squares problem solved via matrix pseudoinverse. Define:
+
+\begin{equation}
+\mathbf{b}(\lambda_i) = \frac{\Delta\text{OD}(\lambda_i)}{L \times \text{DPF}(\lambda_i)}, \quad i = 1, 2
+\end{equation}
+
+The extinction matrix is:
+
+\begin{equation}
+\mathbf{E} = \begin{pmatrix} \varepsilon_{\text{HbO}_2}(760) & \varepsilon_{\text{HbR}}(760) \\ \varepsilon_{\text{HbO}_2}(850) & \varepsilon_{\text{HbR}}(850) \end{pmatrix}
+\end{equation}
+
+The solution is:
+
+\begin{equation}
+\begin{pmatrix} \Delta[\text{HbO}_2] \\ \Delta[\text{HbR}] \end{pmatrix} = \mathbf{E}^{-1} \begin{pmatrix} b(760) \\ b(850) \end{pmatrix}
+\end{equation}
+
+For 2 wavelengths and 2 chromophores, $\mathbf{E}$ is square and invertible (assuming the two wavelengths are not degenerate).
+
+In Python:
+
+\texttt{c = np.linalg.solve(E, b)}
+
+For time-series data, we stack all time points and solve vectorized:
+
+\texttt{C = np.linalg.solve(E, B)} where B is $2 \times N_{\text{time}}$, yielding C also $2 \times N_{\text{time}}$.
+
+\subsection{Bandpass Filtering}
+
+Task-evoked signals occupy frequencies 0.01--0.1~Hz. Physiological noise spans 0.1--2~Hz. A bandpass filter removes high-frequency noise:
+
+\begin{equation}
+H(f) = \begin{cases} 1 & 0.01 < f < 0.1~\text{Hz} \\ 0 & \text{otherwise} \end{cases}
+\end{equation}
+
+Implementation: Butterworth filter (order 4) with cutoff frequencies $f_{\text{low}} = 0.01$~Hz and $f_{\text{high}} = 0.1$~Hz.
+
+\subsection{Vectorized MBLL}
+
+For efficiency, MBLL inversion is vectorized in the time domain:
+
+\begin{equation}
+\mathbf{C}(t) = \mathbf{E}^{-1} \mathbf{B}(t)
+\end{equation}
+
+where $\mathbf{B}$ is a $2 \times N_{\text{time}}$ matrix and $\mathbf{C}$ is also $2 \times N_{\text{time}}$.
+
+Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern laptop.
+
+\newpage
+\part{Results and Interpretation}
+
+\section{Correction Factor Results}
+
+\subsection{Summary Table}
+
+\begin{center}
+\begin{tabular}{ccccc}
+\hline
+\textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}$ & $\kappa_{\mathrm{SSR}}(760)$ & $\kappa_{\mathrm{SSR}}(850)$ \\
+\hline
+25 & 0.043 & 23.42 & 1.17 & 9.82 \\
+30 & 0.064 & 15.54 & 1.19 & 10.15 \\
+35 & 0.091 & 11.02 & 1.22 & 10.52 \\
+40 & 0.110 & 9.12 & 1.21 & 10.52 \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{Note on $\kappa_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $\kappa_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a diagnostic of residual superficial contamination, not multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $\kappa_{\mathrm{SSR}}$ box above (applying it would double-count the dilution).
+
+\subsection{Physical Interpretation}
+
+\paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is large at 850\,nm ($\kappa_{\mathrm{SSR}}(850)\approx9.8$). \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
+
+\paragraph{Moderate-to-long separations (35--40 mm):} The cortical fraction rises to $\sim$9--11\%, so $\kappa_{\text{PV}}$ falls to $\sim$9--11 and, crucially, the cortical signal climbs above the noise floor. This is the regime where the correction is reliable (HbO$_2$ RMSE reduced by $\sim$44\% at 38--40~mm). The recommended operating point is SDS~$\geq$~38~mm.
+
+\paragraph{Long separations (40 mm):} The cortical fraction is largest here ($\sim$11\%), so the partial-volume factor is smallest ($\kappa_{\text{PV}} = 9.1$) and the cortical SNR is highest, the most favourable regime for the correction. Even so, the cortex still contributes only about a tenth of the channel sensitivity, so $\kappa_{\text{PV}}$ remains an order-of-magnitude correction.
+
+\subsection{Noise Performance with Increasing Correction}
+
+Larger corrections amplify measurement noise. However, the multi-step pipeline (SSR first, then partial volume correction) manages this:
+
+\begin{enumerate}
+\item SSR removes systemic noise before amplification
+\item Partial volume correction then amplifies the cleaned signal
+\end{enumerate}
+
+This ordering is crucial for achieving the reported low RMSE.
+
+\section{HbR Results and Wavelength Dependence}
+
+\subsection{HbR Specific Errors}
+
+\begin{center}
+\begin{tabular}{ccccc}
+\hline
+\textbf{SDS (mm)} & $\textbf{RMSE}_{\text{MBLL}}$ & $\textbf{RMSE}_{\text{corr}}$ & \textbf{Error reduction} \\
+\hline
+25 & 0.618 & 0.073 & 88.2\% \\
+30 & 0.517 & 0.079 & 84.7\% \\
+35 & 0.339 & 0.110 & 67.5\% \\
+40 & 0.101 & 0.127 & $-$26.2\% \\
+\hline
+\end{tabular}
+\end{center}
+
+HbR is corrected effectively at short-to-moderate separations (88.2\% at 25~mm, 84.7\% at 30~mm), but the benefit declines as SDS increases and becomes a slight \emph{worsening} at 40~mm ($-26.2\%$). This mirrors the HbO$_2$ pattern but is more pronounced for HbR: at long separations the cortical signal is already large (small $\kappa_{\text{PV}}$), so the correction adds little while the low-amplitude HbR channel is more easily dominated by amplified measurement noise. HbR therefore benefits most from correction precisely where partial-volume dilution is largest, at short separations.
+
+\section{Wavelength Dependence of $\kappa_{\mathrm{SSR}}$}
+
+A critical finding: $\kappa_{\mathrm{SSR}}$ differs significantly between wavelengths:
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{SDS (mm)} & $\kappa_{\mathrm{SSR}}(760)$ & $\kappa_{\mathrm{SSR}}(850)$ & \textbf{Ratio} \\
+\hline
+25 & 1.154 & 9.521 & 8.25 \\
+30 & 1.147 & 9.427 & 8.22 \\
+35 & 1.114 & 8.451 & 7.58 \\
+40 & 1.009 & 3.025 & 3.00 \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Why the Wavelength Dependence?}
+
+This pattern is driven by the wavelength-dependent extinction coefficients rather than by penetration depth alone. The systemic (superficial) signal has a characteristic HbO$_2$/HbR composition, and how strongly it appears in the long-channel $\Delta\mathrm{OD}$ (and hence how much of that variance the short channel can explain) depends on the absorption weighting at each wavelength:
+
+\begin{itemize}
+\item At 850~nm, where HbO$_2$ absorption dominates ($\varepsilon_{\mathrm{HbO_2}} > \varepsilon_{\mathrm{HbR}}$), the systemic signal accounts for a large fraction of the long-channel $\Delta\mathrm{OD}$, so the short channel explains most of its variance ($R^2_{\mathrm{SS}} \approx 0.83$, giving $\kappa_{\mathrm{SSR}} \approx 7$).
+\item At 760~nm, where HbR absorption dominates ($\varepsilon_{\mathrm{HbR}} \gg \varepsilon_{\mathrm{HbO_2}}$), the short channel explains comparatively little of the long-channel variance ($R^2_{\mathrm{SS}} \approx 0.08$, giving $\kappa_{\mathrm{SSR}} \approx 1$).
+\end{itemize}
+
+Because the contamination structure differs so strongly between the two wavelengths, a single scalar $\bar{\kappa}_{\mathrm{SSR}}$ applied to both would misestimate the correction.
+
+\textbf{Critical implication}: Applying a scalar average $\bar{\kappa}_{\mathrm{SSR}}$ to both wavelengths introduces error. The correct approach is to apply wavelength-specific $\kappa_{\mathrm{SSR}}(\lambda)$ at the OD level before spectroscopic inversion.
+
+\section{Sensitivity and Robustness Analysis}
+
+\subsection{Thickness Sensitivity}
+
+The cortical sensitivity fraction $f_{\text{cortex}}$ is very sensitive to the assumed superficial layer thickness. Varying $d_{\text{sup}}$ from 8~mm to 16~mm:
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{Thickness (mm)} & $f_{\text{cortex}}$ (30 mm SDS) & $\kappa_{\text{PV}}$ & \% Change \\
+\hline
+8 & 0.239 & 4.2 & $-$74\% \\
+10 & 0.122 & 8.2 & $-$48\% \\
+12 & 0.063 & 15.9 & 0.0\% (baseline) \\
+14 & 0.030 & 33.3 & +109\% \\
+16 & 0.015 & 66.2 & +316\% \\
+\hline
+\end{tabular}
+\end{center}
+
+These (converged Monte-Carlo) values show the dependence is even \emph{stronger} than an analytical estimate suggested: a 2~mm error (12$\rightarrow$14~mm) more than doubles $\kappa_{\text{PV}}$ ($+$109\%). Superficial-layer thickness is the single most important input to the correction, strongly motivating subject-specific anatomy (MRI, ultrasound, or an age-matched atlas).
+
+\subsection{Optical Property Sensitivity}
+
+Varying the cortical optical properties by $\pm 30\%$ (converged two-layer Monte Carlo, \texttt{mc\_2layer.py}; the $\mu_a$ column uses correlated reweighting of a single photon ensemble, so it is low-variance):
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{Property Change} & $\mu_a$ effect on $\kappa_{\text{PV}}$ & $\mu_s'$ effect & Combined \\
+\hline
+$-30\%$ & $-32\%$ & $-12\%$ & $-32\%$ \\
+Nominal & 0\% & 0\% & 0\% \\
+$+30\%$ & $+39\%$ & $+20\%$ & $+39\%$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Absorption is the dominant optical input (because $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ tracks the survival-weighted cortical pathlength). Optical-property uncertainty is therefore not negligible, but it is still smaller than the effect of superficial-layer thickness (more than $+100\%$ for a $+2$~mm error above), which remains the single most important input. Note that an earlier, naively evaluated analytical kernel understated this optical sensitivity (it suggested only $\pm 13$--$15\%$); the converged Monte Carlo is the reliable estimate.
+
+\subsection{Grid Convergence}
+
+The 3D integration for computing $f_{\text{cortex}}$ uses an adaptive mesh. Convergence analysis:
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{Grid Resolution} & $\Delta\rho$ & $f_{\text{cortex}}$ & Relative Error \\
+\hline
+Coarse & 2.0 mm & 0.2814 & +1.4\% \\
+Medium & 1.0 mm & 0.2851 & +0.2\% \\
+Fine & 0.5 mm & 0.2849 & +0.0\% \\
+Very fine & 0.25 mm & 0.2849 & $<0.01\%$ \\
+\hline
+\end{tabular}
+\end{center}
+
+A medium resolution ($1$ mm) provides sufficient accuracy \emph{in the spatial grid}. Note carefully, however, that this table varies only the $(\rho,z)$ \emph{spatial} mesh; it holds the Hankel-transform quadrature fixed. As the cautionary box earlier explained, it is that quadrature (not the spatial grid) that dominates the error in $f_{\text{cortex}}$. Spatial-grid convergence to $\sim$0.285 therefore does \emph{not} mean the value is correct; the converged answer (Monte Carlo) is $\sim$0.06 at 30~mm. This is the trap the present study originally fell into.
+
+\subsection{Robustness to $f_{\text{cortex}}$ Errors}
+
+A natural concern is: what happens if $f_{\text{cortex}}$ is not known precisely? In practice, anatomical uncertainty guarantees some error in the computed correction factors. Our study systematically evaluated the framework's tolerance to such errors by introducing deliberate $f_{\text{cortex}}$ perturbations and measuring the resulting recovery accuracy.
+
+The results are reassuring:
+
+\begin{center}
+\begin{tabular}{ccc}
+\hline
+\textbf{Error in $f_{\text{cortex}}$} & \textbf{RMSE improvement (HbO$_2$)} & \textbf{RMSE improvement (HbR)} \\
+\hline
+$\pm 10\%$ & 64--72\% & 30--44\% \\
+$\pm 30\%$ & 35--66\% & $-3$--48\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{keyinsight}
+Even with $\pm 30\%$ error in $f_{\text{cortex}}$ (substantial anatomical uncertainty), the correction still improves HbO$_2$ RMSE by 35--66\% at long SDS (HbR is more sensitive, turning marginally negative only at the $-30\%$ extreme). Performance is best when $f_{\text{cortex}}$ is accurate and degrades on either side, faster for underestimates (where the inflated $\kappa_{\text{PV}}$ overcorrects and amplifies noise). The practical message: once a \emph{converged} forward model places $f_{\text{cortex}}$ in the right band, an approximate value is far better than none, so researchers who lack subject-specific MRI can still benefit from population-averaged anatomy, \emph{provided they work at long separations}.
+\end{keyinsight}
+
+\subsection{Three-Layer CSF Effects}
+
+A more realistic three-layer model inserts a thin cerebrospinal fluid (CSF) layer between the skull and the cortex, matching the Monte Carlo used in the study:
+\begin{itemize}
+\item Layer 1 (scalp + skull): 10 mm, $\mu_a = 0.015$~mm$^{-1}$, $\mu_s' = 1.0$~mm$^{-1}$
+\item Layer 2 (CSF): 2 mm, $\mu_a = 0.004$~mm$^{-1}$, $\mu_s' = 0.25$~mm$^{-1}$ (very low scattering)
+\item Layer 3 (cortex): semi-infinite, $\mu_a = 0.020$~mm$^{-1}$, $\mu_s' = 0.80$~mm$^{-1}$
+\end{itemize}
+
+Because CSF scatters very weakly ($\mu_s' \approx 0.25$~mm$^{-1}$, versus $1.0$~mm$^{-1}$ for skull), it behaves as a low-scattering channel that lets light traverse it with little attenuation and reach cortex that would otherwise be absorbed superficially, the classic CSF ``light-piping'' effect. A white Monte Carlo of the three-layer geometry (the diffusion approximation is invalid in the near-transparent CSF layer) shows that inserting the CSF layer \emph{increases} the cortical sensitivity fraction:
+
+\begin{center}
+\begin{tabular}{ccccc}
+\hline
+\textbf{SDS (mm)} & $f_{\text{cortex}}^{\text{2L}}$ & $\gamma$ (MC) & $f_{\text{cortex}}^{\text{3L}}$ & Change \\
+\hline
+25 & 0.041 & 1.80 & 0.074 & $+$80\% \\
+30 & 0.063 & 1.73 & 0.109 & $+$73\% \\
+35 & 0.086 & 1.63 & 0.140 & $+$63\% \\
+\hline
+\end{tabular}
+\end{center}
+
+The Monte Carlo finds that the explicit CSF layer \emph{increases} $f_{\text{cortex}}$ by 40--80\% relative to the two-layer approximation ($\gamma = f^{\text{3L}}/f^{\text{2L}} \approx 1.4$--$1.8$, decreasing with SDS), in agreement with the light-piping literature.
+
+\begin{caution}
+\textbf{Warning: ignoring the CSF layer degrades (but at long SDS does not reverse) the correction.}
+
+If the true tissue contains a CSF layer but corrections are computed with a two-layer model, the two-layer model \emph{underestimates} $f_{\text{cortex}}$ (e.g., $\approx$0.10 versus $\approx$0.15 at 38~mm). Its $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ is therefore too \emph{large} and partially overcorrects. At long separations the net effect is a reduced but still positive benefit (HbO$_2$ improvement $+34\%$ vs.\ $+70\%$ matched; HbR $+14\%$ vs.\ $+39\%$). The framework degrades gracefully rather than catastrophically, but including CSF (via the ratio $\gamma$) is recommended when anatomy is known.
+\end{caution}
+
+\begin{caution}
+\textbf{Modelling note.} The cortical-sensitivity \emph{ratio} $\gamma$ above is robust to the CSF Monte Carlo's isotropic-scattering approximation, so we use only the ratio and apply it to the converged Henyey--Greenstein two-layer fractions ($f^{\text{3L}}=\gamma f^{\text{2L}}$). Even with light-piping the cortical fraction stays small ($<$0.15), so $\kappa_{\text{PV}}$ remains large. For reference, an earlier diffusion finite-difference estimate gave a spurious $\sim$99\% \emph{reduction}; that was a numerical artifact, because diffusion theory fails in the near-transparent CSF layer, which is exactly why Monte Carlo is needed here.
+\end{caution}
+
+\newpage
+\part{Practical Guide}
+
+\section{Implementing $\kappa$-Correction in Your Lab}
+
+\subsection{Step 1: Obtain Anatomical Information}
+
+Ideally, acquire or estimate the superficial layer thickness for your subject population:
+
+\begin{enumerate}
+\item \textbf{MRI}: Measure scalp, skull, and CSF thicknesses from structural images. Most reliable but expensive.
+\item \textbf{Age-based tables}: Use population-averaged values from literature (e.g., scalp = 4~mm, skull = 7~mm for adults).
+\item \textbf{Ultrasound}: Portable and cheap, can measure scalp and skull thickness in clinic.
+\end{enumerate}
+
+For a first study, use standard values: $d_{\text{sup}} = 12$~mm (scalp 4 + skull 7 + CSF 1~mm).
+
+\subsection{Step 2: Choose Source-Detector Separation}
+
+\begin{itemize}
+\item \textbf{If cortical sensitivity is critical}: Use SDS $\geq 35$~mm. Requires larger corrections but better cortical specificity.
+\item \textbf{If noise and SNR are limiting}: Use SDS = 30~mm. Good balance.
+\item \textbf{If only relative changes matter}: SDS = 25~mm is acceptable but requires larger corrections and is more sensitive to depth assumptions.
+\end{itemize}
+
+\subsection{Step 3: Include Short-Separation Channel}
+
+Place a detector at SDS $\approx 10$~mm for every measurement location. This is essential for SSR.
+
+\subsection{Step 4: Compute Correction Factors Offline}
+
+For each SDS and anatomical configuration:
+
+\begin{enumerate}
+\item Solve the two-layer Kienle equation via Hankel transform
+\item Compute fluence fields for source and detector
+\item Integrate Jacobian over cortical and total volumes
+\item Derive $f_{\text{cortex}}(\lambda)$ and $\kappa_{\text{PV}}(\lambda) = 1/f_{\text{cortex}}(\lambda)$
+\end{enumerate}
+
+This computation takes $\sim$0.1 s per channel on a modern laptop and can be done once, offline, before data acquisition.
+
+\subsection{Step 5: Process Data Online or Offline}
+
+\begin{enumerate}
+\item Measure raw OD at two wavelengths, long and short channels
+\item Apply bandpass filter (0.01--0.1~Hz) to remove high-frequency noise
+\item Perform SSR: regress long-channel OD against short-channel OD at each wavelength
+\item Apply wavelength-specific $\kappa_{\text{PV}}$ at OD level
+\item Apply wavelength-specific $\kappa_{\mathrm{SSR}}$ factor (if desired; alternative is to use simplified scalar approach)
+\item Invert with MBLL using wavelength-specific DPF
+\item Extract HbO$_2$ and HbR concentrations and peak values
+\end{enumerate}
+
+\subsection{Step 6: Report with Uncertainty}
+
+Always report:
+\begin{itemize}
+\item Mean $\pm$ SD peak HbO$_2$ and HbR concentrations in micromolar
+\item Assumed anatomical parameters (thickness, DPF values)
+\item SDS used
+\item Acknowledgment of sensitivity to thickness and optical properties
+\end{itemize}
+
+\section{Common Pitfalls and How to Avoid Them}
+
+\begin{caution}
+\textbf{Pitfall 1: Using scalar DPF for both wavelengths.}
+
+Many commercial systems apply a single DPF = 6.0 to both 760~nm and 850~nm. This introduces $\sim$17\% wavelength-dependent errors.
+
+\textbf{Fix}: Use Scholkmann formula or wavelength-specific empirical DPF values:
+\begin{align}
+\text{DPF}(760) &= 6.15 \\
+\text{DPF}(850) &= 5.09
+\end{align}
+Normalize each wavelength independently in MBLL.
+\end{caution}
+
+\begin{caution}
+\textbf{Pitfall 2: Applying corrections after MBLL inversion.}
+
+Post-MBLL corrections lose wavelength information and fail to properly unmix HbO$_2$ and HbR.
+
+\textbf{Fix}: Apply all corrections at the OD level before MBLL inversion.
+\end{caution}
+
+\begin{caution}
+\textbf{Pitfall 3: Ignoring partial volume without short-separation regression.}
+
+Some groups use SSR alone, thinking it solves the partial volume problem. SSR removes superficial noise but does NOT correct for the attenuation of cortical signal.
+
+\textbf{Fix}: Combine SSR (removes systemic noise) and PV correction (corrects attenuation of cortical signal).
+\end{caution}
+
+\begin{caution}
+\textbf{Pitfall 4: Using incorrect layer thickness.}
+
+Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm causes 30\% error in corrections.
+
+\textbf{Fix}: If possible, measure thickness from MRI or ultrasound for each subject. If not, perform sensitivity analysis showing how results change with $\pm$ 4~mm variations in thickness.
+\end{caution}
+
+\begin{caution}
+\textbf{Pitfall 5: Not accounting for wavelength dependence in SSR correction.}
+
+Applying a scalar $\bar{\kappa}_{\mathrm{SSR}}$ to both wavelengths ignores the 2--3$\times$ difference in $\kappa_{\mathrm{SSR}}$ between 760 and 850~nm.
+
+\textbf{Fix}: Compute and apply wavelength-specific $\kappa_{\mathrm{SSR}}(\lambda)$ from the SSR regression coefficients.
+\end{caution}
+
+\section{Limitations and Future Directions}
+
+\subsection{Current Limitations}
+
+\begin{enumerate}
+\item \textbf{Tissue model}: Two-layer model is simplified. Real anatomy includes CSF with very different optical properties. Three-layer corrections are needed for highest accuracy.
+
+\item \textbf{Assumes homogeneous layers}: Real tissue has spatial variation (e.g., bone density variations in skull). Monte Carlo simulation would capture this but is much slower.
+
+\item \textbf{Assumes task-evoked, not systemic signals}: If a cognitive task causes global blood pressure changes (task-evoked systemic response), SSR may remove some cortical signal. The $\kappa_{\mathrm{SSR}}$ diagnostic flags channels where this is likely (high $R^2_{\mathrm{SS}}$), but cannot by itself disentangle the ambiguity.
+
+\item \textbf{Requires anatomical knowledge}: Thickness and optical properties must be known or estimated. Subject-specific anatomical imaging (MRI, ultrasound) is not always available.
+
+\end{enumerate}
+
+\subsection{Real-Data Demonstration (Proof of Concept)}
+
+Application of the pipeline to the publicly available BIDS-NIRS-Tapping finger-tapping dataset (Luke et al., 2021; SDS $\approx$ 38~mm) demonstrates the framework on real data as a proof of concept. There is no concurrent ground truth here, so this tests whether the recovered amplitudes are physiologically plausible, not whether they are quantitatively accurate. Importantly, the data sit at 38~mm, inside the long-separation regime where the correction is reliable. The pipeline proceeds in ordered stages at the OD level:
+
+\begin{enumerate}
+\item \textbf{Short-separation regression (SSR):} Per-wavelength OD-level regression against the short-channel reference removes systemic (extracerebral) signal components.
+\item \textbf{$\kappa_{\text{SSR}}(\lambda)$ diagnostic:} The regression $R^2$ yields $\kappa_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$ ($760$: 2.433, $850$: 3.303 for this dataset). This is \emph{reported as a diagnostic of residual superficial contamination but not applied} (see the $\kappa_{\mathrm{SSR}}$ box earlier): applying it would double-count the dilution.
+\item \textbf{Partial-volume ($\kappa_{\text{PV}}$) correction (the applied amplitude correction):} The two-layer Monte Carlo gives $f_{\text{cortex}}\approx0.10$ at 38~mm. But a \emph{real} adult head also contains a thin cerebrospinal-fluid (CSF) layer, which scatters light very weakly and ``pipes'' it down toward the cortex (see the CSF section). This raises the cortical fraction by the light-piping factor $\gamma\approx1.5$, to a three-layer value $f_{\text{cortex}}^{\mathrm{3L}}\approx0.15$. Because these are real heads, we use this CSF-augmented value, giving $\kappa_{\text{PV}}\approx6.5$ ($760$~nm: $1/0.153=6.56$; $850$~nm: $1/0.156=6.43$).
+\item \textbf{MBLL inversion:} Standard dual-wavelength conversion from corrected $\Delta$OD to $\Delta[\text{HbO}_2]$ and $\Delta[\text{HbR}]$.
+\end{enumerate}
+
+Applying $\kappa_{\text{PV}} = 6.5$ to the SSR-denoised data produces net amplification factors of 3.58$\times$ for HbO$_2$ (uncorrected peak $+0.265\,\mu$M $\rightarrow$ corrected $+0.95\,\mu$M) and 3.15$\times$ for HbR (uncorrected $-0.058\,\mu$M $\rightarrow$ corrected $-0.18\,\mu$M); across all five subjects the group-mean corrected HbO$_2$ is $1.13 \pm 0.41\,\mu$M ($4.6\times$). These magnitudes are physiologically plausible for a finger-tapping task. (Using the two-layer $f_{\text{cortex}}\approx0.10$ instead (ignoring CSF) gives the larger $\kappa_{\text{PV}}\approx9.7$ and $\approx1.7\,\mu$M, an upper bound; the physiological estimate is thus bracketed $\approx1.1$--$1.7\,\mu$M.) This is the payoff of two key choices: using a \emph{converged}, CSF-augmented $f_{\text{cortex}}$ (an under-converged $\approx 0.78$ would make $\kappa_{\text{PV}}$ do almost nothing), and treating $\kappa_{\text{SSR}}$ as a diagnostic (applying it as well would inflate the response to $\sim$2.7~$\mu$M by double-counting the dilution).
+
+\subsection{Future Directions}
+
+\begin{enumerate}
+\item \textbf{Three-layer Kienle solution} with CSF layer for full anatomical accuracy.
+\item \textbf{Hybrid CSF correction}: A particularly promising approach is to compute $f_{\text{cortex}}$ rapidly using the two-layer Hankel transform ($\sim$0.1~s per channel) and then multiply by an SDS-dependent correction factor $\gamma(d_{\text{SDS}}, d_{\text{CSF}})$ from a precomputed lookup table. The adjusted sensitivity $f_{\text{cortex}}^{\text{adj}} = \gamma \times f_{\text{cortex}}^{\text{2L}}$ would retain the speed of the analytical two-layer solution while accounting for the CSF light-guiding effect. Our three-layer analysis shows that $\gamma$ varies systematically: approximately 2.3 at 25~mm, 2.0 at 30~mm, 1.8 at 35~mm, and 1.6 at 40~mm SDS.
+\item \textbf{Adaptive thickness estimation} from temporal statistics of SSR.
+\item \textbf{Bayesian inference} combining MBLL data with prior distributions on tissue properties.
+\item \textbf{Machine learning models} trained on Monte Carlo forward models to predict $f_{\text{cortex}}$ given measurement geometry and partial optical property measurements.
+\item \textbf{In vivo validation} with concurrent fMRI or invasive recordings as ground truth to establish the framework's clinical performance.
+\item \textbf{Real-time feedback}: Deploy corrections online during experiments for closed-loop protocols.
+\end{enumerate}
+
+\newpage
+\section{Check Your Understanding}
+
+These problems work through the core ideas of the framework. Try each before reading the solution.
+
+\paragraph{1. From $f_{\text{cortex}}$ to $\kappa_{\text{PV}}$.} A channel at 30~mm has $f_{\text{cortex}}=0.06$. (a)~What is $\kappa_{\text{PV}}$? (b)~If the raw MBLL estimate of cortical $\Delta[\text{HbO}_2]$ is $0.15~\mu$M, what is the corrected estimate?\\
+\textit{Solution:} (a)~$\kappa_{\text{PV}}=1/0.06\approx16.7$. (b)~$0.15\times16.7\approx2.5~\mu$M.
+
+\paragraph{2. Why not always use short separations?} Short channels are cheap and common. Using the noise-floor idea, explain in one or two sentences why you should \emph{not} apply $\kappa_{\text{PV}}$ at 25~mm.\\
+\textit{Solution:} At 25~mm $f_{\text{cortex}}\approx0.04$, so the cortical optical-density signal ($\sim10^{-3}$) sits at or below the measurement-noise floor (SNR $<1$). Multiplying by $\kappa_{\text{PV}}\approx24$ amplifies the noise as much as the signal, so the ``corrected'' estimate is dominated by amplified noise rather than recovered cortex.
+
+\paragraph{3. The CSF correction.} The two-layer model gives $f_{\text{cortex}}=0.10$ at 38~mm, and the CSF light-piping ratio is $\gamma=1.5$. (a)~What is the three-layer $f_{\text{cortex}}$? (b)~How does $\kappa_{\text{PV}}$ change? (c)~Does the recovered amplitude go up or down?\\
+\textit{Solution:} (a)~$0.10\times1.5=0.15$. (b)~$\kappa_{\text{PV}}$ drops from $1/0.10=10$ to $1/0.15\approx6.7$. (c)~Down: a smaller $\kappa_{\text{PV}}$ multiplies the signal by less, so the recovered amplitude decreases (in the paper, $\approx1.6\to\approx1.1~\mu$M).
+
+\paragraph{4. $R$ vs.\ $\rho$.} A subject's long and short channels have $R^2_{\text{SS}}=0.64$. A classmate concludes that SSR must have removed 64\% of the \emph{cortical} signal. Are they right?\\
+\textit{Solution:} No. $R^2_{\text{SS}}=0.64$ means the short channel explains 64\% of the \emph{long-channel} variance, mostly because the long channel is dominated by the same systemic signal the short channel sees. The cortical loss is set by $\rho$ (the cortical--systemic correlation), not by $R^2$, and is usually much smaller. This is exactly why $\kappa_{\text{SSR}}=1/(1-R^2)$ over-restores and is reported as a diagnostic.
+
+\paragraph{5. Wavelength bookkeeping.} Why must $\kappa_{\text{PV}}(\lambda)$ be applied to each wavelength's $\Delta$OD \emph{before} the MBLL inversion, rather than to the final $\Delta[\text{HbO}_2]$?\\
+\textit{Solution:} The MBLL inversion mixes the two wavelengths to separate HbO$_2$ from HbR. Because $f_{\text{cortex}}$ differs at 760 and 850~nm, the correction is wavelength-specific; applying it \emph{after} the inversion would discard the per-wavelength information and could not properly disentangle the two chromophores (Section~\ref{sec:order} on processing order).
+
+\paragraph{6. An order-of-magnitude sanity check.} You read that a 25~mm channel has $f_{\text{cortex}}=0.55$. Based on converged Monte Carlo and atlas studies, is this plausible?\\
+\textit{Solution:} No. Converged Monte Carlo and atlas studies (e.g.\ Strangman et al.\ 2013) put the brain sensitivity fraction at $\sim$4--8\% at 25--30~mm, an order of magnitude smaller. A value of $0.55$ is a red flag for an under-converged analytical calculation (the trap discussed in the numerical cautionary tale).
+
+\paragraph{7. Putting it together.} In one paragraph, summarize the full corrected pipeline for a single long channel: what is removed, what is multiplied in, what is only reported, and why the result is trustworthy only at long SDS.\\
+\textit{Solution:} Band-pass the optical density; regress out the short channel (SSR) to remove systemic contamination; multiply the SSR-cleaned $\Delta$OD by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ (CSF-augmented) at each wavelength to undo partial-volume dilution; invert with the MBLL using wavelength-specific DPFs. $\kappa_{\text{SSR}}$ is computed and reported as a diagnostic of residual contamination but \emph{not} applied. The result is trustworthy only at long SDS ($\geq$38~mm), because there the cortical signal is above the noise floor; at short SDS the same correction amplifies noise.
+
+\newpage
+\appendix
+
+\section{Appendix A: Numerical Parameters}
+
+\subsection{Optical Properties}
+
+Extinction coefficients and reduced scattering coefficients at 760 and 850~nm (tissue at body temperature):
+
+\begin{center}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Chromophore/Tissue} & $\varepsilon(760)$ & $\varepsilon(850)$ & Unit & Source \\
+\hline
+HbO$_2$ & 0.586 & 1.058 & cm$^{-1}$/mM & Prahl/OMLC \\
+HbR & 1.549 & 0.691 & cm$^{-1}$/mM & Prahl/OMLC \\
+\hline
+Scalp/skin & 0.0120 & 0.0090 & mm$^{-1}$ & Jacques 2013 \\
+Skull & 0.0140 & 0.0110 & mm$^{-1}$ & Okada 2003 \\
+CSF & 0.0010 & 0.0008 & mm$^{-1}$ & Simpson 1998 \\
+\hline
+$\mu_s'$ (scalp/skull) & 1.0--1.2 & 0.85--1.0 & mm$^{-1}$ & Jacques 2013 \\
+$\mu_s'$ (brain grey matter) & 1.0--1.2 & 0.85--1.0 & mm$^{-1}$ & Okada 2003 \\
+$\mu_s'$ (CSF) & 0.01 & 0.01 & mm$^{-1}$ & Simpson 1998 \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Tissue Geometry}
+
+Standard adult head geometry for frontal measurement:
+
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+\textbf{Layer} & \textbf{Thickness (mm)} & \textbf{Refractive Index} & \textbf{Composition} \\
+\hline
+Scalp & 3--5 & 1.40 & Skin, hair, connective tissue \\
+Skull & 5--8 & 1.40 & Bone (compact and trabecular) \\
+CSF (dura/arachnoid) & 1--3 & 1.33 & Cerebrospinal fluid \\
+Cortex (grey matter) & 2--4 & 1.40 & Neuronal tissue \\
+\hline
+\textbf{Total superficial} & 10--14 &, & Typically 12 mm for adults \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Appendix B: Glossary of Symbols}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+\textbf{Symbol} & \textbf{Name} & \textbf{Typical Value / Units} \\
+\hline
+$[\text{HbO}_2]$ & Oxygenated hemoglobin concentration & $\mu$M \\
+$[\text{HbR}]$ & Deoxygenated hemoglobin concentration & $\mu$M \\
+$\Delta[\text{HbO}_2]$ & Change in oxygenated hemoglobin & $\mu$M (1--5 for task; see Hirth 1996, Obrig 1996, Holper 2009) \\
+$\Delta[\text{HbR}]$ & Change in deoxygenated hemoglobin & $\mu$M ($-$1.5 to $-$0.3 for task) \\
+\hline
+$\lambda$ & Wavelength & 760, 850 nm \\
+$\varepsilon(\lambda)$ & Molar extinction coefficient & cm$^{-1}$/mM \\
+$OD$ & Optical density (absorbance) & Dimensionless (0--2 typical) \\
+$\Delta OD$ & Change in optical density & Dimensionless ($10^{-4}$ typical) \\
+\hline
+$\mu_a$ & Absorption coefficient & mm$^{-1}$ (0.01--0.02) \\
+$\mu_s'$ & Reduced scattering coefficient & mm$^{-1}$ (0.7--1.5) \\
+$D$ & Diffusion coefficient & mm ($\sim$0.3) \\
+$\mu_{\mathrm{eff}}$ & Effective attenuation coefficient & mm$^{-1}$ \\
+\hline
+$L$ & Source-detector separation (geometric) & mm (25--40 typical) \\
+$\text{DPF}(\lambda)$ & Differential pathlength factor & Dimensionless (5.5--7.0) \\
+$d_{\text{sup}}$ & Superficial layer thickness & mm (10--14 typical) \\
+\hline
+$\Phi(\mathbf{r})$ & Photon fluence (radiance integrated over angles) & W/mm$^2$ (relative) \\
+$J(\mathbf{r})$ & Jacobian (sensitivity) & Relative units \\
+$f_{\text{cortex}}$ & Cortical sensitivity fraction & Dimensionless (0.1--0.9) \\
+\hline
+$\kappa_{\text{DPF}}$ & DPF correction factor & Dimensionless ($\sim 1$) \\
+$\kappa_{\text{PV}}$ & Partial volume correction factor & Dimensionless (1.1--7.5) \\
+$\kappa_{\mathrm{SSR}}(\lambda)$ & SSR attenuation correction (wavelength-specific) & Dimensionless (1.5--10) \\
+$\kappa_{\text{applied}}$ & Applied composite, $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ ($\kappa_{\mathrm{SSR}}$ is a per-wavelength diagnostic, not applied) & Dimensionless \\
+\hline
+$R^2_{\mathrm{SS}}$ & Variance of the uncorrected long-channel $\Delta\mathrm{OD}$ explained by the short channel (SSR fit $R^2$) & Dimensionless (0--1) \\
+$\beta(\lambda)$ & SSR regression coefficient & Dimensionless \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Appendix C: Key References}
+
+\begin{enumerate}
+
+\item Sagara N, Ahsan A. A diffusion-theory framework for quantifying and correcting partial volume bias in functional near-infrared spectroscopy. \textit{Neurophotonics}. 2026 (submitted).
+\begin{quote}
+The research paper on which this pedagogical guide is based. Presents and validates the complete $\kappa$-correction framework with synthetic fNIRS data across four source--detector separations and 10 subjects.
+\end{quote}
+
+\item Boas DA, Dale AM, Franceschini MA. Diffuse optical imaging of brain activation. \textit{NeuroImage}. 2004;23:S275--S288.
+\begin{quote}
+Foundational work on partial volume effects in fNIRS and early solutions using image reconstruction.
+\end{quote}
+
+\item Duncan A, Meek JH, Clemence M, et al. Optical pathlength measurements on adult head, calf and forearm and the head of the newborn infant using phase-resolved optical spectroscopy. \textit{Phys Med Biol}. 1995;40:295--304.
+\begin{quote}
+Pioneering experimental measurements of wavelength-dependent DPF in human tissue.
+\end{quote}
+
+\item Fang Q, Boas DA. Tetrahedral mesh generation from volumetric binary and grayscale images. \textit{IEEE ISBI}. 2009:1142--1145.
+\begin{quote}
+The iso2mesh toolbox for converting volumetric images into tetrahedral meshes. This is a mesh-generation tool, \emph{not} a Monte Carlo solver, mesh-based Monte Carlo (MMC) is a separate code by Fang (\textit{Biomed Opt Express}, 2010). We cite the 2009 ISBI paper only when preparing head meshes for forward modeling.
+\end{quote}
+
+\item Gagnon L, Pertica C, Haley MI, et al. Improved recovery of the hemodynamic response in diffuse optical imaging using short-separation measurements. \textit{NeuroImage}. 2012;59:2788--2802.
+\begin{quote}
+Practical SSR techniques for removing superficial contamination.
+\end{quote}
+
+\item Jacques SL. Optical properties of biological tissues: A review. \textit{Phys Med Biol}. 2013;58:R37--R61.
+\begin{quote}
+Comprehensive review of tissue optical properties across the NIR window and other wavelengths.
+\end{quote}
+
+\item Kienle A, Lilge L, Vitkin IA, et al. Why the optical properties of biological tissue have a minimum in the 600--1000~nm region. \textit{Appl Opt}. 1996;35:2304--2314.
+\begin{quote}
+Explanation of the NIR optical window; critical for understanding why these wavelengths penetrate deeply.
+\end{quote}
+
+\item Kienle A, Glanzmann T, Herrmann U, et al. Spatially resolved absolute diffuse reflectance measurements for noninvasive determination of the optical scattering and absorption coefficients: Instrumentation and numerical results. \textit{J Biomed Opt}. 1998;3:21--31.
+\begin{quote}
+Semi-analytical solution for two-layer tissue geometry (Hankel transform method); the basis of the $\kappa$ correction framework.
+\end{quote}
+
+\item Okada E, Delpy DT. Near-infrared light propagation in an adult head model. \textit{Appl Opt}. 2003;42:2906--2914.
+\begin{quote}
+Optical properties of head tissue and FD/TD measurements; validation of diffusion model.
+\end{quote}
+
+\item Prahl SA. Tabulated molar extinction coefficient for hemoglobin. \textit{Oregon Medical Laser Center}. 1999.
+\begin{quote}
+Empirical extinction spectra for HbO$_2$ and HbR; standard reference used in fNIRS processing.
+\end{quote}
+
+\item Saager RB, Berger AJ. Direct characterization and removal of interfering absorption trends in two-layer turbid media. \textit{J Opt Soc Am A}. 2005;22:1874--1884.
+\begin{quote}
+Early SSR methodology; foundational for superficial noise removal.
+\end{quote}
+
+\item Scholkmann F, Wolf M. General equation for the differential pathlength factor of the frontal human head depending on wavelength and age. \textit{J Biomed Opt}. 2013;18:105004.
+\begin{quote}
+Empirical formula for wavelength- and age-dependent DPF; widely used in modern fNIRS systems.
+\end{quote}
+
+\item Strangman GE, Li Z, Zhang Q. Depth sensitivity and source-detector separations for near infrared spectroscopy based on the Colin27 brain template. \textit{PLoS ONE}. 2013;8:e66319.
+\begin{quote}
+Atlas-based sensitivity analysis (Colin27) showing how $f_{\mathrm{cortex}}$ varies with source-detector separation and scalp-to-cortex depth; informs the choice of SDS in this framework.
+\end{quote}
+
+\item Hirth C, Obrig H, Villringer K, et al. Non-invasive functional mapping of the human motor cortex using near-infrared spectroscopy. \textit{NeuroReport}. 1996;7:1977--1981.
+\begin{quote}
+Early demonstration of motor-cortex HbO$_2$ amplitudes during finger tapping in the ${\sim}1$--3~$\mu$M range; reference for task-evoked cortical amplitude expectations.
+\end{quote}
+
+\item Obrig H, Hirth C, Junge-H\"ulsing JG, et al. Cerebral oxygenation changes in response to motor stimulation. \textit{J Appl Physiol}. 1996;81:1174--1183.
+\begin{quote}
+Companion measurements of motor-cortex HbO$_2$/HbR responses; supports the 1--5~$\mu$M task range cited in Appendix~B.
+\end{quote}
+
+\item Holper L, Biallas M, Wolf M. Task complexity relates to activation of cortical motor areas during uni- and bimanual performance: A functional NIRS study. \textit{NeuroImage}. 2009;46:1105--1113.
+\begin{quote}
+Modern finger-tapping fNIRS data with amplitudes consistent with the Hirth/Obrig range.
+\end{quote}
+
+\item Arridge SR, Cope M, Delpy DT. The theoretical basis for the determination of optical pathlengths in tissue: Temporal and frequency analysis. \textit{Phys Med Biol}. 1992;37:1531--1560.
+\begin{quote}
+Derivation of the diffusion approximation from the radiative transfer equation for NIR light in tissue; foundational reference for the diffusion-based forward model used in this framework.
+\end{quote}
+
+\item Haskell RC, Svaasand LO, Tsay T, et al. Boundary conditions for the diffusion equation in radiative transfer. \textit{J Opt Soc Am A}. 1994;11:2727--2741.
+\begin{quote}
+Derivation of the extrapolated (Robin) boundary condition used at the air-tissue interface; source of the $A \approx 2.95$ coefficient for $n=1.4$ used in the Kienle two-layer solver.
+\end{quote}
+
+\item Hielscher AH, Alcouffe RE, Barbour RL. Comparison of finite-difference transport and diffusion calculations for photon migration in homogeneous and heterogeneous tissues. \textit{Phys Med Biol}. 1998;43:1285--1302.
+\begin{quote}
+Benchmarks the validity limits of the diffusion approximation against direct solutions of the radiative transfer equation; cited when discussing where the diffusion model is accurate.
+\end{quote}
+
+\end{enumerate}
+
+\end{document}

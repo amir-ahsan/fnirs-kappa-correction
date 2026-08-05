@@ -1,0 +1,43 @@
+# =============================================================================
+# Python dependencies for the fNIRS kappa-correction reproducibility package
+# =============================================================================
+#
+# Synthetic validation (fnirs_kappa_synthetic_validation.py):
+#   numpy, scipy, matplotlib, pandas
+#
+# Real-data analysis (fnirs_kappa_realdata_analysis.py):
+#   numpy, scipy, matplotlib, mne, mne-nirs, mne-bids
+#
+# Beginner notebook (fnirs_kappa_beginner_notebook.ipynb):
+#   numpy, scipy, matplotlib, jupyter
+#
+# Install all dependencies:
+#   pip install -r requirements.txt
+# =============================================================================
+
+numpy>=1.22          # np.trapezoid (NumPy>=2.0) handled via fallback shim in code
+scipy>=1.9
+matplotlib>=3.5
+pandas>=1.4
+
+# MNE ecosystem (for real-data analysis)
+mne>=1.4
+mne-nirs>=0.6
+mne-bids>=0.12
+h5py>=3.6            # required by MNE to read the BIDS .snirf (HDF5) files
+
+# Jupyter (for supplementary notebook)
+jupyter>=1.0
+
+# -----------------------------------------------------------------------------
+# Troubleshooting: NumPy / h5py binary compatibility
+# -----------------------------------------------------------------------------
+# h5py (and parts of MNE) ship compiled extensions built against a specific
+# NumPy ABI.  If NumPy and h5py are installed or upgraded out of step you may
+# see an import error such as:
+#   "A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x ..."
+#   or "numpy.core.multiarray failed to import".
+# Installing everything together with `pip install -r requirements.txt`
+# normally avoids this.  If you hit it after upgrading NumPy, reinstall h5py so
+# its compiled extension matches the installed NumPy:
+#   pip install --force-reinstall --no-cache-dir h5py
