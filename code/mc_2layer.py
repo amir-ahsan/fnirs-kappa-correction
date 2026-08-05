@@ -8,7 +8,7 @@ scattering, mu_s = mu_s'/(1-g), which gives accurate absolute partial pathlength
 import numpy as np, json, time
 
 def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
-        z_max=80.0, L_max=500.0, max_iter=20000, n_tissue=1.4):
+        z_max=80.0, L_max=500.0, max_iter=20000, n_tissue=1.4, return_raw=False):
     rng = np.random.default_rng(seed)
     bounds = np.array(geom['bounds'], float)
     mua = np.array(geom['mua'], float)
@@ -92,6 +92,15 @@ def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
     Lcortex=L[:,ci[0]:].sum(axis=1) if ci else np.zeros(N)
     Ltot=L.sum(axis=1)
     det=detected&(exit_r>=0)
+    if return_raw:
+        # per-photon detected arrays for post-hoc convergence re-scoring and
+        # batch-based uncertainty (single big run serves both).
+        return dict(exit_r=exit_r[det].astype('float32'),
+                    Lcortex=Lcortex[det].astype('float32'),
+                    Ltot=Ltot[det].astype('float32'),
+                    w=w[det].astype('float64'),
+                    N=int(N), seed=int(seed), g=float(g), z_max=float(z_max),
+                    L_max=float(L_max), detected=int(det.sum()))
     out={}
     for sds in sds_centers:
         m=det&(np.abs(exit_r-sds)<=half_width); ww=w[m]

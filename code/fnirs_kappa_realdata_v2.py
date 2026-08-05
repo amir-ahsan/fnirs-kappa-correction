@@ -138,6 +138,8 @@ def analyze_subject(root: Path, sub: str) -> dict:
         Cc = E_inv @ ODc
         chan_out.append(dict(base=b, x=by_base[b][760]["x"], sds=sds,
                              kpv=1.0 / np.mean([fcx[760], fcx[850]]),
+                             f760=fcx[760], f850=fcx[850],
+                             kpv760=1.0 / fcx[760], kpv850=1.0 / fcx[850],
                              hbo_u=Cu[0], hbr_u=Cu[1], hbo_c=Cc[0], hbr_c=Cc[1]))
 
     # --- events ---
@@ -196,6 +198,11 @@ def analyze_subject(root: Path, sub: str) -> dict:
                 hbo_uncorr_uM=hbo_u, hbo_corr_uM=hbo_c,
                 hbr_uncorr_uM=hbr_u, hbr_corr_uM=hbr_c,
                 hbo_scale=hbo_c / hbo_u if hbo_u else float("nan"),
+                channels=[dict(base=c["base"], sds_mm=round(c["sds"], 2),
+                               hemisphere=("right" if c["x"] > 0 else "left"),
+                               f_cortex_760=round(c["f760"], 4), f_cortex_850=round(c["f850"], 4),
+                               kappa_pv_760=round(c["kpv760"], 3), kappa_pv_850=round(c["kpv850"], 3))
+                          for c in chan_out],
                 traces=traces)
 
 

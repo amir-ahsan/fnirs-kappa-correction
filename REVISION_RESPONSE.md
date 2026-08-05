@@ -113,5 +113,91 @@ wavelength-specific OD correction), rather than a claim of a universal correctio
 - The dataset-vs-standard **citation** (r36): the reference is treated as the
   Zenodo dataset; if a separate fNIRS-BIDS standard paper is also cited, add it as
   a distinct entry.
-- **mc_csf.py** is retained as the original isotropic cross-check; the anisotropic,
-  multi-seed production path is `mc_uncertainty.py`.
+- **mc_csf.py** is retained as the original isotropic cross-check; the anisotropic
+  production path is now the single-source `mc_production.py` (see round 2 below).
+
+---
+
+# Round 2 — Response to *Remaining Major Problems in the Revised fNIRS Study*
+
+This second review (5 publication-blocking problems) centred on making **one
+converged, wavelength-specific Monte-Carlo dataset the single source of truth** for
+every number in the paper, and on removing the SSR amplitude counterfactual. All six
+steps of the reviewer's required sequence were implemented; every headline number was
+regenerated from the new production dataset and re-verified against the code output.
+
+**Architecture put in place (addresses the overall assessment and steps 2–4).**
+A new driver `mc_production.py` runs one large anisotropic (g = 0.9) Monte Carlo per
+(geometry, wavelength) and writes a single versioned file
+`fcortex_production.json` / `.csv` containing the wavelength-specific two-layer
+`f_cortex` (mean ± SD and 95% CI over 16 independent photon batches), per-SDS DPF and
+N_eff, the CSF light-piping ratio γ(λ, SDS) at 2 mm and a 1 mm thickness check, and an
+L_max / z_max / annulus convergence sweep. A thin loader `fcortex_source.py` is
+imported by **both** the synthetic (`fnirs_kappa_synthetic_validation.py`) and the
+real-data (`fnirs_kappa_realdata_v2.py`) pipelines. The previous hard-coded tables
+(`_F_CORTEX_MC`, `_F_CORTEX_760`, `_RATIO_850_760`, `_CSF_GAMMA`) were deleted from
+both scripts; if the production file is absent, the loader raises rather than falling
+back to stale values.
+
+**Problem 1 — production means not used by the synthetic pipeline (Critical).**
+Resolved. The synthetic pipeline no longer carries any hard-coded sensitivity table;
+`f_cortex_mc()` and `csf_gamma()` now return `fcortex_source` values read from
+`fcortex_production.json`. Every synthetic table, figure, abstract percentage,
+conclusion statement, and README expected output was regenerated from that one file.
+The reviewer correctly anticipated that the headline long-SDS improvements would move;
+with the **converged** dataset (below) the pooled HbO₂ RMSE improvements are
+−60%, −4%, +26%, +40%, +44% at 25/30/35/38/40 mm, and the abstract now reports the
+long-SDS figure as **40–44%** (not 44–45%), matching the regenerated Table. The
+apparent −55%/…/+45% ↔ −59%/…/+39% tension the memo noted was a symptom of the
+*under-converged* L_max = 500 run; once L_max is on the plateau the long-SDS values
+recover to +40/+44%.
+
+**Problem 2 — photon-pathlength cutoff not shown converged (Critical).**
+Resolved. `mc_production.py` re-scores `f_cortex` from the *same* production run at
+L_max = 400/500/800/1200 mm and reports a new Supplementary Table (Monte-Carlo
+convergence): at 760 nm the two-layer fraction plateaus for L_max ≥ 800 mm
+(38 mm: 0.0892 → 0.0978 → 0.1010 → 0.1010; 40 mm: 0.0961 → 0.1059 → 0.1098 → 0.1098),
+so the earlier 500 mm default modestly under-estimated the long-SDS fraction. The
+production setting **L_max = 1200 mm** sits on the plateau. Separate checks of the
+domain depth (z_max = 150 vs 220 mm) and the detector-annulus half-width
+(2.0/2.5/3.0 mm) change `f_cortex` by less than the 16-batch interval, so both are
+also converged; the selection criterion (an observed numerical plateau within the
+batch interval) is stated in the caption and in `mc_production.py`.
+
+**Problem 3 — real-data pipeline still used a 760→850 shortcut (High).**
+Resolved. The production file stores **direct** 760- and 850-nm two-layer fractions
+*and* wavelength-specific CSF ratios γ(λ, SDS). `fnirs_kappa_realdata_v2.py` now reads
+per-channel, per-wavelength `f_cortex` directly (`f_cortex_invivo(sds, 760)` and
+`…, 850)`), with no 1.02 multiplier and no single-γ shortcut. Tables and Figures 4–7
+were regenerated, and the pipeline now writes the exact per-channel, per-wavelength
+factors (f760, f850, kpv760, kpv850) for every subject into
+`realdata_v2_summary.json` (machine-readable).
+
+**Problem 4 — SSR variance diagnostic still used as an amplitude multiplier (High).**
+Resolved. The quantity is renamed **V_SSR = 1/(1 − R²_SS)** throughout (abstract,
+theory, results, discussion, conclusions, tables, figure captions, README, and code
+comments), and described only as an inverse residual-variance ratio / variance-removal
+diagnostic. Every counterfactual that multiplied a task-response amplitude by V_SSR
+(the "would roughly double the amplitude / reach ≈2–4 µM / exceed the physiological
+range" statements) was **removed**. The retained statement is the supported one:
+√(1 − R²_SS) is the residual-to-original standard-deviation ratio under the OLS
+variance decomposition, not a ratio of cortical task-response amplitudes, and R²_SS
+alone cannot identify cortical attenuation. V_SSR is reported per wavelength and never
+applied.
+
+**Problem 5 — Monte-Carlo uncertainty underpowered (High).**
+Resolved. Uncertainty is now computed from **16 independent photon batches** (disjoint
+subsets of the 2×10⁶ detected photons), with `f_cortex` recomputed as a ratio
+estimator on each batch; the reported mean ± SD and 2.5/97.5-percentile interval
+therefore reflect the sampling variance of the ratio across independent batches, not a
+3-seed bootstrap. The number of batches and the exact procedure are stated in the
+Supplementary Table caption. `N_eff = (Σw)²/Σw²` is now described explicitly as an
+**absorption-weight effective count only** (it does not capture pathlength variability
+or numerator–denominator covariance in the ratio), and the 16-batch interval — not
+N_eff — is identified as the operative uncertainty.
+
+**Verification.** Both pipelines were re-run against the final
+`fcortex_production.json`; the synthetic correction-factor table, HbO₂/HbR improvement
+figures, S1 uncertainty table, convergence table, CSF γ table, and the full in-vivo
+per-subject/group tables were cross-checked line-by-line against the regenerated
+console/JSON output, and the manuscript was recompiled cleanly.

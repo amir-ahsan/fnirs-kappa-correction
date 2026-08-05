@@ -564,34 +564,22 @@ def compute_sensitivity_map(
 
 
 # =============================================================================
-# STABLE cortical sensitivity fraction (Monte-Carlo calibrated)
+# Cortical sensitivity fraction -- SINGLE SOURCE OF TRUTH
 # =============================================================================
-# The analytical two-layer Kienle kernel evaluated by Cartesian-trapezoid Hankel
-# transform is NOT quadrature-converged for f_cortex (it swings 0.0005 -> 0.62 ->
-# 0.085 as n_s is increased; the exp(alpha*z) term overflows/cancels at high
-# spatial frequency).  We therefore take f_cortex from a converged Henyey-
-# Greenstein (g=0.9) white Monte-Carlo of the SAME two-layer slab
-# (code/mc_2layer.py, 9e5 photons/SDS, DPF-validated at 6.4-6.6).  These values
-# agree with atlas Monte Carlo (Strangman 2013 brain 6%@20mm -> 13%@40mm; Custo;
-# Mansouri), the paper's finite-difference cross-check, and the cylindrical-
-# Kienle check.  See KAPPA_PV_ATLAS_CHECK.md.
-_F_CORTEX_MC: Dict[int, Dict[float, float]] = {
-    760: {25.0: 0.0412, 30.0: 0.0626, 35.0: 0.0859, 38.0: 0.1016, 40.0: 0.1115},
-    850: {25.0: 0.0442, 30.0: 0.0661, 35.0: 0.0956, 38.0: 0.1033, 40.0: 0.1079},
-}
+# f_cortex is read from the versioned production Monte-Carlo file via
+# fcortex_source (which loads fcortex_production.json). There is no hard-coded
+# table here: the same converged, wavelength-specific values drive both the
+# synthetic data generation and the correction, so the two are guaranteed
+# consistent. The production run establishes L_max / z_max / annulus / photon
+# convergence and reports batch-based uncertainty (see mc_production.py and
+# Supplementary Table S1).
+import fcortex_source as _fcs
 
 
 def f_cortex_mc(sds_mm: float, wavelength_nm: int) -> float:
-    """Stable cortical sensitivity fraction f_cortex(SDS, lambda) from the
-    converged two-layer Monte Carlo (code/mc_2layer.py).  Linear interpolation
-    in SDS; nearest available wavelength (760/850 nm).  Replaces the
-    non-converged analytical Hankel value used for kappa_PV = 1/f_cortex."""
-    wls = sorted(_F_CORTEX_MC)
-    wl = min(wls, key=lambda w: abs(w - wavelength_nm))
-    tbl = _F_CORTEX_MC[wl]
-    xs = sorted(tbl)
-    ys = [tbl[x] for x in xs]
-    return float(np.interp(float(sds_mm), xs, ys))
+    """Two-layer cortical sensitivity fraction f_cortex(SDS, lambda) from the
+    single production Monte-Carlo source (fcortex_production.json)."""
+    return _fcs.f_cortex_2L(sds_mm, wavelength_nm)
 
 
 # =============================================================================
@@ -1710,7 +1698,7 @@ def analyze_thickness_robustness(sds_mm: float = 30.0, wavelength_nm: int = 760)
 # cortical-mu_a curve uses correlated reweighting of a single photon ensemble,
 # so it is low-variance).  These REPLACE the earlier analytical-kernel sweep,
 # which (i) used the non-converged Cartesian-trapezoid Hankel f_cortex (~0.29 at
-# 30 mm, an order of magnitude too high; see _F_CORTEX_MC and Section on Hankel
+# 30 mm, an order of magnitude too high; see fcortex_source / mc_production and Hankel
 # convergence) and (ii) had its kappa column decoupled from f.  Grid is
 # -30,-15,0,+15,+30 % perturbation of the cortical optical property.
 _OPT_SENS_MC = {
@@ -1983,12 +1971,11 @@ def solve_diffusion_fd(layers: List[Dict], sds_mm: float, rho_max: float = 60.0,
 # of ~1.4-1.8 (decreasing with SDS), in agreement with the light-transport literature.
 # gamma values below are Monte-Carlo estimates (2.2e6 photons/geometry, mc_csf.py);
 # the ratio is robust to the MC scattering approximation.
-_CSF_GAMMA_MC = {25.0: 1.80, 30.0: 1.73, 35.0: 1.63, 40.0: 1.41}
-
 def csf_gamma(sds_mm: float) -> float:
-    """CSF amplification of cortical sensitivity, f_cortex(3L)/f_cortex(2L), from Monte Carlo (mc_csf.py)."""
-    xs = sorted(_CSF_GAMMA_MC); ys = [_CSF_GAMMA_MC[x] for x in xs]
-    return float(np.interp(sds_mm, xs, ys))
+    """CSF amplification f_cortex(3L)/f_cortex(2L) from the single production
+    Monte-Carlo source (760 nm; used only for the illustrative CSF/mismatch
+    analysis).  No hard-coded table."""
+    return _fcs.gamma_csf(sds_mm, 760)
 
 def f_cortex_three_layer(sds_mm: float, f_cortex_2l: float) -> float:
     """Three-layer (with CSF) cortical sensitivity fraction, Monte-Carlo calibrated."""

@@ -5,80 +5,801 @@
    "n_long": 20,
    "n_contra": 20,
    "sds_mean": 38.22585838986682,
-   "kpv_mean": 6.278025139103277,
+   "kpv_mean": 6.707911631063622,
    "kssr760": 1.9679132600545093,
    "kssr850": 2.781952448646125,
    "hbo_uncorr_uM": 0.14393557651663277,
-   "hbo_corr_uM": 0.5979560173107648,
+   "hbo_corr_uM": 0.649110195238147,
    "hbr_uncorr_uM": -0.030152285872665517,
-   "hbr_corr_uM": -0.1666200387426864,
-   "hbo_scale": 4.154330929029674
+   "hbr_corr_uM": -0.1805703378468297,
+   "hbo_scale": 4.509727274848812,
+   "channels": [
+    {
+     "base": "S1_D1",
+     "sds_mm": 39.29,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1559,
+     "f_cortex_850": 0.1557,
+     "kappa_pv_760": 6.414,
+     "kappa_pv_850": 6.423
+    },
+    {
+     "base": "S1_D2",
+     "sds_mm": 38.91,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1545,
+     "f_cortex_850": 0.1535,
+     "kappa_pv_760": 6.472,
+     "kappa_pv_850": 6.515
+    },
+    {
+     "base": "S1_D3",
+     "sds_mm": 40.89,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S2_D1",
+     "sds_mm": 37.18,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1476,
+     "f_cortex_850": 0.1441,
+     "kappa_pv_760": 6.775,
+     "kappa_pv_850": 6.94
+    },
+    {
+     "base": "S2_D3",
+     "sds_mm": 37.6,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1494,
+     "f_cortex_850": 0.1463,
+     "kappa_pv_760": 6.693,
+     "kappa_pv_850": 6.835
+    },
+    {
+     "base": "S2_D4",
+     "sds_mm": 37.04,
+     "hemisphere": "left",
+     "f_cortex_760": 0.147,
+     "f_cortex_850": 0.1433,
+     "kappa_pv_760": 6.803,
+     "kappa_pv_850": 6.978
+    },
+    {
+     "base": "S3_D2",
+     "sds_mm": 40.32,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S3_D3",
+     "sds_mm": 36.66,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1454,
+     "f_cortex_850": 0.1414,
+     "kappa_pv_760": 6.878,
+     "kappa_pv_850": 7.072
+    },
+    {
+     "base": "S4_D3",
+     "sds_mm": 40.69,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S4_D4",
+     "sds_mm": 34.03,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1321,
+     "f_cortex_850": 0.1274,
+     "kappa_pv_760": 7.57,
+     "kappa_pv_850": 7.849
+    },
+    {
+     "base": "S5_D5",
+     "sds_mm": 39.02,
+     "hemisphere": "right",
+     "f_cortex_760": 0.155,
+     "f_cortex_850": 0.1542,
+     "kappa_pv_760": 6.452,
+     "kappa_pv_850": 6.485
+    },
+    {
+     "base": "S5_D6",
+     "sds_mm": 39.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1557,
+     "f_cortex_850": 0.1553,
+     "kappa_pv_760": 6.423,
+     "kappa_pv_850": 6.439
+    },
+    {
+     "base": "S5_D7",
+     "sds_mm": 40.9,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S6_D5",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S6_D7",
+     "sds_mm": 37.07,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1472,
+     "f_cortex_850": 0.1435,
+     "kappa_pv_760": 6.793,
+     "kappa_pv_850": 6.969
+    },
+    {
+     "base": "S6_D8",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S7_D6",
+     "sds_mm": 40.43,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S7_D7",
+     "sds_mm": 37.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1478,
+     "f_cortex_850": 0.1442,
+     "kappa_pv_760": 6.766,
+     "kappa_pv_850": 6.935
+    },
+    {
+     "base": "S8_D7",
+     "sds_mm": 40.67,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S8_D8",
+     "sds_mm": 33.44,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1286,
+     "f_cortex_850": 0.1243,
+     "kappa_pv_760": 7.776,
+     "kappa_pv_850": 8.045
+    }
+   ]
   },
   {
    "subject": "02",
    "n_long": 14,
    "n_contra": 14,
    "sds_mean": 37.622451396282294,
-   "kpv_mean": 6.361583367224526,
+   "kpv_mean": 6.82663349203231,
    "kssr760": 1.8321605614929375,
    "kssr850": 2.0986738962235902,
    "hbo_uncorr_uM": 0.1068851361052743,
-   "hbo_corr_uM": 0.7886504543175598,
+   "hbo_corr_uM": 0.8600937756914483,
    "hbr_uncorr_uM": -0.023406986393787268,
-   "hbr_corr_uM": -0.1583878944148048,
-   "hbo_scale": 7.378485756343098
+   "hbr_corr_uM": -0.17287328904061866,
+   "hbo_scale": 8.046897885261771,
+   "channels": [
+    {
+     "base": "S1_D2",
+     "sds_mm": 38.91,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1545,
+     "f_cortex_850": 0.1535,
+     "kappa_pv_760": 6.472,
+     "kappa_pv_850": 6.515
+    },
+    {
+     "base": "S2_D1",
+     "sds_mm": 37.18,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1476,
+     "f_cortex_850": 0.1441,
+     "kappa_pv_760": 6.775,
+     "kappa_pv_850": 6.94
+    },
+    {
+     "base": "S2_D3",
+     "sds_mm": 37.6,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1494,
+     "f_cortex_850": 0.1463,
+     "kappa_pv_760": 6.693,
+     "kappa_pv_850": 6.835
+    },
+    {
+     "base": "S2_D4",
+     "sds_mm": 37.04,
+     "hemisphere": "left",
+     "f_cortex_760": 0.147,
+     "f_cortex_850": 0.1433,
+     "kappa_pv_760": 6.803,
+     "kappa_pv_850": 6.978
+    },
+    {
+     "base": "S3_D2",
+     "sds_mm": 40.32,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S3_D3",
+     "sds_mm": 36.66,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1454,
+     "f_cortex_850": 0.1414,
+     "kappa_pv_760": 6.878,
+     "kappa_pv_850": 7.072
+    },
+    {
+     "base": "S4_D3",
+     "sds_mm": 40.69,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S4_D4",
+     "sds_mm": 34.03,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1321,
+     "f_cortex_850": 0.1274,
+     "kappa_pv_760": 7.57,
+     "kappa_pv_850": 7.849
+    },
+    {
+     "base": "S5_D5",
+     "sds_mm": 39.02,
+     "hemisphere": "right",
+     "f_cortex_760": 0.155,
+     "f_cortex_850": 0.1542,
+     "kappa_pv_760": 6.452,
+     "kappa_pv_850": 6.485
+    },
+    {
+     "base": "S6_D5",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S6_D8",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S7_D7",
+     "sds_mm": 37.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1478,
+     "f_cortex_850": 0.1442,
+     "kappa_pv_760": 6.766,
+     "kappa_pv_850": 6.935
+    },
+    {
+     "base": "S8_D7",
+     "sds_mm": 40.67,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S8_D8",
+     "sds_mm": 33.44,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1286,
+     "f_cortex_850": 0.1243,
+     "kappa_pv_760": 7.776,
+     "kappa_pv_850": 8.045
+    }
+   ]
   },
   {
    "subject": "03",
    "n_long": 12,
    "n_contra": 12,
    "sds_mean": 37.72553089615015,
-   "kpv_mean": 6.373906108500964,
+   "kpv_mean": 6.8327265614575206,
    "kssr760": 1.6399849474649753,
    "kssr850": 2.3603140615960148,
    "hbo_uncorr_uM": 0.0394046833573897,
-   "hbo_corr_uM": 0.5328839950777494,
+   "hbo_corr_uM": 0.5849353027353281,
    "hbr_uncorr_uM": -0.0230337307828116,
-   "hbr_corr_uM": -0.18566386135360893,
-   "hbo_scale": 13.52336701311967
+   "hbr_corr_uM": -0.19883669209342095,
+   "hbo_scale": 14.844309175894779,
+   "channels": [
+    {
+     "base": "S1_D3",
+     "sds_mm": 40.89,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S2_D1",
+     "sds_mm": 37.18,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1476,
+     "f_cortex_850": 0.1441,
+     "kappa_pv_760": 6.775,
+     "kappa_pv_850": 6.94
+    },
+    {
+     "base": "S2_D3",
+     "sds_mm": 37.6,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1494,
+     "f_cortex_850": 0.1463,
+     "kappa_pv_760": 6.693,
+     "kappa_pv_850": 6.835
+    },
+    {
+     "base": "S2_D4",
+     "sds_mm": 37.04,
+     "hemisphere": "left",
+     "f_cortex_760": 0.147,
+     "f_cortex_850": 0.1433,
+     "kappa_pv_760": 6.803,
+     "kappa_pv_850": 6.978
+    },
+    {
+     "base": "S3_D2",
+     "sds_mm": 40.32,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S3_D3",
+     "sds_mm": 36.66,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1454,
+     "f_cortex_850": 0.1414,
+     "kappa_pv_760": 6.878,
+     "kappa_pv_850": 7.072
+    },
+    {
+     "base": "S4_D3",
+     "sds_mm": 40.69,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S4_D4",
+     "sds_mm": 34.03,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1321,
+     "f_cortex_850": 0.1274,
+     "kappa_pv_760": 7.57,
+     "kappa_pv_850": 7.849
+    },
+    {
+     "base": "S6_D8",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S7_D7",
+     "sds_mm": 37.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1478,
+     "f_cortex_850": 0.1442,
+     "kappa_pv_760": 6.766,
+     "kappa_pv_850": 6.935
+    },
+    {
+     "base": "S8_D7",
+     "sds_mm": 40.67,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S8_D8",
+     "sds_mm": 33.44,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1286,
+     "f_cortex_850": 0.1243,
+     "kappa_pv_760": 7.776,
+     "kappa_pv_850": 8.045
+    }
+   ]
   },
   {
    "subject": "04",
    "n_long": 20,
    "n_contra": 20,
    "sds_mean": 38.22585838986682,
-   "kpv_mean": 6.278025139103277,
+   "kpv_mean": 6.707911631063622,
    "kssr760": 1.859168862411294,
    "kssr850": 2.6171141812601886,
    "hbo_uncorr_uM": 0.11074546549706259,
-   "hbo_corr_uM": 1.018647696705552,
+   "hbo_corr_uM": 1.1020399635109448,
    "hbr_uncorr_uM": -0.08016412596001327,
-   "hbr_corr_uM": -0.5827302051332975,
-   "hbo_scale": 9.198098469616985
+   "hbr_corr_uM": -0.6203618169828669,
+   "hbo_scale": 9.95110687886517,
+   "channels": [
+    {
+     "base": "S1_D1",
+     "sds_mm": 39.29,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1559,
+     "f_cortex_850": 0.1557,
+     "kappa_pv_760": 6.414,
+     "kappa_pv_850": 6.423
+    },
+    {
+     "base": "S1_D2",
+     "sds_mm": 38.91,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1545,
+     "f_cortex_850": 0.1535,
+     "kappa_pv_760": 6.472,
+     "kappa_pv_850": 6.515
+    },
+    {
+     "base": "S1_D3",
+     "sds_mm": 40.89,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S2_D1",
+     "sds_mm": 37.18,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1476,
+     "f_cortex_850": 0.1441,
+     "kappa_pv_760": 6.775,
+     "kappa_pv_850": 6.94
+    },
+    {
+     "base": "S2_D3",
+     "sds_mm": 37.6,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1494,
+     "f_cortex_850": 0.1463,
+     "kappa_pv_760": 6.693,
+     "kappa_pv_850": 6.835
+    },
+    {
+     "base": "S2_D4",
+     "sds_mm": 37.04,
+     "hemisphere": "left",
+     "f_cortex_760": 0.147,
+     "f_cortex_850": 0.1433,
+     "kappa_pv_760": 6.803,
+     "kappa_pv_850": 6.978
+    },
+    {
+     "base": "S3_D2",
+     "sds_mm": 40.32,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S3_D3",
+     "sds_mm": 36.66,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1454,
+     "f_cortex_850": 0.1414,
+     "kappa_pv_760": 6.878,
+     "kappa_pv_850": 7.072
+    },
+    {
+     "base": "S4_D3",
+     "sds_mm": 40.69,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S4_D4",
+     "sds_mm": 34.03,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1321,
+     "f_cortex_850": 0.1274,
+     "kappa_pv_760": 7.57,
+     "kappa_pv_850": 7.849
+    },
+    {
+     "base": "S5_D5",
+     "sds_mm": 39.02,
+     "hemisphere": "right",
+     "f_cortex_760": 0.155,
+     "f_cortex_850": 0.1542,
+     "kappa_pv_760": 6.452,
+     "kappa_pv_850": 6.485
+    },
+    {
+     "base": "S5_D6",
+     "sds_mm": 39.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1557,
+     "f_cortex_850": 0.1553,
+     "kappa_pv_760": 6.423,
+     "kappa_pv_850": 6.439
+    },
+    {
+     "base": "S5_D7",
+     "sds_mm": 40.9,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S6_D5",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S6_D7",
+     "sds_mm": 37.07,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1472,
+     "f_cortex_850": 0.1435,
+     "kappa_pv_760": 6.793,
+     "kappa_pv_850": 6.969
+    },
+    {
+     "base": "S6_D8",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S7_D6",
+     "sds_mm": 40.43,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S7_D7",
+     "sds_mm": 37.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1478,
+     "f_cortex_850": 0.1442,
+     "kappa_pv_760": 6.766,
+     "kappa_pv_850": 6.935
+    },
+    {
+     "base": "S8_D7",
+     "sds_mm": 40.67,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S8_D8",
+     "sds_mm": 33.44,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1286,
+     "f_cortex_850": 0.1243,
+     "kappa_pv_760": 7.776,
+     "kappa_pv_850": 8.045
+    }
+   ]
   },
   {
    "subject": "05",
    "n_long": 13,
    "n_contra": 13,
    "sds_mean": 37.2943982106196,
-   "kpv_mean": 6.406025413630301,
+   "kpv_mean": 6.894164012791951,
    "kssr760": 1.6060160847037381,
    "kssr850": 1.8165307533541701,
    "hbo_uncorr_uM": 0.21879685099791235,
-   "hbo_corr_uM": 1.2753521205165514,
+   "hbo_corr_uM": 1.3959424665562419,
    "hbr_uncorr_uM": -0.07595421721770182,
-   "hbr_corr_uM": -0.5005730429239876,
-   "hbo_scale": 5.828932704925997
+   "hbr_corr_uM": -0.5438102603674457,
+   "hbo_scale": 6.380084814701292,
+   "channels": [
+    {
+     "base": "S1_D1",
+     "sds_mm": 39.29,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1559,
+     "f_cortex_850": 0.1557,
+     "kappa_pv_760": 6.414,
+     "kappa_pv_850": 6.423
+    },
+    {
+     "base": "S2_D1",
+     "sds_mm": 37.18,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1476,
+     "f_cortex_850": 0.1441,
+     "kappa_pv_760": 6.775,
+     "kappa_pv_850": 6.94
+    },
+    {
+     "base": "S2_D3",
+     "sds_mm": 37.6,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1494,
+     "f_cortex_850": 0.1463,
+     "kappa_pv_760": 6.693,
+     "kappa_pv_850": 6.835
+    },
+    {
+     "base": "S2_D4",
+     "sds_mm": 37.04,
+     "hemisphere": "left",
+     "f_cortex_760": 0.147,
+     "f_cortex_850": 0.1433,
+     "kappa_pv_760": 6.803,
+     "kappa_pv_850": 6.978
+    },
+    {
+     "base": "S3_D3",
+     "sds_mm": 36.66,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1454,
+     "f_cortex_850": 0.1414,
+     "kappa_pv_760": 6.878,
+     "kappa_pv_850": 7.072
+    },
+    {
+     "base": "S4_D3",
+     "sds_mm": 40.69,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S4_D4",
+     "sds_mm": 34.03,
+     "hemisphere": "left",
+     "f_cortex_760": 0.1321,
+     "f_cortex_850": 0.1274,
+     "kappa_pv_760": 7.57,
+     "kappa_pv_850": 7.849
+    },
+    {
+     "base": "S6_D5",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S6_D7",
+     "sds_mm": 37.07,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1472,
+     "f_cortex_850": 0.1435,
+     "kappa_pv_760": 6.793,
+     "kappa_pv_850": 6.969
+    },
+    {
+     "base": "S6_D8",
+     "sds_mm": 36.97,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1467,
+     "f_cortex_850": 0.143,
+     "kappa_pv_760": 6.817,
+     "kappa_pv_850": 6.993
+    },
+    {
+     "base": "S7_D7",
+     "sds_mm": 37.22,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1478,
+     "f_cortex_850": 0.1442,
+     "kappa_pv_760": 6.766,
+     "kappa_pv_850": 6.935
+    },
+    {
+     "base": "S8_D7",
+     "sds_mm": 40.67,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1585,
+     "f_cortex_850": 0.1597,
+     "kappa_pv_760": 6.309,
+     "kappa_pv_850": 6.262
+    },
+    {
+     "base": "S8_D8",
+     "sds_mm": 33.44,
+     "hemisphere": "right",
+     "f_cortex_760": 0.1286,
+     "f_cortex_850": 0.1243,
+     "kappa_pv_760": 7.776,
+     "kappa_pv_850": 8.045
+    }
+   ]
   }
  ],
  "group": {
   "hbo_uncorr": 0.12395354249485435,
   "hbo_uncorr_sd": 0.0652089492086018,
-  "hbo_corr": 0.8426980567856355,
-  "hbo_corr_sd": 0.3069822375568446,
+  "hbo_corr": 0.9184243407464219,
+  "hbo_corr_sd": 0.33499468639971597,
   "hbr_uncorr": -0.04654226924539589,
-  "hbr_corr": -0.31879500851367704,
-  "kpv": 6.339513033512469,
+  "hbr_corr": -0.34329047926623635,
+  "kpv": 6.793869465681806,
   "kssr760": 1.781048743225491,
   "kssr760_sd": 0.15343479450690778,
   "kssr850": 2.3349170682160176,

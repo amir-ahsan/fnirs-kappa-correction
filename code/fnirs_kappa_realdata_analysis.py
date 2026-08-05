@@ -126,43 +126,20 @@ LN10: float = float(np.log(10.0))
 #: cited equation and with the synthetic pipeline, which uses the formula value).
 DPF: dict[int, float] = {760: 6.15, 850: 5.089}
 
-#: Cortical sensitivity fractions at 760 nm, keyed by SDS in mm.
-#: Source: converged Henyey-Greenstein (g=0.9) two-layer white Monte Carlo
-#: (code/mc_2layer.py), which agrees with atlas Monte Carlo (Strangman 2013,
-#: Custo, Mansouri) and the finite-difference cross-check.  These REPLACE the
-#: earlier analytical-Kienle values {25:0.134, 30:0.285, 35:0.553, 40:0.888},
-#: which were a non-converged Hankel-quadrature artifact (see
-#: KAPPA_PV_ATLAS_CHECK.md).  f_cortex is ~0.04-0.11, so kappa_PV ~9-23.
-_F_CORTEX_760: dict[int, float] = {25: 0.0412, 30: 0.0626, 35: 0.0859, 40: 0.1115}
+#: Cortical sensitivity fractions come from the SINGLE production Monte-Carlo
+#: source (fcortex_production.json via fcortex_source): direct, wavelength-specific
+#: two-layer fractions at BOTH 760 and 850 nm and wavelength-specific CSF ratios
+#: gamma(lambda, SDS).  There is NO hard-coded 760-nm table and NO fixed 760->850
+#: ratio here -- the earlier 1.02 shortcut and single-gamma multiplier are removed,
+#: so the in-vivo correction propagates the full revised Monte-Carlo calculation.
+import fcortex_source as _fcs
 
-#: Wavelength scaling ratio f_cortex(850) / f_cortex(760) from the Monte Carlo
-#: near the operative separation (~38 mm: 0.1033 / 0.1016 ~ 1.02).
-_RATIO_850_760: float = 1.02
-
-#: CSF light-piping amplification gamma = f_cortex^3L / f_cortex^2L, computed by
-#: white Monte Carlo using the SAME anisotropic (Henyey-Greenstein, g=0.9)
-#: transport as the two-layer model (code/mc_uncertainty.py), so the ratio
-#: isolates the effect of the low-scattering CSF layer under consistent
-#: assumptions (values are means over independent seeds; see the CSF-uncertainty
-#: table).  The real adult head contains a CSF layer that pipes light to cortex,
-#: raising f_cortex above the two-layer value; because the experimental data are
-#: from real heads, the correction uses the CSF-augmented (three-layer) f_cortex.
-#: The physiological plausibility of the recovered amplitude is used ONLY as an
-#: external sanity check, never as a criterion for selecting gamma.  (The
-#: two-layer synthetic validation keeps the two-layer values; only the real-head
-#: correction uses gamma.)
 APPLY_CSF_LIGHTPIPING: bool = True
-#: Anisotropic (g=0.9) Monte-Carlo gamma at the nominal 2 mm CSF thickness
-#: (means over seeds; consistent with the earlier isotropic estimate within MC
-#: uncertainty, confirming the CSF ratio is robust to the anisotropy assumption).
-_CSF_GAMMA: dict[float, float] = {25.0: 1.85, 30.0: 1.75, 35.0: 1.71, 40.0: 1.48}
 
 
-def csf_gamma(sds_mm: float) -> float:
-    """Three-layer/two-layer cortical-sensitivity ratio gamma(SDS) (mc_csf.py)."""
-    xs = sorted(_CSF_GAMMA)
-    ys = [_CSF_GAMMA[x] for x in xs]
-    return float(np.interp(float(np.clip(sds_mm, xs[0], xs[-1])), xs, ys))
+def csf_gamma(sds_mm: float, wavelength_nm: int = 760) -> float:
+    """Wavelength-specific CSF light-piping ratio gamma(SDS, lambda) (production MC)."""
+    return _fcs.gamma_csf(sds_mm, wavelength_nm)
 
 #: Maximum source-detector distance (m) for a channel to be classified
 #: as "short-separation".
@@ -184,38 +161,19 @@ _PLOT_PARAMS: dict[str, Any] = {
 # ========================================================================
 
 def get_f_cortex(sds_mm: float) -> dict[int, float]:
-    """Interpolate cortical sensitivity fractions for an arbitrary SDS.
+    """Per-wavelength cortical sensitivity fractions for an arbitrary SDS.
 
-    Values are linearly interpolated from the look-up table in
-    ``_F_CORTEX_760`` (paper Table 2) for 760 nm, then scaled by
-    ``_RATIO_850_760`` for 850 nm.
-
-    Parameters
-    ----------
-    sds_mm : float
-        Source-detector separation in millimetres.
-
-    Returns
-    -------
-    dict[int, float]
-        Mapping ``{wavelength_nm: f_cortex}``.
+    Reads direct 760- and 850-nm two-layer fractions from the single production
+    Monte-Carlo source and applies the corresponding wavelength-specific CSF
+    light-piping ratio gamma(lambda, SDS) for real heads.  No 760->850 ratio
+    shortcut and no single gamma multiplier are used.
     """
-    sds_pts = np.array(sorted(_F_CORTEX_760.keys()), dtype=float)
-    f_pts = np.array([_F_CORTEX_760[int(s)] for s in sds_pts])
-
-    sds_clamped = np.clip(sds_mm, sds_pts[0], sds_pts[-1])
-    f_760 = float(np.interp(sds_clamped, sds_pts, f_pts))
-
-    # Real heads contain a CSF layer: multiply the two-layer MC fraction by the
-    # CSF light-piping ratio gamma(SDS) so the correction uses the three-layer
-    # (CSF-augmented) f_cortex.  This is the value appropriate for in-vivo data.
-    if APPLY_CSF_LIGHTPIPING:
-        g = csf_gamma(sds_clamped)
-        f_760 = min(f_760 * g, 0.999)
-
-    f_850 = min(f_760 * _RATIO_850_760, 0.999)
-
-    return {760: round(f_760, 4), 850: round(f_850, 4)}
+    out = {}
+    for wl in (760, 850):
+        f = (_fcs.f_cortex_invivo(sds_mm, wl) if APPLY_CSF_LIGHTPIPING
+             else _fcs.f_cortex_2L(sds_mm, wl))
+        out[wl] = round(float(f), 4)
+    return out
 
 
 # ========================================================================
