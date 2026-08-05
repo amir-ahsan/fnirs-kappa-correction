@@ -41,13 +41,17 @@ Two methodological cautions are the core contribution:
    is **not** converged for this integral and overstates `f_cortex` by ~10x (a property
    of that quadrature, not of the Kienle model). The package calibrates `f_cortex` with
    a single converged, batched anisotropic Monte Carlo (`code/mc_production.py`),
-   cross-checked against a finite-difference solver and the Colin27 atlas Monte Carlo.
+   whose sensitivity fraction is compared against the published Colin27 atlas Monte
+   Carlo (Strangman et al.). (An earlier "finite-difference" cross-check was removed:
+   the supplied routine was not a genuine FD solve, so that claim is not made.)
 2. **Statistical:** the SSR R² is a variance-removal diagnostic, not an amplitude
    factor — `1/(1−R²_SS)` belongs in a report, not in the correction.
 
-A practical consequence: under the simulated measurement noise (σ_OD = 10⁻³), the
-correction is reliable **only at long source–detector separations (≥ 38 mm)**; at
-short separations the diluted cortical signal falls below the noise floor and kappa_PV
+A practical consequence: under the simulated (fixed additive Gaussian) OD noise
+(σ_OD = 10⁻³), the correction is harmful at 25 mm, transitional near 30 mm, and
+**consistently beneficial by ~35 mm, strongest at 38–40 mm** (a 30-seed noise sweep
+is positive in all seeds from 35 mm up); at short separations the diluted cortical
+signal falls below the noise floor and kappa_PV
 amplifies noise. This threshold is noise-conditional, not universal.
 
 ### Single source of truth for f_cortex
@@ -168,9 +172,11 @@ python mc_production.py -N 2000000 --batches 16 --out fcortex_production
 
 Runs one converged anisotropic (g = 0.9) Monte Carlo per (geometry, wavelength) and
 writes `fcortex_production.json` / `.csv`: wavelength-specific two-layer `f_cortex`
-(mean ± SD and 95% CI over 16 independent photon batches), per-SDS DPF and N_eff, the
-CSF light-piping ratio γ(λ, SDS) at 2 mm and 1 mm CSF thickness, and an
-L_max / z_max / annulus convergence sweep. **A copy is bundled in `results/` and
+with its batch SD, the standard error of the combined estimate (SD/√16), and a 95%
+t-confidence-interval for the combined estimate (over 16 independent photon batches);
+per-SDS DPF; the CSF light-piping ratio γ(λ, SDS) — with its propagated standard
+error — at 2 mm and 1 mm CSF thickness; and an L_max / z_max (matched-N, common-random-
+number) / annulus convergence sweep. **A copy is bundled in `results/` and
 `code/`, so steps 1–3 run without re-running this.** **Runtime:** ~45–60 min on 2
 cores at the paper's N (2×10⁶ photons/config).
 
@@ -199,7 +205,7 @@ V_SSR(760) = 1.199 ± 0.054, V_SSR(850) = 10.339 ± 1.571 (diagnostic only, not 
 HbR overall RMSE 0.657 → 0.226 µM (65.6%). Per-subject MAE 1.83 ± 0.38 µM.
 
 **Runtime:** the core pipeline (main tables) finishes in well under a minute; the
-full script also runs the grid-convergence, finite-difference, robustness, and
+full script also runs the grid-convergence, robustness, multi-seed noise, and
 figure-generation steps (which use the slower analytical kernel), so end-to-end it
 takes roughly **15–30 minutes** on a laptop. Set `MPLBACKEND=Agg` to run headless.
 
@@ -258,7 +264,7 @@ NumPy/Matplotlib-only walkthrough of the pipeline stages at 38 mm. **Runtime:** 
   plateau).
 
 All reported synthetic numbers are exactly reproducible with these seeds; the MC
-fractions are seed-insensitive to within the reported 16-batch interval.
+fractions are seed-insensitive to within the reported 95% confidence interval.
 
 ---
 
@@ -267,6 +273,8 @@ fractions are seed-insensitive to within the reported 16-batch interval.
 - Experimental data: BIDS-NIRS-Tapping (Luke et al., 2021),
   DOI:10.5281/zenodo.5529797 — publicly available; the real-data script fetches it
   automatically (or point it at a local copy).
-- Add your preferred code/data license here before public deposit (e.g. MIT for
-  code, CC-BY for text/figures). No license file is included in this package.
-```
+- **Code** is released under the **MIT License** (`LICENSE`).
+- **Manuscript text and figures** are released under **CC BY 4.0**
+  (`LICENSE-manuscript.md`).
+- Exact package versions used to regenerate the submitted results are pinned in
+  `requirements-lock.txt`; `requirements.txt` gives the minimum-version ranges.

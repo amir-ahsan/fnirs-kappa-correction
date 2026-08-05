@@ -13,6 +13,10 @@
 #
 # Install all dependencies:
 #   pip install -r requirements.txt
+#
+# For the EXACT versions used to regenerate the submitted results, use the
+# pinned lock file instead:
+#   pip install -r requirements-lock.txt
 # =============================================================================
 
 numpy>=1.22          # np.trapezoid (NumPy>=2.0) handled via fallback shim in code

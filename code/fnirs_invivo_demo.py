@@ -22,7 +22,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from math import factorial
-import os
+import os, sys
+# Make the single-source loader importable regardless of the working directory.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fcortex_source as _fcs   # reads fcortex_production.json (single source of truth)
 
 # ======================================================================
 # Physical Constants and Parameters
@@ -46,10 +49,11 @@ DPF = {760: 6.15, 850: 5.089}
 SDS_LONG  = 38.0   # mm
 SDS_SHORT = 10.0   # mm
 
-# Cortical sensitivity fractions (from two-layer Kienle model, d_sup=12 mm)
-# Interpolated for SDS = 38 mm (between 35 mm and 40 mm table entries)
-F_CORTEX = {760: 0.1016, 850: 0.1033}  # converged Monte Carlo at 38 mm (mc_2layer.py)
-F_CORTEX_SHORT = 0.05  # short channel: almost entirely superficial
+# Cortical sensitivity fractions: read from the single source of truth
+# (fcortex_production.json via fcortex_source.py) -- no hard-coded table here.
+# This demo uses the converged two-layer fractions at the long-channel SDS.
+F_CORTEX = {wl: _fcs.f_cortex_2L(SDS_LONG, wl) for wl in (760, 850)}
+F_CORTEX_SHORT = 0.05  # short channel: almost entirely superficial (illustrative)
 
 # Sampling and timing — matched to BIDS-NIRS-Tapping paradigm
 FS = 7.8125         # Hz (matching BIDS-NIRS-Tapping acquisition rate)
@@ -226,23 +230,23 @@ def run_simulation():
         var_resid = np.var(od_ssr[lam])
         r2_ss[lam] = 1 - var_resid / var_orig if var_orig > 1e-20 else 0.0
 
-    # 7b. kappa_SSR is a DIAGNOSTIC, NOT applied (see KAPPA_PV_ATLAS_CHECK.md
+    # 7b. V_SSR is a DIAGNOSTIC, NOT applied (see KAPPA_PV_ATLAS_CHECK.md
     #     Rec. 2 and the manuscript): SSR already removed the superficial
     #     component; the cortical residual is recovered by kappa_PV alone.
-    #     Applying kappa_SSR here would double-count the dilution.
+    #     Applying V_SSR here would double-count the dilution.
     od_ssr_corr = {}
     kappa_ssr_vals = {}
     for lam in [760, 850]:
         a_ssr = max(1 - r2_ss[lam], 0.02)     # clamp to avoid blow-up
         kappa_ssr_vals[lam] = 1.0 / a_ssr      # reported as diagnostic only
-        od_ssr_corr[lam] = od_ssr[lam]         # kappa_SSR NOT applied
+        od_ssr_corr[lam] = od_ssr[lam]         # V_SSR NOT applied
 
     # 7c. Partial volume correction: divide by f_cortex (the applied PV factor)
     od_corrected = {}
     for lam in [760, 850]:
         od_corrected[lam] = od_ssr_corr[lam] / F_CORTEX[lam]
 
-    # MBLL on corrected ODs (SSR denoise + PV; kappa_SSR diagnostic only)
+    # MBLL on corrected ODs (SSR denoise + PV; V_SSR diagnostic only)
     hbo2_corr, hbr_corr = mbll_inversion(od_corrected[760], od_corrected[850])
 
     # --- Step 8: Bandpass the ground truth for fair comparison ---
@@ -269,7 +273,7 @@ def run_simulation():
     print(f"  SDS = {SDS_LONG} mm,  f_cortex(760) = {F_CORTEX[760]},  f_cortex(850) = {F_CORTEX[850]}")
     print(f"  kappa_PV (mean, applied) = {kappa_pv_mean:.3f}")
     print(f"  R^2_SS(760) = {r2_ss[760]:.3f},  R^2_SS(850) = {r2_ss[850]:.3f}")
-    print(f"  kappa_SSR(760) = {kappa_ssr_vals[760]:.3f},  kappa_SSR(850) = {kappa_ssr_vals[850]:.3f}"
+    print(f"  V_SSR(760) = {kappa_ssr_vals[760]:.3f},  V_SSR(850) = {kappa_ssr_vals[850]:.3f}"
           f"  [per-wavelength diagnostic, NOT applied; no mean/total formed]")
     print()
     print(f"  Ground truth peaks:  HbO2 = {np.max(hbo2_gt):+.3f} uM,  HbR = {np.min(hbr_gt):+.3f} uM")

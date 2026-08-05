@@ -12,7 +12,7 @@ Pipeline includes:
   - Wavelength-specific κ(PV) correction at OD level
   - Wavelength-specific forward model in synthetic data generation
   - SSR regression on same-wavelength short-channel OD
-  - Per-wavelength κ(SSR, λ) = 1/(1 − R²_SS(λ)) reported as a diagnostic only
+  - Per-wavelength V(SSR, λ) = 1/(1 − R²_SS(λ)) reported as a diagnostic only
     (NOT applied; no cross-wavelength mean or κ_total is formed)
   - Exact Student-t p-value via betainc
   - Core κ correction framework (DPF, PV, SSR)
@@ -43,6 +43,7 @@ import warnings
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -736,7 +737,7 @@ def _compute_R2_SS_single(
     return float(R2_SS)
 
 
-def compute_kappa_SSR(
+def compute_V_SSR(
     long_OD_dict: Dict[int, np.ndarray],
     short_OD_dict: Dict[int, np.ndarray],
     wavelengths: List[int],
@@ -745,9 +746,9 @@ def compute_kappa_SSR(
     band: Tuple[float, float] = (0.01, 0.5)
 ) -> Tuple[Dict[int, float], Dict[int, float], float, float]:
     """
-    Compute κ(SSR) per wavelength at the OD level.
+    Compute V(SSR) per wavelength at the OD level.
 
-    κ_SSR(λ) = 1 / (1 - R²_SS(λ))
+    V_SSR(λ) = 1 / (1 - R²_SS(λ))
 
     where R²_SS(λ) is the partial R² of the short-channel ΔOD(λ) on the
     *uncorrected* long-channel ΔOD(λ), after partialling out the task
@@ -757,16 +758,16 @@ def compute_kappa_SSR(
     same wavelength.  It must NOT be computed against the SSR-corrected
     long-channel signal — by construction of OLS, the residual of the
     SSR fit is orthogonal to the short-channel regressor, so doing so
-    would force R²_SS ≈ 0 and κ_SSR ≈ 1 regardless of the true
+    would force R²_SS ≈ 0 and V_SSR ≈ 1 regardless of the true
     superficial contamination level.
 
     Because the absorption and scattering coefficients differ at each
     wavelength, the superficial contamination fraction — and hence the
-    SSR regression R² — is wavelength-dependent.  Computing κ_SSR(λ)
+    SSR regression R² — is wavelength-dependent.  Computing V_SSR(λ)
     per wavelength preserves this physical dependence and is consistent
     with the per-wavelength OD-level SSR and PV corrections.
 
-    κ_SSR is reported PER WAVELENGTH only.  A cross-wavelength arithmetic
+    V_SSR is reported PER WAVELENGTH only.  A cross-wavelength arithmetic
     mean is returned (last two outputs) for backward compatibility, but it is
     NOT used in the results tables, figures or summaries, because the
     per-wavelength values differ substantially (e.g. 760 vs 850 nm) so their
@@ -781,12 +782,12 @@ def compute_kappa_SSR(
         band: Bandpass filter range (Hz)
 
     Returns:
-        kappa_SSR_dict: {wavelength: κ_SSR(λ)}
+        V_SSR_dict: {wavelength: V_SSR(λ)}
         R2_SS_dict: {wavelength: R²_SS(λ)}
-        kappa_SSR_mean: Arithmetic mean of κ_SSR across wavelengths
+        V_SSR_mean: Arithmetic mean of V_SSR across wavelengths
         R2_SS_mean: Arithmetic mean of R²_SS across wavelengths
     """
-    kappa_SSR_dict: Dict[int, float] = {}
+    V_SSR_dict: Dict[int, float] = {}
     R2_SS_dict: Dict[int, float] = {}
 
     for wl in wavelengths:
@@ -795,12 +796,12 @@ def compute_kappa_SSR(
             task_regressor, sfreq, band
         )
         R2_SS_dict[wl] = R2
-        kappa_SSR_dict[wl] = 1.0 / (1.0 - R2)
+        V_SSR_dict[wl] = 1.0 / (1.0 - R2)
 
-    kappa_SSR_mean = float(np.mean(list(kappa_SSR_dict.values())))
+    V_SSR_mean = float(np.mean(list(V_SSR_dict.values())))
     R2_SS_mean = float(np.mean(list(R2_SS_dict.values())))
 
-    return kappa_SSR_dict, R2_SS_dict, kappa_SSR_mean, R2_SS_mean
+    return V_SSR_dict, R2_SS_dict, V_SSR_mean, R2_SS_mean
 
 
 # =============================================================================
@@ -1076,7 +1077,7 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
     4. MBLL inversion on corrected ODs → corrected concentrations
     5. Compute and report κ factors:
          κ(PV) = 1/f_cortex(λ) is applied at the OD level
-         κ(SSR, λ) = 1/(1−R²_SS(λ)) is reported PER WAVELENGTH as a diagnostic
+         V(SSR, λ) = 1/(1−R²_SS(λ)) is reported PER WAVELENGTH as a diagnostic
          only (not applied); no cross-wavelength mean or κ_total is formed
 
     Parameters:
@@ -1186,18 +1187,18 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
             # wavelength.  Using the SSR-corrected signal here would be
             # incorrect: the SSR residual is OLS-orthogonal to the short
             # regressor by construction, so R²_SS would collapse to ≈0
-            # and κ_SSR to ≈1 regardless of the true superficial
+            # and V_SSR to ≈1 regardless of the true superficial
             # contamination.  Because μ_a and μ_s' differ at each
             # wavelength the superficial contamination fraction is
             # wavelength-dependent, making a per-wavelength computation
             # the physically rigorous approach.
-            # kappa_SSR is computed and reported PER WAVELENGTH only.  The
+            # V_SSR is computed and reported PER WAVELENGTH only.  The
             # cross-wavelength arithmetic mean (and any kappa_total built from
             # it) is intentionally NOT formed: the per-wavelength values differ
             # substantially (e.g. 760 vs 850 nm), so their mean is not a
-            # physically meaningful quantity.  kappa_SSR is a diagnostic and is
+            # physically meaningful quantity.  V_SSR is a diagnostic and is
             # not applied to the data (only kappa_PV is applied at the OD level).
-            kappa_SSR_dict, R2_SS_dict, _kappa_SSR_mean, _R2_SS_mean = compute_kappa_SSR(
+            V_SSR_dict, R2_SS_dict, _V_SSR_mean, _R2_SS_mean = compute_V_SSR(
                 ch_data['delta_OD'],
                 short_ch['delta_OD'],
                 wavelengths,
@@ -1215,9 +1216,9 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
 
             corr_short, _ = pearsonr(mbll_HbO, short_ch['HbO'])
 
-            # Build per-wavelength κ_SSR columns
-            kappa_SSR_per_wl = {
-                f'kappa_SSR_{wl}': kappa_SSR_dict[wl] for wl in wavelengths
+            # Build per-wavelength V_SSR columns
+            V_SSR_per_wl = {
+                f'V_SSR_{wl}': V_SSR_dict[wl] for wl in wavelengths
             }
             R2_SS_per_wl = {
                 f'R2_SS_{wl}': R2_SS_dict[wl] for wl in wavelengths
@@ -1236,7 +1237,7 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
                 'corrected_beta_HbR': corrected_beta_HbR,
                 'kappa_DPF': kappa_DPF,
                 'kappa_PV': kappa_PV,
-                **kappa_SSR_per_wl,
+                **V_SSR_per_wl,
                 **R2_SS_per_wl,
                 'error_mbll_HbO': error_mbll_HbO,
                 'error_mbll_HbR': error_mbll_HbR,
@@ -1306,18 +1307,18 @@ def plot_results(df: pd.DataFrame, save_path: Optional[str] = None):
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    # 5. κ components.  κ_SSR is shown PER WAVELENGTH (diagnostic, not applied);
+    # 5. κ components.  V_SSR is shown PER WAVELENGTH (diagnostic, not applied);
     #    no cross-wavelength mean is plotted (the 760/850 nm values differ too
     #    much for their average to be meaningful).
     ax = axes[1, 1]
-    kappa_cols = ['kappa_DPF', 'kappa_PV', 'kappa_SSR_760', 'kappa_SSR_850']
+    kappa_cols = ['kappa_DPF', 'kappa_PV', 'V_SSR_760', 'V_SSR_850']
     kappa_means = df.groupby('sds_mm')[kappa_cols].mean()
     x = np.arange(len(sds_unique))
     width = 0.2
     ax.bar(x - 1.5*width, kappa_means['kappa_DPF'], width, label='κ(DPF)', alpha=0.8)
     ax.bar(x - 0.5*width, kappa_means['kappa_PV'], width, label='κ(PV)', alpha=0.8)
-    ax.bar(x + 0.5*width, kappa_means['kappa_SSR_760'], width, label='κ$_{SSR}$(760)', alpha=0.8)
-    ax.bar(x + 1.5*width, kappa_means['kappa_SSR_850'], width, label='κ$_{SSR}$(850)', alpha=0.8)
+    ax.bar(x + 0.5*width, kappa_means['V_SSR_760'], width, label='V$_{SSR}$(760)', alpha=0.8)
+    ax.bar(x + 1.5*width, kappa_means['V_SSR_850'], width, label='V$_{SSR}$(850)', alpha=0.8)
     ax.set_xticks(x)
     ax.set_xticklabels([f'{s}mm' for s in sds_unique])
     ax.set_xlabel('Source-Detector Separation', fontsize=12)
@@ -1860,99 +1861,19 @@ def benchmark_computation_time(sds_mm: float = 30.0, wavelength_nm: int = 760,
 # FINITE-DIFFERENCE AND MULTI-LAYER ANALYSES (NEW)
 # =============================================================================
 
-def solve_diffusion_fd(layers: List[Dict], sds_mm: float, rho_max: float = 60.0,
-                       z_max: float = 40.0, drho: float = 1.0, dz: float = 0.5) -> float:
-    """
-    Finite-difference solver for N-layer slab diffusion model.
-
-    NOTE: retained for the two-layer cross-check only.  The three-layer CSF
-    analysis uses Monte Carlo (mc_csf.py): diffusion theory is invalid in the
-    near-transparent CSF layer, where this solver gives a non-physical result.
-
-    Solves (-D∇² + μ_a)Φ = S on a (ρ, z) cylindrical grid with Robin boundary
-    at extrapolated surface z = -z_b and zero-flux at other boundaries.
-
-    Parameters:
-        layers: List of dicts with keys 'thickness_mm', 'D', 'mua', 'musp'
-        sds_mm: Source-detector separation
-        rho_max: Maximum radial extent (mm)
-        z_max: Maximum depth extent (mm)
-        drho: Radial grid spacing (mm)
-        dz: Axial grid spacing (mm)
-
-    Returns:
-        f_cortex: Cortical sensitivity fraction from 3D cylindrical integral
-    """
-    # Setup grid
-    n_rho = int(rho_max / drho) + 1
-    n_z = int(z_max / dz) + 1
-    rho_grid = np.linspace(0, rho_max, n_rho)
-    z_grid = np.linspace(-0.0, z_max, n_z)
-
-    # Extract layer boundaries (cumulative depth)
-    z_sup = layers[0]['thickness_mm'] if len(layers) > 0 else 12.0
-
-    # Initialize fluence matrices: source and detector
-    phi_src = np.zeros((n_rho, n_z))
-    phi_det = np.zeros((n_rho, n_z))
-
-    # Source at z_s = 1/μs' in top layer
-    source_layer = layers[0]
-    z_s = 1.0 / source_layer['musp']
-
-    # Simple finite-difference iteration (Jacobi-like)
-    # For each layer, solve (-D∇² + μ_a)Φ = S using direct FD discretization
-
-    # Initialize with a source-like profile (Gaussian-like)
-    for i_z in range(n_z):
-        z = z_grid[i_z]
-        z_rel = z - z_s
-        for i_rho in range(n_rho):
-            rho = rho_grid[i_rho]
-            r = np.sqrt(rho**2 + z_rel**2 + 1e-10)
-            # Approximate solution: 1/(4πD r) * exp(-mu_eff * r)
-            layer_idx = min(int(z / z_sup), len(layers) - 1)
-            D = layers[layer_idx]['D']
-            mua = layers[layer_idx]['mua']
-            musp = layers[layer_idx]['musp']
-            mu_eff = np.sqrt(3 * mua * (mua + musp))
-            phi_src[i_rho, i_z] = max(np.exp(-mu_eff * r) / (4.0 * np.pi * D * r), 1e-20)
-
-    # Detector fluence (source now at detector position)
-    for i_z in range(n_z):
-        z = z_grid[i_z]
-        for i_rho in range(n_rho):
-            rho = rho_grid[i_rho]
-            # Distance from detector at (sds_mm, 0)
-            rho_det = np.sqrt((rho - sds_mm)**2)
-            z_rel = z - z_s
-            r = np.sqrt(rho_det**2 + z_rel**2 + 1e-10)
-            layer_idx = min(int(z / z_sup), len(layers) - 1)
-            D = layers[layer_idx]['D']
-            mua = layers[layer_idx]['mua']
-            musp = layers[layer_idx]['musp']
-            mu_eff = np.sqrt(3 * mua * (mua + musp))
-            phi_det[i_rho, i_z] = max(np.exp(-mu_eff * r) / (4.0 * np.pi * D * r), 1e-20)
-
-    # Compute sensitivity (Born approximation): J = φ_src * φ_det
-    J = phi_src * phi_det
-
-    # 3D cylindrical integration
-    # ∫∫∫ J(ρ, θ, z) ρ dρ dθ dz = 2π ∫∫ J(ρ, z) ρ dρ dz
-    S_total = 0.0
-    S_cortex = 0.0
-
-    for i_rho in range(1, n_rho):  # Skip i_rho=0 to avoid singularity
-        rho = rho_grid[i_rho]
-        for i_z in range(n_z):
-            z = z_grid[i_z]
-            dV_cyl = 2.0 * np.pi * J[i_rho, i_z] * rho * drho * dz
-            S_total += dV_cyl
-            if z >= z_sup:
-                S_cortex += dV_cyl
-
-    f_cortex = S_cortex / S_total if S_total > 0 else 0.0
-    return float(f_cortex)
+# NOTE: An earlier version of this file contained a function named
+# ``solve_diffusion_fd`` that was presented as an independent finite-difference
+# cross-check of f_cortex.  It did not actually assemble or solve a
+# finite-difference system: it filled the source/detector fields with
+# homogeneous-medium Green's functions exp(-mu_eff*r)/(4*pi*D*r) and integrated
+# their product.  Because it was not a genuine FD solve and its results were not
+# reproduced by any runnable command, that function and the associated
+# "finite-difference / adaptive-Kienle validation" table have been REMOVED.
+# The converged f_cortex is validated by (a) Monte-Carlo convergence
+# (L_max / z_max / batch checks in mc_production.py) and (b) agreement with
+# published atlas Monte Carlo (Strangman, Li & Zhang, Colin27) -- see the
+# manuscript's atlas-comparison paragraph.  No independent FD/adaptive-Kienle
+# numerical validation is claimed.
 
 
 # ============================================================================
@@ -2074,10 +1995,8 @@ def analyze_model_mismatch(sds_mm: float = 30.0,
     # Wavelength-specific cortical sensitivity: two-layer (analytic Kienle)
     f2l = {wl: f_cortex_mc(sds_mm, wl) for wl in wavelengths}  # stable MC f_cortex
 
-    # Three-layer (with CSF) sensitivity from the finite-difference solver.
-    # The FD model uses wavelength-independent optical properties, so the same
-    # f_cortex is applied to both wavelengths.
-    # Three-layer (with CSF) cortical sensitivity, Monte-Carlo calibrated (mc_csf.py):
+    # Three-layer (with CSF) cortical sensitivity, Monte-Carlo calibrated
+    # (from the production CSF ratio gamma via fcortex_source):
     # CSF light-piping INCREASES f_cortex, so f3l > f2l and a two-layer model
     # UNDERESTIMATES the true cortical sensitivity (-> the two-layer kappa_PV overcorrects).
     f3l = {wl: f_cortex_three_layer(sds_mm, f2l[wl]) for wl in wavelengths}
@@ -2247,6 +2166,39 @@ def analyze_fcortex_sensitivity(sds_mm: float = 30.0,
     return {'results': results, 'f_cortex_true': f_true_mean}
 
 
+def multiseed_operating_regime(n_seeds: int = 30, base_seed: int = 1000,
+                               sds_list=(25.0, 30.0, 35.0, 38.0, 40.0)) -> List[Dict]:
+    """Repeat the HbO2 RMSE-improvement evaluation over many independent noise
+    realizations (seeds) to quantify how noise-dependent the operating-regime
+    result is.  The single-seed (seed 42) numbers are one draw from this
+    distribution; this reports mean +/- SD and the fraction of seeds improving
+    at each separation, so the crossover can be described as noise-dependent
+    rather than a hard threshold.
+
+    Returns a list of dicts (one per SDS) with mean, sd and fraction-improving.
+    """
+    per_sds = {s: [] for s in sds_list}
+    for k in range(n_seeds):
+        data = generate_synthetic_fnirs_data(
+            n_subjects=5, duration_s=660.0, sfreq=7.8125,
+            sds_long_mm=list(sds_list), sds_short_mm=10.0,
+            wavelengths=[760, 850], seed=base_seed + k)
+        df = run_analysis_pipeline(data, n_s=500)
+        for s in sds_list:
+            sub = df[np.isclose(df['sds_mm'], s)]
+            rm = np.sqrt((sub['error_mbll_HbO'] ** 2).mean())
+            rc = np.sqrt((sub['error_corr_HbO'] ** 2).mean())
+            per_sds[s].append((1.0 - rc / rm) * 100.0 if rm > 0 else np.nan)
+    rows = []
+    for s in sds_list:
+        a = np.array(per_sds[s], float); a = a[~np.isnan(a)]
+        rows.append(dict(sds_mm=float(s), n_seeds=int(a.size),
+                         mean_improvement=float(a.mean()),
+                         sd_improvement=float(a.std(ddof=1)) if a.size > 1 else 0.0,
+                         frac_improving=float(np.mean(a > 0))))
+    return rows
+
+
 # =============================================================================
 # MAIN FUNCTION
 # =============================================================================
@@ -2304,14 +2256,14 @@ def main():
     summary = results_df.groupby('sds_mm').agg({
         'f_cortex_computed': 'mean',
         'kappa_PV': 'mean',
-        'kappa_SSR_760': 'mean',
-        'kappa_SSR_850': 'mean',
+        'V_SSR_760': 'mean',
+        'V_SSR_850': 'mean',
         'error_mbll_HbO': lambda x: np.sqrt((x**2).mean()),
         'error_corr_HbO': lambda x: np.sqrt((x**2).mean()),
     }).rename(columns={
         'f_cortex_computed': 'f_cortex',
-        'kappa_SSR_760': 'kSSR_760',
-        'kappa_SSR_850': 'kSSR_850',
+        'V_SSR_760': 'V_SSR_760',
+        'V_SSR_850': 'V_SSR_850',
         'error_mbll_HbO': 'RMSE_MBLL',
         'error_corr_HbO': 'RMSE_Corrected'
     })
@@ -2329,15 +2281,15 @@ def main():
     print("\nκ Factor Statistics (mean ± std):")
     print(f"  κ(DPF):   {results_df['kappa_DPF'].mean():.3f} ± {results_df['kappa_DPF'].std():.3f}")
     print(f"  κ(PV):    {results_df['kappa_PV'].mean():.3f} ± {results_df['kappa_PV'].std():.3f}  (applied)")
-    # κ_SSR is a per-wavelength diagnostic (NOT applied).  No cross-wavelength
+    # V_SSR is a per-wavelength diagnostic (NOT applied).  No cross-wavelength
     # mean or κ_total is reported, because the 760/850 nm values differ too much
     # for their arithmetic mean to be a meaningful quantity.
-    print("  κ(SSR) per wavelength [diagnostic, not applied]:")
-    wl_cols = [c for c in results_df.columns if c.startswith('kappa_SSR_')]
+    print("  V(SSR) per wavelength [diagnostic, not applied]:")
+    wl_cols = [c for c in results_df.columns if c.startswith('V_SSR_')]
     for col in sorted(wl_cols):
-        wl = col.replace('kappa_SSR_', '')
+        wl = col.replace('V_SSR_', '')
         r2_col = f'R2_SS_{wl}'
-        print(f"    λ={wl} nm: κ_SSR = {results_df[col].mean():.3f} ± {results_df[col].std():.3f}"
+        print(f"    λ={wl} nm: V_SSR = {results_df[col].mean():.3f} ± {results_df[col].std():.3f}"
               f"  [R²_SS = {results_df[r2_col].mean():.3f}]")
     print()
 
@@ -2395,6 +2347,19 @@ def main():
     summary.to_csv('fnirs_kappa_summary_by_sds.csv')
     print("  Saved: fnirs_kappa_summary_by_sds.csv")
 
+    # --- Multi-seed operating-regime variability (noise-realization spread) ---
+    print("\n" + "="*70)
+    print("ANALYSIS I: MULTI-SEED OPERATING REGIME (HbO2 improvement over 30 seeds)")
+    print("="*70)
+    ms_rows = multiseed_operating_regime(n_seeds=30, base_seed=1000)
+    print(f"\n{'SDS (mm)':<10}{'Mean impr.':<13}{'SD':<9}{'Frac. improving':<16}")
+    print("-"*48)
+    for r in ms_rows:
+        print(f"{r['sds_mm']:<10.0f}{r['mean_improvement']:<+13.1f}"
+              f"{r['sd_improvement']:<9.1f}{100*r['frac_improving']:<16.0f}")
+    json.dump(ms_rows, open('multiseed_operating_regime.json', 'w'), indent=1)
+    print("  Saved: multiseed_operating_regime.json")
+
     print()
     print("="*70)
     print("ANALYSIS COMPLETE")
@@ -2404,9 +2369,9 @@ def main():
     print(f"  HbR  RMSE improvement: {hbr_results['overall']['improvement_pct']:.1f}%")
     print(f"  Per-subject MAE: {subj_results['overall_mae']['mean']:.4f} ± {subj_results['overall_mae']['std']:.4f} µM")
     print(f"  κ(PV) mean (applied):  {results_df['kappa_PV'].mean():.3f}")
-    print(f"  κ(SSR) [diagnostic, per λ]:  "
-          f"760 nm {results_df['kappa_SSR_760'].mean():.3f}, "
-          f"850 nm {results_df['kappa_SSR_850'].mean():.3f}")
+    print(f"  V(SSR) [diagnostic, per λ]:  "
+          f"760 nm {results_df['V_SSR_760'].mean():.3f}, "
+          f"850 nm {results_df['V_SSR_850'].mean():.3f}")
     print(f"  Computation time: {time_results['mean_time']:.4f} s/channel")
     print()
 

@@ -76,7 +76,7 @@ def analyze_subject(subject: str):
     od_data = raw_od.get_data().T
     od_filt = rh.bandpass_filter(od_data, fs, lo=0.01, hi=0.1)
 
-    # SSR + kappa_SSR
+    # SSR + V_SSR
     od_ssr = od_filt.copy()
     r2_by_wl, kappa_ssr_by_wl = {}, {}
     for wl in (wl1, wl2):
@@ -91,7 +91,7 @@ def analyze_subject(subject: str):
         r2_by_wl[wl] = r2
         kappa_ssr_by_wl[wl] = float(np.mean(rh.compute_kappa_ssr(r2)))
 
-    # kappa_SSR is a DIAGNOSTIC, NOT applied.  1/(1-R^2_SS) is an inverse
+    # V_SSR is a DIAGNOSTIC, NOT applied.  1/(1-R^2_SS) is an inverse
     # residual-VARIANCE ratio, not an amplitude-restoration factor (the amplitude
     # ratio would be sqrt(1-R^2)), and R^2_SS cannot identify cortical loss.
     # kappa_PV = 1/f_cortex corrects only the optical dilution of the cortical
@@ -109,7 +109,7 @@ def analyze_subject(subject: str):
         od_pv[:, lp] = od_ssr_corrected[:, lp] / f
 
     kappa_pv_mean = float(np.mean(list(kappa_pvs.values())))
-    # kappa_SSR is a per-wavelength diagnostic (not applied); no cross-wavelength
+    # V_SSR is a per-wavelength diagnostic (not applied); no cross-wavelength
     # mean or kappa_total is formed (the 760/850 nm values differ too much for
     # their average to be meaningful).
 
@@ -233,7 +233,7 @@ def write_outputs(per_subject, group):
     # Human-readable
     lines = ["Group-level kappa-correction analysis (BIDS-NIRS-Tapping, N=5)",
              "=" * 70, ""]
-    lines.append(f"{'Subject':<10}{'SDS(mm)':>10}{'kPV':>8}{'kSSR760':>9}{'kSSR850':>9}"
+    lines.append(f"{'Subject':<10}{'SDS(mm)':>10}{'kPV':>8}{'V_SSR760':>9}{'V_SSR850':>9}"
                  f"{'HbO2 unc':>10}{'HbO2 cor':>10}{'scale':>8}"
                  f"{'HbR unc':>10}{'HbR cor':>10}{'scale':>8}")
     lines.append("-" * 110)

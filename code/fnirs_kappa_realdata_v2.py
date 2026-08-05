@@ -13,7 +13,7 @@ Improvements over fnirs_kappa_realdata_analysis.py:
   * a fixed pre-registered response-window MEAN amplitude estimator (not a max-|.|,
     which is positively biased after large amplification).
 
-Only kappa_PV = 1/f_cortex(per-channel SDS, CSF-augmented) is applied; kappa_SSR is
+Only kappa_PV = 1/f_cortex(per-channel SDS, CSF-augmented) is applied; V_SSR is
 reported as a variance-removal diagnostic (not applied).
 
 Requires: mne, mne-bids, numpy, scipy.  Reuses constants/helpers from
@@ -164,7 +164,14 @@ def analyze_subject(root: Path, sub: str) -> dict:
         return float(mean_trace[w0:w1].mean())
 
     # contralateral selection: left hand -> right hemi (x>0); right hand -> left hemi (x<0)
+    # ipsilateral is the opposite hemisphere; used only to test the coordinate
+    # convention (contralateral response should exceed ipsilateral for both hands).
     contra = {"left": lambda c: c["x"] > 0, "right": lambda c: c["x"] < 0}
+    ipsi = {"left": lambda c: c["x"] < 0, "right": lambda c: c["x"] > 0}
+    ipsi_hbo_u = []   # uncorrected contralateral-window HbO on the IPSILATERAL side
+    for cond in ("left", "right"):
+        for c in [c for c in chan_out if ipsi[cond](c)]:
+            ipsi_hbo_u.append(win_amp(block_mean(c["hbo_u"], onsets[cond]), HBO_WINDOW))
     res = {"hbo_u": [], "hbo_c": [], "hbr_u": [], "hbr_c": [], "kpv": [], "sds": []}
     tr = {"hbo_u": [], "hbo_c": [], "hbr_u": [], "hbr_c": []}   # block-average traces
     for cond in ("left", "right"):
@@ -190,12 +197,15 @@ def analyze_subject(root: Path, sub: str) -> dict:
     # mM^-1 cm^-1 -> mm^-1 uM^-1 conversion), so no further scaling is applied.
     hbo_u = float(np.mean(res["hbo_u"])); hbo_c = float(np.mean(res["hbo_c"]))
     hbr_u = float(np.mean(res["hbr_u"])); hbr_c = float(np.mean(res["hbr_c"]))
+    hbo_u_ipsi = float(np.mean(ipsi_hbo_u)) if ipsi_hbo_u else float("nan")
     return dict(subject=sub, n_long=len(chan_out),
-                n_contra=len(res["hbo_u"]),
+                n_contra=len(res["hbo_u"]), n_ipsi=len(ipsi_hbo_u),
                 sds_mean=float(np.mean(res["sds"])),
                 kpv_mean=float(np.mean(res["kpv"])),
                 kssr760=float(np.mean(kssr[760])), kssr850=float(np.mean(kssr[850])),
                 hbo_uncorr_uM=hbo_u, hbo_corr_uM=hbo_c,
+                hbo_uncorr_ipsi_uM=hbo_u_ipsi,
+                lateralization_contra_gt_ipsi=bool(hbo_u > hbo_u_ipsi),
                 hbr_uncorr_uM=hbr_u, hbr_corr_uM=hbr_c,
                 hbo_scale=hbo_c / hbo_u if hbo_u else float("nan"),
                 channels=[dict(base=c["base"], sds_mm=round(c["sds"], 2),
@@ -284,15 +294,21 @@ def main():
         r = analyze_subject(root, sub)
         rows.append(r)
         print(f"sub-{sub}: n_contra={r['n_contra']:2d} SDS={r['sds_mean']:.1f}mm "
-              f"kPV={r['kpv_mean']:.2f} kSSR(760/850)={r['kssr760']:.2f}/{r['kssr850']:.2f}  "
+              f"kPV={r['kpv_mean']:.2f} V_SSR(760/850)={r['kssr760']:.2f}/{r['kssr850']:.2f}  "
               f"HbO {r['hbo_uncorr_uM']:+.3f}->{r['hbo_corr_uM']:+.3f}uM ({r['hbo_scale']:.2f}x)  "
               f"HbR {r['hbr_uncorr_uM']:+.3f}->{r['hbr_corr_uM']:+.3f}uM")
     arr = lambda k: np.array([r[k] for r in rows])
     print("\nGROUP (contralateral, window-mean, N=5):")
     for k, lab in [("hbo_uncorr_uM", "HbO uncorr"), ("hbo_corr_uM", "HbO corr"),
                    ("hbr_uncorr_uM", "HbR uncorr"), ("hbr_corr_uM", "HbR corr"),
-                   ("kpv_mean", "kPV"), ("kssr760", "kSSR760"), ("kssr850", "kSSR850")]:
+                   ("kpv_mean", "kPV"), ("kssr760", "V_SSR760"), ("kssr850", "V_SSR850")]:
         print(f"  {lab:11s}: {arr(k).mean():+.3f} +/- {arr(k).std(ddof=1):.3f}")
+    # Lateralization check: uncorrected contralateral vs ipsilateral HbO (convention test)
+    contra_u = arr("hbo_uncorr_uM"); ipsi_u = arr("hbo_uncorr_ipsi_uM")
+    n_lateralized = int(np.sum(contra_u > ipsi_u))
+    print(f"\nLATERALIZATION (uncorrected HbO, contra vs ipsi):")
+    print(f"  contralateral {contra_u.mean():+.3f} vs ipsilateral {ipsi_u.mean():+.3f} uM  "
+          f"(contra>ipsi in {n_lateralized}/{len(rows)} subjects)")
     out = dict(per_subject=rows,
                group=dict(hbo_uncorr=float(arr("hbo_uncorr_uM").mean()),
                           hbo_uncorr_sd=float(arr("hbo_uncorr_uM").std(ddof=1)),
@@ -302,7 +318,9 @@ def main():
                           hbr_corr=float(arr("hbr_corr_uM").mean()),
                           kpv=float(arr("kpv_mean").mean()),
                           kssr760=float(arr("kssr760").mean()), kssr760_sd=float(arr("kssr760").std(ddof=1)),
-                          kssr850=float(arr("kssr850").mean()), kssr850_sd=float(arr("kssr850").std(ddof=1))))
+                          kssr850=float(arr("kssr850").mean()), kssr850_sd=float(arr("kssr850").std(ddof=1)),
+                          hbo_uncorr_ipsi=float(np.nanmean(ipsi_u)),
+                          n_lateralized=n_lateralized, n_subjects=len(rows)))
     make_figures(rows, script_dir)
     for r in out["per_subject"]:
         r.pop("traces", None)

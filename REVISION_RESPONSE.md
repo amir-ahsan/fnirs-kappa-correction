@@ -201,3 +201,106 @@ N_eff — is identified as the operative uncertainty.
 figures, S1 uncertainty table, convergence table, CSF γ table, and the full in-vivo
 per-subject/group tables were cross-checked line-by-line against the regenerated
 console/JSON output, and the manuscript was recompiled cleanly.
+
+---
+
+# Round 3 — Response to *Updated fNIRS Study: Remaining Problems and Recommendations*
+
+This third review raised two Critical items (an unsupported finite-difference /
+adaptive-Kienle validation claim and a mislabeled Monte-Carlo confidence interval),
+three Major items (a confounded z_max convergence check, an over-broad
+single-source-of-truth claim, and an over-restrictive operating-regime conclusion),
+and a set of secondary edits. All are addressed below; every affected number was
+regenerated from a fresh production Monte-Carlo run and the manuscript recompiles
+cleanly.
+
+**Problem 1 — finite-difference / adaptive-Kienle "validation" not reproduced by the
+code (Critical).** Removed, as the reviewer's second option recommends. The reviewer
+is correct: the supplied `solve_diffusion_fd` did not assemble or solve a
+finite-difference system — it filled the source/detector fields with homogeneous-medium
+Green's functions `exp(-mu_eff*r)/(4πDr)` and integrated their product — and it was
+never actually called (the table values were hard-coded in the LaTeX). We therefore
+(i) deleted Supplementary Table S6 (the FD/adaptive-Kienle comparison) and its
+equation, (ii) removed all "independent finite-difference validation" and "four
+independent methods agree" language from the abstract, introduction, methods, results,
+discussion and conclusions, and (iii) removed the misleading `solve_diffusion_fd`
+function, replacing it with a comment documenting why. The converged `f_cortex` is now
+supported by two honest, reproducible checks only: Monte-Carlo convergence (the
+L_max / z_max / annulus sweeps in `mc_production.py`) and agreement with the
+*published* Colin27 atlas Monte Carlo of Strangman, Li & Zhang. The homogeneous-limit
+check is retained but explicitly scoped to validating the Kienle *fluence*, not the
+sensitivity fraction.
+
+**Problem 2 — the "95% CI" was not a CI for the combined estimate (Critical).**
+Corrected exactly as recommended. `mc_production.py` now reports three distinct
+quantities per SDS/wavelength: the batch SD (spread of the 16 individual batch
+estimates), the standard error of the combined estimate SE = SD/√16, and a 95%
+confidence interval for the combined 2×10⁶-photon estimate as the t interval
+f ± t₀.₉₇₅,₁₅·SE (t = 2.131). Supplementary Table S1 now has separate SD, SE and
+95%-CI(t) columns. The combined-estimate CI is much narrower than the old
+percentile-of-batches range — e.g. at 760 nm / 38 mm it is [0.094, 0.108] (SE 0.0032),
+not the batch-spread [0.082, 0.120] — which is now labeled as a batch-level prediction
+range, not a CI. The CSF ratio γ uncertainty is likewise propagated from the batch
+*standard errors* of f²ᴸ and f³ᴸ (not the raw batch SDs), giving γ = 1.84 ± 0.03,
+1.66 ± 0.03, 1.57 ± 0.04, 1.44 ± 0.04 (760 nm) in place of the earlier ±0.11–0.15.
+N_eff is described (and no longer tabulated as an uncertainty) as an absorption-weight
+effective count only.
+
+**Problem 3 — the z_max convergence check confounded depth with photon count (Major).**
+Fixed. The z_max = 220 mm check is now run at the *same* N = 2×10⁶ photons and the
+*same* seed (common random numbers) as the z_max = 150 mm production run, scored
+identically. At matched N the paired difference is 0.000 at both 38 mm and 40 mm
+(Δ = 0.000 ± 0.005 and 0.000 ± 0.004 SE, well within the 95% CI), confirming
+z_max = 150 mm is converged. The earlier apparent difference (0.1010 vs 0.0941 at
+38 mm; 0.1098 vs 0.0979 at 40 mm) was entirely a low-N sampling fluctuation from the
+0.8 M-photon check — at matched N it vanishes. The convergence-table caption now
+reports the matched-N paired difference and its SE. (The L_max plateau was already
+sound and is unchanged.)
+
+**Problem 4 — single-source-of-truth claim overstated (Major).** Narrowed and
+completed where feasible. `fnirs_invivo_demo.py` no longer hard-codes
+f_cortex(760)=0.1016 / f_cortex(850)=0.1033; it imports the values from
+`fcortex_source.py`. The two remaining embedded tables are the *secondary* robustness
+sweeps — the superficial-thickness sweep (which by definition varies d_sup away from
+the production geometry) and the optical-property sweep (which varies cortical μₐ, μₛ′)
+— which necessarily require their own perturbed simulations; these are now explicitly
+labeled in the manuscript as separate secondary simulations with their own provenance
+(`mc_2layer.py`, single-ensemble correlated reweighting) and reported as relative
+sensitivities, not production baselines. The README/manuscript claim is narrowed to
+"every principal baseline f_cortex used in the main synthetic and in-vivo analyses
+comes from one versioned production source." Remaining `kappa_SSR` identifiers, labels,
+comments and printed output across all scripts were renamed to `V_SSR`.
+
+**Problem 5 — operating-regime conclusion more restrictive than the evidence (Major).**
+Reframed, with a new multi-seed analysis. A `multiseed_operating_regime` routine was
+added to the synthetic script and run over 30 independent noise seeds; the resulting
+distribution (new Supplementary Table, mean ± SD and fraction of seeds improving) is:
+25 mm −33 ± 20% (0/30 improving), 30 mm +7 ± 14% (23/30), 35 mm +29 ± 10% (30/30),
+38 mm +38 ± 8% (30/30), 40 mm +43 ± 8% (30/30). The abstract, operating-regime section,
+scope discussion and conclusions no longer state that useful performance begins only at
+38 mm; they now say the correction is harmful at 25 mm, transitional near 30 mm,
+*consistently beneficial by ~35 mm*, and strongest at 38–40 mm, with the crossover
+explicitly instrument- and noise-dependent rather than universal. The 38–40 mm range is
+still highlighted as strongest.
+
+**Problem 6 — secondary edits.** (5.1) "pre-registered response windows" → "fixed,
+pre-specified response windows" (no dated registry exists). (5.2) The primary in-vivo
+script now computes a reproducible ipsilateral-versus-contralateral comparison; the
+uncorrected contralateral HbO₂ exceeds the ipsilateral response in all five subjects
+(group 0.124 vs 0.065 µM), and the manuscript's lateralization statement now cites
+this. (5.3) `kappa_SSR` → `V_SSR` throughout code comments, variable names, printed
+output and legacy docs. (5.4) "shot-noise floor" → "assumed OD-noise floor / simulated
+OD-noise level"; the Methods now state explicitly that the synthetic noise is a fixed,
+separation-independent additive Gaussian, not intensity-dependent photon-counting
+noise, and that real shot noise (which grows with separation) is discussed as a
+limitation. (5.5) MIT (`LICENSE`) and CC BY 4.0 (`LICENSE-manuscript.md`) files are
+included in the package; the README license placeholder and the trailing unmatched code
+fence are removed; a pinned `requirements-lock.txt` records the exact dependency
+versions used to regenerate the results.
+
+**Verification.** A fresh production Monte-Carlo run (2×10⁶ photons/config, 16 batches,
+matched-N z_max check) regenerated `fcortex_production.json`; both pipelines and the
+demo were re-run against it; the 30-seed operating-regime table, the S1 SD/SE/CI table,
+the z_max paired-difference result, the γ standard errors, and the in-vivo lateralization
+were cross-checked against the regenerated console/JSON output, and the manuscript and
+pedagogical guide both recompile cleanly.

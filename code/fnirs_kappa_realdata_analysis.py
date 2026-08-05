@@ -16,11 +16,11 @@ data acquired from a publicly available finger-tapping experiment:
 
     1. Short-separation regression (SSR) at the OD level, performed
        independently for each wavelength.
-    2. SSR-attenuation diagnostic: kappa_SSR(lam) = 1 / (1 - R^2_SS(lam)),
+    2. SSR-attenuation diagnostic: V_SSR(lam) = 1 / (1 - R^2_SS(lam)),
        estimated per wavelength from the regression statistics and REPORTED
        as a diagnostic of residual superficial contamination. It is NOT
        applied to the data, and no cross-wavelength mean or kappa_total is
-       formed: applying kappa_SSR on top of the (correctly large) kappa_PV
+       formed: applying V_SSR on top of the (correctly large) kappa_PV
        would double-count the dilution, and the per-wavelength values differ
        too much for their mean to be meaningful.
     3. Partial-volume (PV) correction: OD_cortex = OD_ssr / f_cortex(lam),
@@ -391,12 +391,12 @@ def ssr_per_wavelength(
 
 
 def compute_kappa_ssr(r_squared: NDArray) -> NDArray:
-    """Compute per-channel kappa_SSR from R^2 values.
+    """Compute per-channel V_SSR from R^2 values.
 
     The SSR attenuation correction factor compensates for cortical
     signal inadvertently removed by short-separation regression:
 
-        kappa_SSR = 1 / (1 - R^2_SS)
+        V_SSR = 1 / (1 - R^2_SS)
 
     Parameters
     ----------
@@ -759,8 +759,8 @@ def generate_figures(
         f"f_cortex({wl1}): {f_cortex.get(wl1, 'N/A')}\n"
         f"f_cortex({wl2}): {f_cortex.get(wl2, 'N/A')}\n"
         f"κ_PV (mean, applied):    {results['kappa_pv_mean']:.3f}\n"
-        f"κ_SSR({wl1}) [diag.]:    {k_ssr_wl.get(wl1, 'N/A'):.3f}\n"
-        f"κ_SSR({wl2}) [diag.]:    {k_ssr_wl.get(wl2, 'N/A'):.3f}\n"
+        f"V_SSR({wl1}) [diag.]:    {k_ssr_wl.get(wl1, 'N/A'):.3f}\n"
+        f"V_SSR({wl2}) [diag.]:    {k_ssr_wl.get(wl2, 'N/A'):.3f}\n"
         f"\n"
         f"Peak |HbO₂| uncorr: {hbo2_peak_unc:.4f} μM\n"
         f"Peak |HbO₂| corr:   {hbo2_peak_cor:.4f} μM\n"
@@ -890,25 +890,25 @@ def main() -> None:
         kappa_ssr_by_wl[wl] = float(np.mean(k_ssr))
         print(f"    {wl} nm -- mean beta = {betas.mean():.4f}, "
               f"mean R^2 = {r2.mean():.4f}, "
-              f"mean kappa_SSR = {np.mean(k_ssr):.3f}")
+              f"mean V_SSR = {np.mean(k_ssr):.3f}")
 
-    # ── Step 7: kappa_SSR is a DIAGNOSTIC, not applied ───────────────
-    # kappa_SSR = 1/(1 - R^2_SS) was previously multiplied into the long-channel
+    # ── Step 7: V_SSR is a DIAGNOSTIC, not applied ───────────────
+    # V_SSR = 1/(1 - R^2_SS) was previously multiplied into the long-channel
     # OD here.  That double-counts the dilution: short-separation regression has
     # already removed the SUPERFICIAL (systemic) component, and the residual
     # cortical signal is recovered by the partial-volume factor kappa_PV =
     # 1/f_cortex alone (Step 8).  Restoring the SSR-removed variance with
-    # kappa_SSR would re-inject the systemic signal SSR was meant to remove, and
+    # V_SSR would re-inject the systemic signal SSR was meant to remove, and
     # together with the corrected (large) kappa_PV drove the corrected amplitude
-    # to a non-physiological ~11 uM.  We therefore report kappa_SSR as a
+    # to a non-physiological ~11 uM.  We therefore report V_SSR as a
     # diagnostic of residual superficial contamination but do NOT apply it,
     # consistent with the synthetic pipeline (where only kappa_PV is applied).
     # See KAPPA_PV_ATLAS_CHECK.md (Rec. 2) and CHANGELOG_FIXES.md.
-    print("[7] kappa_SSR reported as diagnostic (NOT applied; see Step 8) ...")
+    print("[7] V_SSR reported as diagnostic (NOT applied; see Step 8) ...")
     od_ssr_corrected = od_ssr.copy()
     for wl in (wl1, wl2):
         k_ssr = compute_kappa_ssr(r2_by_wl[wl])
-        print(f"    {wl} nm -- kappa_SSR (diagnostic) range: "
+        print(f"    {wl} nm -- V_SSR (diagnostic) range: "
               f"[{k_ssr.min():.3f}, {k_ssr.max():.3f}], mean {np.mean(k_ssr):.3f}")
 
     # ── Step 8: partial-volume correction ───────────────────────────
@@ -924,7 +924,7 @@ def main() -> None:
         print(f"    {wl} nm -- f_cortex = {f:.4f}, kappa_PV = {kpv:.3f}")
 
     kappa_pv_mean = float(np.mean(list(kappa_pvs.values())))
-    # No cross-wavelength mean of kappa_SSR (or kappa_total) is formed: kappa_SSR
+    # No cross-wavelength mean of V_SSR (or kappa_total) is formed: V_SSR
     # is a per-wavelength diagnostic only, and the 760/850 nm values differ too
     # much for their arithmetic mean to be a meaningful quantity.
 
@@ -1018,9 +1018,9 @@ def main() -> None:
     print()
     print("  Correction factors:")
     print(f"    kappa_PV (mean, applied):    {kappa_pv_mean:.3f}")
-    print(f"    kappa_SSR({wl1}) [diagnostic]:    {kappa_ssr_by_wl.get(wl1, 0):.3f}")
-    print(f"    kappa_SSR({wl2}) [diagnostic]:    {kappa_ssr_by_wl.get(wl2, 0):.3f}")
-    print("    (kappa_SSR is per-wavelength and NOT applied; no cross-wavelength")
+    print(f"    V_SSR({wl1}) [diagnostic]:    {kappa_ssr_by_wl.get(wl1, 0):.3f}")
+    print(f"    V_SSR({wl2}) [diagnostic]:    {kappa_ssr_by_wl.get(wl2, 0):.3f}")
+    print("    (V_SSR is per-wavelength and NOT applied; no cross-wavelength")
     print("     mean or kappa_total is reported.)")
     print()
     print(f"  Peak |HbO2| uncorr:   {hbo2_peak_unc:.4f} uM")
