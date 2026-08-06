@@ -179,6 +179,31 @@ def score(raw, sds, hw, K):
                 detected=int(idx.size))
 
 
+def gamma_stats(f2s, f3s):
+    """CSF light-piping ratio gamma = f3L/f2L with its uncertainty, for one SDS.
+
+    The per-batch ratio gamma_b = f3L,b/f2L,b is formed over LAUNCH-DEFINED batches
+    (batch b is the same launched-photon cohort in both geometries; launch_idx mod B,
+    shared seed), so gamma_b is a launch-index-matched batch estimator. The primary
+    reported SE is the conservative independent-propagation value (quadrature of the
+    two per-geometry standard errors, which assumes no correlation); gamma_se is the
+    launch-index-matched batchwise cross-check."""
+    f2, f3 = f2s['f_cortex'], f3s['f_cortex']
+    b2 = np.array(f2s['batch_estimates']); b3 = np.array(f3s['batch_estimates'])
+    pair = np.isfinite(b2) & np.isfinite(b3) & (b2 != 0)
+    gb = b3[pair] / b2[pair]
+    nbp = int(gb.size)
+    gamma_se = float(gb.std(ddof=1) / np.sqrt(nbp)) if nbp > 1 else None
+    se2, se3 = f2s['se'], f3s['se']
+    gamma_se_indep = (float((f3 / f2) * np.hypot(se2 / f2, se3 / f3))
+                      if f2 and f3 else None)
+    return dict(gamma=float(f3 / f2) if f2 else None,
+                gamma_batch_mean=float(gb.mean()) if nbp else None,
+                gamma_se=gamma_se, n_paired_batches=nbp,
+                gamma_se_indep=gamma_se_indep,
+                f3L_detected=int(f3s['detected']))
+
+
 def convergence(raw):
     er, Lcx, Lt, w = raw['exit_r'], raw['Lcortex'], raw['Ltot'], raw['w']
     out = {'Lmax': {}, 'annulus': {}}
@@ -198,10 +223,13 @@ def main():
     ap.add_argument('--batches', type=int, default=16)
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--zmax_check', type=float, default=220.0)
-    ap.add_argument('--zmax_check_N', type=lambda v: int(float(v)), default=800000)
+    ap.add_argument('--thin_csf_N', type=lambda v: int(float(v)), default=2000000,
+                    help="photons for the 1 mm CSF (thin-layer) configuration")
     ap.add_argument('--out', default='fcortex_production')
     ap.add_argument('--git_commit', default=None,
-                    help="record this commit hash in provenance (else auto-detect)")
+                    help="Git SHA to record in provenance (else auto-detected via git rev-parse)")
+    ap.add_argument('--analysis_round', default=None,
+                    help="human-readable release label (e.g. round6), stored separately from git_commit")
     args = ap.parse_args()
     t0 = time.time()
     two_layer, csf, conv = {}, {}, {}
@@ -211,9 +239,10 @@ def main():
     for wl in (760, 850):
         tasks.append((('2L', wl), geom2L(wl), args.N, args.seed, PROD_ZMAX))
         tasks.append((('3L', wl), geom3L(wl, 2.0), args.N, args.seed, PROD_ZMAX))
-        # CSF-thickness robustness: a thinner 1 mm CSF layer (reduced N is fine
-        # for this secondary ratio), scored against the same 2-layer fractions.
-        tasks.append((('3Lthin', wl), geom3L(wl, 1.0), args.zmax_check_N, args.seed, PROD_ZMAX))
+        # CSF-thickness robustness: a thinner 1 mm CSF layer, scored against the
+        # same 2-layer fractions and fully characterised (own photon count, detected
+        # count, launch-index-matched batch uncertainty).
+        tasks.append((('3Lthin', wl), geom3L(wl, 1.0), args.thin_csf_N, args.seed, PROD_ZMAX))
     # z_max convergence check at the SAME photon count and seed as the production
     # 2L 760 run (common random numbers), so the 150-vs-220 mm difference isolates
     # domain depth rather than sample size.
@@ -233,28 +262,9 @@ def main():
         csf[wl] = {}
         for s in SDS:
             f2s = two_layer[wl][str(s)]
-            f2 = f2s['f_cortex']
             f3s = score(raws[('3L', wl)], s, PROD_HW, args.batches)
-            f3 = f3s['f_cortex']
-            # gamma uncertainty from the distribution of the per-batch RATIOS
-            # gamma_b = f3L,b / f2L,b over LAUNCH-DEFINED batches: batch b of the
-            # 2L and 3L runs is the same launched-photon cohort (launch_idx mod B,
-            # shared seed = common random numbers), so gamma_b is a genuinely paired
-            # estimator.  SE = SD(gamma_b)/sqrt(B_paired).  We also report the
-            # independent-propagation SE (quadrature of the 2L and 3L standard
-            # errors) as a conservative cross-check that does not rely on pairing.
-            b2 = np.array(f2s['batch_estimates']); b3 = np.array(f3s['batch_estimates'])
-            pair = np.isfinite(b2) & np.isfinite(b3) & (b2 != 0)
-            gb = b3[pair] / b2[pair]
-            nbp = int(gb.size)
-            gamma_se = float(gb.std(ddof=1) / np.sqrt(nbp)) if nbp > 1 else None
-            se2, se3 = f2s['se'], f3s['se']
-            gamma_se_indep = (float((f3 / f2) * np.hypot(se2 / f2, se3 / f3))
-                              if f2 and f3 else None)
-            csf[wl][str(s)] = dict(f2L=f2, f3L=f3, gamma=float(f3 / f2) if f2 else None,
-                                   gamma_batch_mean=float(gb.mean()) if nbp else None,
-                                   gamma_se=gamma_se, n_paired_batches=nbp,
-                                   gamma_se_indep=gamma_se_indep)
+            csf[wl][str(s)] = dict(f2L=f2s['f_cortex'], f3L=f3s['f_cortex'],
+                                   **gamma_stats(f2s, f3s))
     # z_max=220 mm check, scored identically (same N, same seed, same batch
     # partition) as the z_max=150 mm production run, so the batches are truly
     # PAIRED.  Report the mean and SE of the per-batch paired difference
@@ -276,25 +286,33 @@ def main():
                           within_ci=bool(abs(d) <= 1.96 * d_se) if d_se > 0 else True)
 
     # CSF-thickness sweep: gamma with a thinner 1 mm CSF layer (vs the nominal
-    # 2 mm), scored against the same converged two-layer fractions.
+    # 2 mm), scored against the same converged two-layer fractions and now fully
+    # characterised (own detected count and launch-index-matched batch SE/CI).
     csf_thickness = {}
     for wl in (760, 850):
         csf_thickness[wl] = {}
         for s in SDS:
-            f2 = two_layer[wl][str(s)]['f_cortex']
-            f3t = score(raws[('3Lthin', wl)], s, PROD_HW, args.batches)['f_cortex']
-            csf_thickness[wl][str(s)] = dict(f3L_1mm=f3t,
-                                             gamma_1mm=float(f3t / f2) if f2 else None)
+            f2s = two_layer[wl][str(s)]
+            f3ts = score(raws[('3Lthin', wl)], s, PROD_HW, args.batches)
+            gt = gamma_stats(f2s, f3ts)
+            csf_thickness[wl][str(s)] = dict(
+                f3L_1mm=f3ts['f_cortex'], f3L_1mm_batch_sd=f3ts['batch_sd'],
+                f3L_1mm_se=f3ts['se'], f3L_1mm_ci95=f3ts['ci95'],
+                f3L_1mm_detected=int(f3ts['detected']), f3L_1mm_DPF=f3ts['DPF'],
+                gamma_1mm=gt['gamma'], gamma_1mm_se=gt['gamma_se_indep'],
+                gamma_1mm_se_batch=gt['gamma_se'], gamma_1mm_n_paired_batches=gt['n_paired_batches'])
 
     result = dict(
         _meta=dict(schema_version=SCHEMA_VERSION, data_version=SCHEMA_VERSION,
                    produced_by="mc_production.py",
                    git_commit=_git_commit(getattr(args, 'git_commit', None)),
+                   analysis_round=getattr(args, 'analysis_round', None),
                    generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                    command="python mc_production.py " + " ".join(sys.argv[1:]),
                    python_version=platform.python_version(),
                    numpy_version=np.__version__,
                    N_per_config=args.N, n_batches=args.batches, seed=args.seed,
+                   N_thin_csf=args.thin_csf_N,
                    g=0.9, L_max=PROD_LMAX, z_max=PROD_ZMAX, half_width=PROD_HW,
                    sds=SDS, optical_properties=OPT,
                    uncertainty=f"f_cortex is a ratio estimator recomputed on each of "
@@ -319,7 +337,11 @@ def main():
                             "separate SEs. gamma_se_indep is the independent-propagation SE "
                             "(quadrature of the 2L and 3L standard errors), reported as a "
                             "conservative cross-check that does not assume pairing. "
-                            "csf_thickness_1mm holds gamma for a thinner 1 mm CSF layer.",
+                            "csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully "
+                            "characterised (own photon count N_thin_csf, detected count, "
+                            "f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE "
+                            "gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); "
+                            "the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
                    convergence_note="L_max/annulus sweeps re-scored from the same run; the "
                                     "z_max=220 check uses the SAME N, seed and LAUNCH-DEFINED "
                                     "batches (common random numbers) as the z_max=150 run, so "
@@ -342,6 +364,19 @@ def main():
                         f"{d['se']:.5f},{d['ci95'][0]:.5f},{d['ci95'][1]:.5f},{d['n_batches']},"
                         f"{d['N_eff_absw']:.1f},{d['DPF']:.3f},{d['detected']},"
                         f"{c['gamma']:.4f},{c['gamma_se']:.4f},{gsi:.4f}\n")
+        # 1 mm CSF (thin-layer) rows: geometry "CSF1mm"; the two-layer f_cortex
+        # columns hold the CSF-augmented 1 mm fraction f3L_1mm, and gamma is the
+        # 1 mm CSF ratio. batch_sd/se/CI/DPF/detected are for f3L_1mm; gamma_se is
+        # the launch-index-matched batch SE and gamma_se_indep the propagated SE.
+        for wl in (760, 850):
+            for s in SDS:
+                t = csf_thickness[wl][str(s)]
+                gsi = t['gamma_1mm_se'] if t['gamma_1mm_se'] is not None else float('nan')
+                gsb = t['gamma_1mm_se_batch'] if t['gamma_1mm_se_batch'] is not None else float('nan')
+                f.write(f"CSF1mm,{wl},{s:g},{t['f3L_1mm']:.5f},{t['f3L_1mm_batch_sd']:.5f},"
+                        f"{t['f3L_1mm_se']:.5f},{t['f3L_1mm_ci95'][0]:.5f},{t['f3L_1mm_ci95'][1]:.5f},"
+                        f"{args.batches},,{t['f3L_1mm_DPF']:.3f},{t['f3L_1mm_detected']},"
+                        f"{t['gamma_1mm']:.4f},{gsb:.4f},{gsi:.4f}\n")
     # console summary
     print(f"\n=== convergence (2L 760nm, f_cortex vs L_max) ===")
     for s in ('38.0', '40.0'):
@@ -362,8 +397,9 @@ def main():
                   f"Neff={d['N_eff_absw']:.0f} DPF={d['DPF']:.2f}")
         print(f"  gamma(CSF,2mm) {wl}: " + "  ".join(
             f"{s:g}:{csf[wl][str(s)]['gamma']:.2f}" for s in SDS))
-        print(f"  gamma(CSF,1mm) {wl}: " + "  ".join(
-            f"{s:g}:{csf_thickness[wl][str(s)]['gamma_1mm']:.2f}" for s in SDS))
+        print(f"  gamma(CSF,1mm) {wl} [N={args.thin_csf_N}]: " + "  ".join(
+            f"{s:g}:{csf_thickness[wl][str(s)]['gamma_1mm']:.2f}+/-{(csf_thickness[wl][str(s)]['gamma_1mm_se'] or 0):.2f}"
+            for s in SDS))
     print(f"\nwrote {args.out}.json / .csv  ({result['_meta']['secs']}s)")
 
 

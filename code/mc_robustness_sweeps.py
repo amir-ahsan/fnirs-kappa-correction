@@ -158,7 +158,10 @@ def main():
                     help="photons per configuration (default 1000000)")
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--out', default='../results/robustness_secondary.json')
-    ap.add_argument('--git_commit', default=None)
+    ap.add_argument('--git_commit', default=None,
+                    help="Git SHA to record (else auto-detected via git rev-parse)")
+    ap.add_argument('--analysis_round', default=None,
+                    help="human-readable release label, stored separately from git_commit")
     args = ap.parse_args()
 
     print("=== SECONDARY robustness sweeps (executable, first-principles MC) ===", flush=True)
@@ -169,6 +172,7 @@ def main():
         produced_by="mc_robustness_sweeps.py",
         engine="mc_2layer.run (Henyey-Greenstein white MC, g=0.9)",
         git_commit=_git_commit(args.git_commit),
+        analysis_round=args.analysis_round,
         generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         command="python mc_robustness_sweeps.py " + " ".join(sys.argv[1:]),
         python_version=platform.python_version(), numpy_version=np.__version__,

@@ -77,10 +77,19 @@ def _load_and_check(path: Path) -> dict:
             raise ValueError(f"{path.name} is missing the required '{key}' block "
                              f"(schema_version {ver}); it is not a valid production file.")
     # Validate the stored numeric-payload hash so an edited/corrupted/truncated
-    # file cannot masquerade as the released artifact. Set FCORTEX_SKIP_HASH=1 to
-    # bypass (e.g. when intentionally hand-editing during development).
+    # file cannot masquerade as the released artifact. In release mode the hash
+    # is REQUIRED: a schema-2.0 file with data_sha256 removed is rejected, so the
+    # integrity guard cannot be silently defeated by deleting the field. Set
+    # FCORTEX_SKIP_HASH=1 for intentional hand-editing during development.
+    dev_override = os.environ.get("FCORTEX_SKIP_HASH")
     stored = meta.get("data_sha256")
-    if stored and not os.environ.get("FCORTEX_SKIP_HASH"):
+    if not stored and not dev_override:
+        raise ValueError(
+            f"{path.name} has no _meta.data_sha256 (schema {ver}). The manuscript "
+            f"release requires the payload hash for integrity; regenerate the file "
+            f"with mc_production.py, or set FCORTEX_SKIP_HASH=1 to override in "
+            f"development.")
+    if stored and not dev_override:
         actual = _payload_sha256(data)
         if actual != stored:
             raise ValueError(

@@ -76,6 +76,7 @@ Irvine Valley College
 # ── Standard library ────────────────────────────────────────────────────
 from __future__ import annotations
 
+import hashlib
 import os
 import sys
 import urllib.request
@@ -180,8 +181,35 @@ def get_f_cortex(sds_mm: float) -> dict[int, float]:
 #  1. Dataset acquisition
 # ========================================================================
 
+# PINNED, immutable dataset reference. We do NOT download the moving `master`
+# branch (which is mutable and would break reproducibility); we pin to a fixed
+# Git tag archive whose contents are frozen, and we document the citable Zenodo
+# release. Set DATASET_SHA256 to the SHA-256 of the downloaded archive to enforce
+# a strict integrity check; if left None the code computes and prints the hash and
+# warns that it is unpinned (record it once, then paste it here to freeze).
+DATASET_DOI = "10.5281/zenodo.5529797"          # rob-luke/BIDS-NIRS-Tapping (Luke et al., 2021)
+DATASET_REF = "v0.1.1"                           # immutable Git tag (not `master`)
+DATASET_URL = (
+    f"https://github.com/rob-luke/BIDS-NIRS-Tapping/archive/refs/tags/{DATASET_REF}.zip"
+)
+DATASET_EXTRACT_DIR = f"BIDS-NIRS-Tapping-{DATASET_REF.lstrip('v')}"
+DATASET_SHA256 = None                            # paste the archive SHA-256 here to enforce
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def download_dataset(dest: Path) -> Path:
-    """Download the BIDS-NIRS-Tapping dataset if not already present.
+    """Download the BIDS-NIRS-Tapping dataset (pinned, immutable) if not present.
+
+    The archive is fetched from a fixed Git tag (``DATASET_REF``), not the moving
+    ``master`` branch, and its SHA-256 is computed and (if ``DATASET_SHA256`` is
+    set) verified, so the input data is reproducible. Cite Zenodo ``DATASET_DOI``.
 
     Parameters
     ----------
@@ -197,25 +225,39 @@ def download_dataset(dest: Path) -> Path:
         print(f"  Dataset already present at {dest}")
         return dest
 
-    url = (
-        "https://github.com/rob-luke/BIDS-NIRS-Tapping/"
-        "archive/refs/heads/master.zip"
-    )
     zip_path = dest.parent / "bids_nirs_tapping.zip"
+    print(f"  Downloading pinned dataset {DATASET_REF} (Zenodo {DATASET_DOI}) from "
+          f"{DATASET_URL} ...")
+    urllib.request.urlretrieve(DATASET_URL, zip_path)
 
-    print(f"  Downloading from {url} ...")
-    urllib.request.urlretrieve(url, zip_path)
+    sha = _sha256_file(zip_path)
+    if DATASET_SHA256 is None:
+        print(f"  [warning] downloaded archive SHA-256 = {sha}\n"
+              f"  [warning] DATASET_SHA256 is not pinned; set it to this value in "
+              f"fnirs_kappa_realdata_analysis.py to enforce integrity on future runs.")
+    elif sha != DATASET_SHA256:
+        zip_path.unlink(missing_ok=True)
+        raise ValueError(
+            f"BIDS-NIRS-Tapping archive SHA-256 mismatch: expected {DATASET_SHA256[:12]}..., "
+            f"got {sha[:12]}.... The pinned dataset does not match its recorded checksum; "
+            f"refusing to proceed with an unverified input.")
+    else:
+        print(f"  Archive SHA-256 verified: {sha[:12]}...")
 
     print("  Extracting ...")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(dest.parent)
 
-    extracted = dest.parent / "BIDS-NIRS-Tapping-master"
+    extracted = dest.parent / DATASET_EXTRACT_DIR
+    if not extracted.exists():
+        # Fall back to whatever top-level dir the archive produced.
+        cands = [p for p in dest.parent.glob("BIDS-NIRS-Tapping*") if p.is_dir()]
+        extracted = cands[0] if cands else extracted
     if extracted.exists():
         extracted.rename(dest)
-    zip_path.unlink()
+    zip_path.unlink(missing_ok=True)
 
-    print(f"  Dataset ready at {dest}")
+    print(f"  Dataset ready at {dest} (pinned {DATASET_REF}, Zenodo {DATASET_DOI})")
     return dest
 
 

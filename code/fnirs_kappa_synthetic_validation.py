@@ -54,6 +54,74 @@ warnings.filterwarnings('ignore', category=RuntimeWarning)
 # NumPy compatibility: np.trapezoid (NumPy>=2.0) vs np.trapz (NumPy<2.0)
 _np_trapz = getattr(np, 'trapezoid', None) or np.trapz
 
+
+def _robustness_from_json():
+    """Load the secondary robustness sweeps from results/robustness_secondary.json
+    (produced by mc_robustness_sweeps.py) so Figure 3 and the robustness numbers are
+    read DIRECTLY from that versioned artifact rather than from embedded constants.
+    Returns dict(thickness_T, thickness_F, opt) or None if the file is absent."""
+    import os as _os
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    for cand in (_os.path.join(here, "..", "results", "robustness_secondary.json"),
+                 _os.path.join(_os.getcwd(), "results", "robustness_secondary.json"),
+                 _os.path.join(here, "robustness_secondary.json")):
+        if _os.path.exists(cand):
+            try:
+                with open(cand) as fh:
+                    d = json.load(fh)
+                rows = sorted(d["thickness_sweep"]["rows"], key=lambda r: r["sup_thickness_mm"])
+                T = [float(r["sup_thickness_mm"]) for r in rows]
+                F = [float(r["f_cortex"]) for r in rows]
+                osw = d["optical_property_sweep"]
+                def _col(key, sub):
+                    return [float(r[sub]) for r in sorted(osw[key], key=lambda r: r["pct"])]
+                pct = [float(r["pct"]) for r in sorted(osw["mua"], key=lambda r: r["pct"])]
+                mua_f = _col("mua", "f_cortex"); mua_k = _col("mua", "kappa_pv")
+                musp_f = _col("musp", "f_cortex"); musp_k = _col("musp", "kappa_pv")
+                i0 = pct.index(0.0)
+                opt = {'variations_pct': pct,
+                       'mua': {'f': mua_f, 'k': mua_k},
+                       'musp': {'f': musp_f, 'k': musp_k},
+                       'baseline': {'f': mua_f[i0], 'k': mua_k[i0]}}
+                return dict(thickness_T=T, thickness_F=F, opt=opt, source=cand)
+            except Exception as e:
+                print(f"  [warning] could not parse robustness_secondary.json ({e}); "
+                      f"falling back to archived arrays")
+                return None
+    return None
+
+
+def _synth_provenance(produced_by):
+    """Provenance block for synthetic-validation JSON outputs: command, timestamp,
+    Git SHA, dependency versions, and the production forward-model hash consumed."""
+    import os as _os, sys as _sys, platform as _platform, subprocess as _sub
+    from datetime import datetime as _dt, timezone as _tz
+    def _git():
+        try:
+            root = _os.path.dirname(_os.path.abspath(__file__))
+            h = _sub.check_output(["git", "-C", root, "rev-parse", "--short", "HEAD"],
+                                  stderr=_sub.DEVNULL).decode().strip()
+            dirty = _sub.call(["git", "-C", root, "diff", "--quiet"],
+                              stderr=_sub.DEVNULL) != 0
+            return h + ("-dirty" if dirty else "")
+        except Exception:
+            return "unknown"
+    prod = {}
+    try:
+        import fcortex_source as _fs
+        p = _fs.provenance()
+        prod = dict(fcortex_production_sha256=p.get("data_sha256"),
+                    fcortex_production_git=p.get("git_commit"),
+                    fcortex_production_schema=p.get("schema_version"))
+    except Exception:
+        pass
+    return dict(schema_version="2.0", produced_by=produced_by, git_commit=_git(),
+                analysis_round=_os.environ.get("ANALYSIS_ROUND"),
+                generated_utc=_dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                command="python " + " ".join(_sys.argv),
+                python_version=_platform.python_version(), numpy_version=np.__version__,
+                forward_model=prod, seed=42)
+
 # =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
@@ -1661,14 +1729,18 @@ def analyze_thickness_robustness(sds_mm: float = 30.0, wavelength_nm: int = 760)
     thicknesses = [8, 9, 10, 11, 12, 13, 14, 15, 16]
     results = {}
 
-    # ARCHIVED Monte-Carlo f_cortex vs superficial thickness at SDS = 30 mm
-    # (two-layer white MC, code/mc_2layer.py, g=0.9).  These are archived results
-    # from a prior MC sweep, kept here for the figure; they are REGENERATED from
-    # first principles by mc_robustness_sweeps.py (-> results/robustness_secondary.json)
-    # with full provenance, and agree with a fresh run within a few percent.
-    # Log-linear interpolation in thickness; the trend is the key robustness result.
-    _MC_T = [8.0, 10.0, 12.0, 14.0, 16.0]
-    _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]   # archived MC results
+    # f_cortex vs superficial thickness at SDS = 30 mm. PREFERRED SOURCE: the
+    # versioned robustness_secondary.json produced by mc_robustness_sweeps.py, read
+    # directly so the figure/table are an exact function of that artifact. If the
+    # file is absent we fall back to the archived MC arrays (clearly labelled).
+    _rob = _robustness_from_json()
+    if _rob is not None:
+        _MC_T, _MC_F = _rob['thickness_T'], _rob['thickness_F']
+        print(f"  (thickness sweep read from {_rob['source']})")
+    else:
+        _MC_T = [8.0, 10.0, 12.0, 14.0, 16.0]
+        _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]   # archived MC results (fallback)
+        print("  (robustness_secondary.json not found; using archived MC arrays)")
     def _f_mc(T):
         return float(np.exp(np.interp(float(T), _MC_T, np.log(_MC_F))))
 
@@ -1734,7 +1806,12 @@ def analyze_optical_property_robustness(sds_mm: float = 30.0, wavelength_nm: int
     print("ANALYSIS D: ROBUSTNESS TO OPTICAL PROPERTY VARIATION (Monte Carlo)")
     print("="*70)
 
-    tbl = _OPT_SENS_MC
+    # PREFERRED SOURCE: robustness_secondary.json (mc_robustness_sweeps.py); fall
+    # back to the archived arrays only if that versioned artifact is absent.
+    _rob = _robustness_from_json()
+    tbl = _rob['opt'] if _rob is not None else _OPT_SENS_MC
+    if _rob is not None:
+        print(f"  (optical sweep read from {_rob['source']})")
     variations_pct = np.array(tbl['variations_pct'], dtype=float)
     f_base = tbl['baseline']['f']
     k_base = tbl['baseline']['k']
@@ -1892,16 +1969,20 @@ def benchmark_computation_time(sds_mm: float = 30.0, wavelength_nm: int = 760,
 # An earlier diffusion finite-difference approximation estimated the effect of an
 # explicit cerebrospinal-fluid (CSF) layer and returned a ~99% COLLAPSE of cortical
 # sensitivity.  That result is a numerical artifact: the diffusion approximation is
-# invalid in the near-transparent CSF layer (mu_s' ~ mu_a), and a 99% collapse is
-# physically implausible (fNIRS detects cortical activation through real CSF).
+# invalid in the thin (1-2 mm) CSF layer because that layer is much thinner than its
+# transport mean free path (1/mu_s' ~ 4 mm at mu_s' ~ 0.25 mm^-1), so photons cross
+# it in far less than one transport length and undergo too few direction-randomizing
+# events for diffusion theory to hold; a 99% collapse is also physically implausible
+# (fNIRS detects cortical activation through real CSF).
 #
-# It is replaced by a white Monte Carlo (code/mc_csf.py), which shows that inserting
-# a 2 mm low-scattering CSF layer INCREASES the cortical sensitivity fraction (the
-# CSF 'light-piping' effect), by a factor
+# It is replaced by the anisotropic (Henyey-Greenstein g=0.9) white Monte Carlo of
+# the PRODUCTION source (code/mc_production.py, read via fcortex_source.py), which
+# shows that inserting a low-scattering CSF layer INCREASES the cortical sensitivity
+# fraction (the CSF 'light-piping' effect), by a factor
 #     gamma(SDS) = f_cortex(3-layer) / f_cortex(2-layer)
 # of ~1.4-1.8 (decreasing with SDS), in agreement with the light-transport literature.
-# gamma values below are Monte-Carlo estimates (2.2e6 photons/geometry, mc_csf.py);
-# the ratio is robust to the MC scattering approximation.
+# The gamma values come from fcortex_source.gamma_csf (production Monte Carlo); the
+# legacy isotropic mc_csf.py is NOT used here.
 def csf_gamma(sds_mm: float) -> float:
     """CSF amplification f_cortex(3L)/f_cortex(2L) from the single production
     Monte-Carlo source (760 nm; used only for the illustrative CSF/mismatch
@@ -1941,7 +2022,8 @@ def analyze_csf_layer_effect(sds_list: List[float] = [25, 35]) -> Dict:
         f_cortex_2l = f_cortex_mc(sds, wavelength_nm)
         print(f"    SDS={sds} mm: f_cortex(2L) = {f_cortex_2l:.4f}")
 
-        # Three-layer (with CSF): Monte-Carlo-calibrated amplification (mc_csf.py)
+        # Three-layer (with CSF): production Monte-Carlo-calibrated amplification
+        # (fcortex_source.gamma_csf, from mc_production.py; not the legacy mc_csf.py)
         f_cortex_3l = f_cortex_three_layer(sds, f_cortex_2l)
 
         increase_pct = (f_cortex_3l / f_cortex_2l - 1.0) * 100.0 if f_cortex_2l > 0 else 0.0
@@ -2390,7 +2472,8 @@ def main():
         description="HbO2 RMSE improvement across 30 independently generated 5-subject "
                     "synthetic cohorts (each seed regenerates amplitudes, systemics, phases, "
                     "superficial signals and additive OD noise); not a noise-only analysis.",
-        base_seed=1000, n_cohorts=30, per_sds=ms_rows),
+        base_seed=1000, n_cohorts=30, per_sds=ms_rows,
+        _meta=_synth_provenance("fnirs_kappa_synthetic_validation.py:multiseed_operating_regime")),
         open('multiseed_operating_regime.json', 'w'), indent=1)
     print("  Saved: multiseed_operating_regime.json")
 

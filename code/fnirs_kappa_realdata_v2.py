@@ -20,6 +20,7 @@ Requires: mne, mne-bids, numpy, scipy.  Reuses constants/helpers from
 fnirs_kappa_realdata_analysis.py.
 """
 from __future__ import annotations
+import os
 import json
 from pathlib import Path
 import numpy as np
@@ -346,8 +347,50 @@ def main():
     make_figures(rows, script_dir)
     for r in out["per_subject"]:
         r.pop("traces", None)
+    out["_meta"] = _provenance()
     json.dump(out, open(script_dir / "realdata_v2_summary.json", "w"), indent=1)
     print("wrote realdata_v2_summary.json")
+
+
+def _provenance():
+    """Provenance block for the real-data summary: command, timestamp, Git SHA,
+    dependency versions, the production forward-model hash it consumed, and the
+    pinned input-dataset DOI/version/checksum."""
+    import sys, platform, subprocess
+    from datetime import datetime, timezone
+    def git_commit():
+        try:
+            root = Path(__file__).resolve().parent
+            h = subprocess.check_output(["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+                                        stderr=subprocess.DEVNULL).decode().strip()
+            dirty = subprocess.call(["git", "-C", str(root), "diff", "--quiet"],
+                                    stderr=subprocess.DEVNULL) != 0
+            return h + ("-dirty" if dirty else "")
+        except Exception:
+            return "unknown"
+    prod = {}
+    try:
+        import fcortex_source as fs
+        p = fs.provenance()
+        prod = dict(fcortex_production_sha256=p.get("data_sha256"),
+                    fcortex_production_git=p.get("git_commit"),
+                    fcortex_production_schema=p.get("schema_version"))
+    except Exception:
+        pass
+    return dict(
+        schema_version="2.0", produced_by="fnirs_kappa_realdata_v2.py",
+        git_commit=git_commit(),
+        analysis_round=os.environ.get("ANALYSIS_ROUND"),
+        generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        command="python " + " ".join(sys.argv),
+        python_version=platform.python_version(), numpy_version=np.__version__,
+        mne_version=getattr(mne, "__version__", "unknown"),
+        forward_model=prod,
+        dataset=dict(name="BIDS-NIRS-Tapping", doi=getattr(rd, "DATASET_DOI", None),
+                     ref=getattr(rd, "DATASET_REF", None),
+                     sha256=getattr(rd, "DATASET_SHA256", None),
+                     citation="Luke et al., 2021"),
+        seeds=dict(note="deterministic pipeline; no stochastic step in the real-data analysis"))
 
 
 if __name__ == "__main__":
