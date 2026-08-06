@@ -32,6 +32,7 @@ from datetime import datetime, timezone
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from mc_2layer import run
+import provenance as _prov
 
 SCHEMA_VERSION = "2.0"   # bumped when the JSON schema changes (SE/CI/paired fields)
 
@@ -58,7 +59,7 @@ def _payload_sha256(result):
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(blob).hexdigest()
 
-SDS = [25.0, 30.0, 35.0, 38.0, 40.0]
+SDS = [25.0, 30.0, 33.0, 35.0, 38.0, 40.0, 42.0]   # grid spans the in-vivo channel range (33.4-40.9 mm)
 LMAX_SWEEP = [400.0, 500.0, 800.0, 1200.0]
 ANNULUS_SWEEP = [2.0, 2.5, 3.0]
 PROD_LMAX = 1200.0
@@ -302,14 +303,11 @@ def main():
                 gamma_1mm=gt['gamma'], gamma_1mm_se=gt['gamma_se_indep'],
                 gamma_1mm_se_batch=gt['gamma_se'], gamma_1mm_n_paired_batches=gt['n_paired_batches'])
 
-    result = dict(
-        _meta=dict(schema_version=SCHEMA_VERSION, data_version=SCHEMA_VERSION,
-                   produced_by="mc_production.py",
-                   git_commit=_git_commit(getattr(args, 'git_commit', None)),
-                   analysis_round=getattr(args, 'analysis_round', None),
-                   generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                   command="python mc_production.py " + " ".join(sys.argv[1:]),
-                   python_version=platform.python_version(),
+    _meta = _prov.provenance("mc_production.py",
+                             analysis_round=getattr(args, 'analysis_round', None),
+                             git_commit=getattr(args, 'git_commit', None),
+                             extra=dict(
+                   data_version=SCHEMA_VERSION,
                    numpy_version=np.__version__,
                    N_per_config=args.N, n_batches=args.batches, seed=args.seed,
                    N_thin_csf=args.thin_csf_N,
@@ -330,24 +328,28 @@ def main():
                    N_eff_note="N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight "
                               "effective count only; it does not capture pathlength or "
                               "numerator-denominator covariance in the ratio (see se/ci95)",
-                   csf_note="csf gamma at nominal 2 mm. gamma_se is SD(gamma_b)/sqrt(B_paired) "
-                            "over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b is the "
-                            "SAME launched-photon cohort in the 2L and 3L runs (launch_idx mod B, "
-                            "shared seed) -- a genuinely PAIRED estimator, not a quadrature of two "
-                            "separate SEs. gamma_se_indep is the independent-propagation SE "
-                            "(quadrature of the 2L and 3L standard errors), reported as a "
-                            "conservative cross-check that does not assume pairing. "
+                   csf_note="csf gamma at nominal 2 mm. gamma_se_indep is the PRIMARY reported "
+                            "uncertainty: the independent-propagation SE (quadrature of the 2L and "
+                            "3L standard errors), which assumes no correlation. gamma_se is a "
+                            "launch-index-matched batch cross-check: SD(gamma_b)/sqrt(B) over the "
+                            "per-batch ratios gamma_b=f3L,b/f2L,b, where batch b draws on the same "
+                            "launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared "
+                            "seed). This is a launch-index match, not a strict per-photon common-"
+                            "random-number stream, since the vectorized transport diverges once the "
+                            "geometries' active sets differ; the two SEs agree within a 16-batch estimate. "
                             "csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully "
                             "characterised (own photon count N_thin_csf, detected count, "
                             "f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE "
                             "gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); "
                             "the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
                    convergence_note="L_max/annulus sweeps re-scored from the same run; the "
-                                    "z_max=220 check uses the SAME N, seed and LAUNCH-DEFINED "
-                                    "batches (common random numbers) as the z_max=150 run, so "
-                                    "zmax_check reports the mean and SE of the per-batch PAIRED "
-                                    "difference d_b=f_150,b-f_220,b.",
-                   data_sha256=None, secs=None),
+                                    "z_max=220 check uses the SAME N, seed and launch-defined "
+                                    "batches as the z_max=150 run (same geometry, so the photons are "
+                                    "identical until the cap), so zmax_check reports the mean and SE "
+                                    "of the per-batch difference d_b=f_150,b-f_220,b.",
+                   data_sha256=None, secs=None))
+    result = dict(
+        _meta=_meta,
         two_layer=two_layer, csf=csf, csf_thickness_1mm=csf_thickness,
         convergence=conv, zmax_check=zc_conv)
     result['_meta']['secs'] = round(time.time() - t0, 1)

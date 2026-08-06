@@ -123,13 +123,11 @@ def main():
                     A_extrap=A_EXTRAP),
         results=rows, max_rel_error=float(max_rel),
         passes_0p01pct=bool(max_rel < 1e-4),
-        provenance=dict(schema_version="2.0", produced_by="validate_homogeneous_fluence.py",
-                        git_commit=_git_commit(args.git_commit),
-                        analysis_round=args.analysis_round,
-                        generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                        command="python validate_homogeneous_fluence.py " + " ".join(sys.argv[1:]),
-                        python_version=platform.python_version(), numpy_version=np.__version__,
-                        scipy_version=__import__("scipy").__version__))
+        provenance=__import__("provenance").provenance(
+            "validate_homogeneous_fluence.py",
+            analysis_round=args.analysis_round, git_commit=args.git_commit,
+            extra=dict(numpy_version=np.__version__,
+                       scipy_version=__import__("scipy").__version__)))
     payload = {k: out[k] for k in out if k != "provenance"}
     out["provenance"]["data_sha256"] = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()

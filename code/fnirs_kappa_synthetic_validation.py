@@ -92,35 +92,12 @@ def _robustness_from_json():
 
 
 def _synth_provenance(produced_by):
-    """Provenance block for synthetic-validation JSON outputs: command, timestamp,
-    Git SHA, dependency versions, and the production forward-model hash consumed."""
-    import os as _os, sys as _sys, platform as _platform, subprocess as _sub
-    from datetime import datetime as _dt, timezone as _tz
-    def _git():
-        try:
-            root = _os.path.dirname(_os.path.abspath(__file__))
-            h = _sub.check_output(["git", "-C", root, "rev-parse", "--short", "HEAD"],
-                                  stderr=_sub.DEVNULL).decode().strip()
-            dirty = _sub.call(["git", "-C", root, "diff", "--quiet"],
-                              stderr=_sub.DEVNULL) != 0
-            return h + ("-dirty" if dirty else "")
-        except Exception:
-            return "unknown"
-    prod = {}
-    try:
-        import fcortex_source as _fs
-        p = _fs.provenance()
-        prod = dict(fcortex_production_sha256=p.get("data_sha256"),
-                    fcortex_production_git=p.get("git_commit"),
-                    fcortex_production_schema=p.get("schema_version"))
-    except Exception:
-        pass
-    return dict(schema_version="2.0", produced_by=produced_by, git_commit=_git(),
-                analysis_round=_os.environ.get("ANALYSIS_ROUND"),
-                generated_utc=_dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                command="python " + " ".join(_sys.argv),
-                python_version=_platform.python_version(), numpy_version=np.__version__,
-                forward_model=prod, seed=42)
+    """Provenance block for synthetic-validation JSON outputs, from the shared
+    provenance helper (uniform schema across all package scripts)."""
+    import provenance as _prov
+    return _prov.provenance(produced_by,
+                            input_hashes=_prov.fcortex_production_input(),
+                            extra=dict(forward_model=_prov.fcortex_production_input(), seed=42))
 
 # =============================================================================
 # UTILITY FUNCTIONS

@@ -230,6 +230,11 @@ def analyze_subject(root: Path, sub: str) -> dict:
                                f_cortex_760=round(c["f760"], 4), f_cortex_850=round(c["f850"], 4),
                                kappa_pv_760=round(c["kpv760"], 3), kappa_pv_850=round(c["kpv850"], 3))
                           for c in chan_out],
+                # per-contralateral-channel window-mean amplitudes with their SDS, for the
+                # source-detector-separation-range (35-40 mm) sensitivity analysis.
+                contra_amp=[dict(sds_mm=round(float(s), 2), hbo_uncorr_uM=float(u),
+                                 hbo_corr_uM=float(cc))
+                            for s, u, cc in zip(res["sds"], res["hbo_u"], res["hbo_c"])],
                 traces=traces)
 
 
@@ -344,6 +349,39 @@ def main():
                           kssr850=float(arr("kssr850").mean()), kssr850_sd=float(arr("kssr850").std(ddof=1)),
                           hbo_uncorr_ipsi=float(np.nanmean(ipsi_u)),
                           n_lateralized=n_lateralized, n_subjects=len(rows)))
+    # Source-detector-separation-range sensitivity: pool every contralateral channel
+    # and report the range, the interpolation/clipping rule, and the group corrected
+    # HbO2 restricted to the recommended 35-40 mm band plus the <35 mm and >40 mm
+    # subsets, so the reader sees whether the group estimate depends on out-of-range
+    # channels (which the loader interpolates/clips to the production grid).
+    ca = [c for r in rows for c in r.get("contra_amp", [])]
+    sds_all = np.array([c["sds_mm"] for c in ca])
+    def _band(lo, hi):
+        sel = [c for c in ca if lo <= c["sds_mm"] <= hi]
+        if not sel:
+            return None
+        hc = np.array([c["hbo_corr_uM"] for c in sel]); hu = np.array([c["hbo_uncorr_uM"] for c in sel])
+        return dict(n_channels=len(sel), sds_lo=float(min(c["sds_mm"] for c in sel)),
+                    sds_hi=float(max(c["sds_mm"] for c in sel)),
+                    hbo_corr_mean=float(hc.mean()), hbo_uncorr_mean=float(hu.mean()))
+    out["sds_range_sensitivity"] = dict(
+        note="Contralateral channels span the SDS range below. fcortex_source interpolates "
+             "f_cortex(SDS) on the production grid and clips SDS to the grid range; channels "
+             "outside the grid receive the nearest grid endpoint. With the extended 25-42 mm "
+             "grid the in-vivo channel range (33.4-40.9 mm) is covered without clipping.",
+        n_channels=len(ca),
+        sds_min=float(sds_all.min()), sds_max=float(sds_all.max()),
+        sds_median=float(np.median(sds_all)), sds_mean=float(sds_all.mean()),
+        n_below_35=int((sds_all < 35).sum()), n_35_40=int(((sds_all >= 35) & (sds_all <= 40)).sum()),
+        n_above_40=int((sds_all > 40).sum()),
+        all_channels=_band(0, 999), band_35_40=_band(35, 40),
+        below_35=_band(0, 35 - 1e-9), above_40=_band(40 + 1e-9, 999))
+    if out["sds_range_sensitivity"]["band_35_40"]:
+        b = out["sds_range_sensitivity"]
+        print(f"\nSDS-RANGE SENSITIVITY: {b['n_channels']} channels, {b['sds_min']:.2f}-{b['sds_max']:.2f} mm "
+              f"(median {b['sds_median']:.2f}); <35mm:{b['n_below_35']} 35-40mm:{b['n_35_40']} >40mm:{b['n_above_40']}")
+        print(f"  group corrected HbO2: all={b['all_channels']['hbo_corr_mean']:.3f} "
+              f"35-40mm={b['band_35_40']['hbo_corr_mean']:.3f} uM")
     make_figures(rows, script_dir)
     for r in out["per_subject"]:
         r.pop("traces", None)
@@ -353,44 +391,21 @@ def main():
 
 
 def _provenance():
-    """Provenance block for the real-data summary: command, timestamp, Git SHA,
-    dependency versions, the production forward-model hash it consumed, and the
-    pinned input-dataset DOI/version/checksum."""
-    import sys, platform, subprocess
-    from datetime import datetime, timezone
-    def git_commit():
-        try:
-            root = Path(__file__).resolve().parent
-            h = subprocess.check_output(["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
-                                        stderr=subprocess.DEVNULL).decode().strip()
-            dirty = subprocess.call(["git", "-C", str(root), "diff", "--quiet"],
-                                    stderr=subprocess.DEVNULL) != 0
-            return h + ("-dirty" if dirty else "")
-        except Exception:
-            return "unknown"
-    prod = {}
-    try:
-        import fcortex_source as fs
-        p = fs.provenance()
-        prod = dict(fcortex_production_sha256=p.get("data_sha256"),
-                    fcortex_production_git=p.get("git_commit"),
-                    fcortex_production_schema=p.get("schema_version"))
-    except Exception:
-        pass
-    return dict(
-        schema_version="2.0", produced_by="fnirs_kappa_realdata_v2.py",
-        git_commit=git_commit(),
-        analysis_round=os.environ.get("ANALYSIS_ROUND"),
-        generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        command="python " + " ".join(sys.argv),
-        python_version=platform.python_version(), numpy_version=np.__version__,
-        mne_version=getattr(mne, "__version__", "unknown"),
-        forward_model=prod,
-        dataset=dict(name="BIDS-NIRS-Tapping", doi=getattr(rd, "DATASET_DOI", None),
-                     ref=getattr(rd, "DATASET_REF", None),
-                     sha256=getattr(rd, "DATASET_SHA256", None),
-                     citation="Luke et al., 2021"),
-        seeds=dict(note="deterministic pipeline; no stochastic step in the real-data analysis"))
+    """Provenance block for the real-data summary, from the shared provenance helper
+    (uniform schema), plus the consumed forward-model hash and the pinned input dataset."""
+    import provenance as _prov
+    return _prov.provenance(
+        "fnirs_kappa_realdata_v2.py",
+        input_hashes=_prov.fcortex_production_input(),
+        extra=dict(
+            forward_model=_prov.fcortex_production_input(),
+            dataset=dict(name="BIDS-NIRS-Tapping", doi=getattr(rd, "DATASET_DOI", None),
+                         zenodo_record=getattr(rd, "DATASET_ZENODO_RECORD", None),
+                         sha256=getattr(rd, "DATASET_SHA256", None),
+                         citation="Luke et al., 2021",
+                         verification="pinned Zenodo record; each file verified against the "
+                                      "Zenodo-published md5; local SHA-256 also recorded"),
+            seeds=dict(note="deterministic pipeline; no stochastic step in the real-data analysis")))
 
 
 if __name__ == "__main__":

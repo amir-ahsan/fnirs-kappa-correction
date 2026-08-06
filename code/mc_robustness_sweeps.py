@@ -167,19 +167,17 @@ def main():
     print("=== SECONDARY robustness sweeps (executable, first-principles MC) ===", flush=True)
     thick, mua_rows, musp_rows = run_sweeps(args.N, args.seed)
 
-    provenance = dict(
-        schema_version="2.0",
-        produced_by="mc_robustness_sweeps.py",
-        engine="mc_2layer.run (Henyey-Greenstein white MC, g=0.9)",
-        git_commit=_git_commit(args.git_commit),
-        analysis_round=args.analysis_round,
-        generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        command="python mc_robustness_sweeps.py " + " ".join(sys.argv[1:]),
-        python_version=platform.python_version(), numpy_version=np.__version__,
-        N_per_config=int(args.N), seed=int(args.seed), g=G,
-        wavelength_nm=WL, sds_mm=SDS, half_width_mm=HW, L_max=LMAX, z_max=150.0,
-        nominal_scalp_mua_musp=list(SCALP), nominal_cortex_mua_musp=list(CORTEX),
-        nominal_superficial_thickness_mm=SUP_THICK_NOMINAL)
+    import provenance as _prov
+    provenance = _prov.provenance(
+        "mc_robustness_sweeps.py",
+        analysis_round=args.analysis_round, git_commit=args.git_commit,
+        extra=dict(
+            engine="mc_2layer.run (Henyey-Greenstein white MC, g=0.9)",
+            numpy_version=np.__version__,
+            N_per_config=int(args.N), seed=int(args.seed), g=G,
+            wavelength_nm=WL, sds_mm=SDS, half_width_mm=HW, L_max=LMAX, z_max=150.0,
+            nominal_scalp_mua_musp=list(SCALP), nominal_cortex_mua_musp=list(CORTEX),
+            nominal_superficial_thickness_mm=SUP_THICK_NOMINAL))
 
     out = dict(
         description="SECONDARY robustness sweeps (NOT production baselines): raw "
