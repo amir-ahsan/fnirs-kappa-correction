@@ -1,13 +1,26 @@
 {
  "_meta": {
   "schema_version": "2.0",
-  "data_version": "2.0",
   "produced_by": "mc_production.py",
-  "git_commit": "4ea6693",
-  "analysis_round": "round6",
-  "generated_utc": "2026-08-06T18:25:12Z",
-  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit 4ea6693 --analysis_round round6",
+  "git_commit": "bd007a1",
+  "git_commit_full": "bd007a1d39dfb7461a02fce95b8bd5c4567f25b2",
+  "git_dirty": true,
+  "analysis_round": "round7",
+  "generated_utc": "2026-08-06T22:21:43Z",
+  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit bd007a1 --analysis_round round7",
   "python_version": "3.11.15",
+  "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "packages": {
+   "numpy": "2.4.4",
+   "scipy": "1.17.1",
+   "pandas": "3.0.2",
+   "matplotlib": "3.10.9",
+   "mne": "1.12.1",
+   "mne_bids": "0.19.0",
+   "h5py": "3.16.0"
+  },
+  "data_version": "2.0",
   "numpy_version": "2.4.4",
   "N_per_config": 2000000,
   "n_batches": 16,
@@ -20,9 +33,11 @@
   "sds": [
    25.0,
    30.0,
+   33.0,
    35.0,
    38.0,
-   40.0
+   40.0,
+   42.0
   ],
   "optical_properties": {
    "760": {
@@ -56,10 +71,10 @@
   },
   "uncertainty": "f_cortex is a ratio estimator recomputed on each of 16 LAUNCH-DEFINED photon batches (batch id = launch_idx mod B; disjoint subsets of the detected photons). Reported per SDS: batch_sd (spread of batch estimates), se=batch_sd/sqrt(B) (standard error of the combined estimate), and ci95 = the t interval f_all +/- t_{.975,B-1}*se (a 95% CI for the combined 2e+06-photon estimate). batch_spread holds the 2.5/97.5 percentiles of the individual batch estimates (a prediction range, NOT a CI for the combined run). batch_estimates is length B, aligned by batch id (NaN=empty batch), so batch b pairs across geometries for the gamma/z_max paired statistics.",
   "N_eff_note": "N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight effective count only; it does not capture pathlength or numerator-denominator covariance in the ratio (see se/ci95)",
-  "csf_note": "csf gamma at nominal 2 mm. gamma_se is SD(gamma_b)/sqrt(B_paired) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b is the SAME launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed) -- a genuinely PAIRED estimator, not a quadrature of two separate SEs. gamma_se_indep is the independent-propagation SE (quadrature of the 2L and 3L standard errors), reported as a conservative cross-check that does not assume pairing. csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully characterised (own photon count N_thin_csf, detected count, f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
-  "convergence_note": "L_max/annulus sweeps re-scored from the same run; the z_max=220 check uses the SAME N, seed and LAUNCH-DEFINED batches (common random numbers) as the z_max=150 run, so zmax_check reports the mean and SE of the per-batch PAIRED difference d_b=f_150,b-f_220,b.",
-  "data_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
-  "secs": 4197.4
+  "csf_note": "csf gamma at nominal 2 mm. gamma_se_indep is the PRIMARY reported uncertainty: the independent-propagation SE (quadrature of the 2L and 3L standard errors), which assumes no correlation. gamma_se is a launch-index-matched batch cross-check: SD(gamma_b)/sqrt(B) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b draws on the same launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed). This is a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ; the two SEs agree within a 16-batch estimate. csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully characterised (own photon count N_thin_csf, detected count, f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
+  "convergence_note": "L_max/annulus sweeps re-scored from the same run; the z_max=220 check uses the SAME N, seed and launch-defined batches as the z_max=150 run (same geometry, so the photons are identical until the cap), so zmax_check reports the mean and SE of the per-batch difference d_b=f_150,b-f_220,b.",
+  "data_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
+  "secs": 5081.5
  },
  "two_layer": {
   "760": {
@@ -136,6 +151,43 @@
     "N_eff_absw": 3792.316429617653,
     "DPF": 6.542808558262565,
     "detected": 21676
+   },
+   "33.0": {
+    "f_cortex": 0.07741842590421316,
+    "batch_mean": 0.07782943277834112,
+    "batch_sd": 0.007589199554698129,
+    "se": 0.0018972998886745323,
+    "t_crit": 2.131449545559776,
+    "ci95": [
+     0.07337442691870721,
+     0.08146242488971911
+    ],
+    "batch_spread": [
+     0.06588355485534649,
+     0.09210706812599562
+    ],
+    "batch_estimates": [
+     0.06360906529449127,
+     0.06967437079010518,
+     0.09018643954665932,
+     0.07778734341918805,
+     0.0780847131765807,
+     0.07768454264750861,
+     0.09325944527359739,
+     0.07319797290496742,
+     0.07147479406360975,
+     0.0769716755331298,
+     0.08000592154173417,
+     0.08249898795144697,
+     0.07584429505476095,
+     0.08479390587266036,
+     0.07020593014920393,
+     0.0799915212338141
+    ],
+    "n_batches": 16,
+    "N_eff_absw": 2330.252564352116,
+    "DPF": 6.57091689118515,
+    "detected": 16771
    },
    "35.0": {
     "f_cortex": 0.08788503634328954,
@@ -247,6 +299,43 @@
     "N_eff_absw": 840.6539801106186,
     "DPF": 6.728697746595576,
     "detected": 9604
+   },
+   "42.0": {
+    "f_cortex": 0.12264844352308608,
+    "batch_mean": 0.12264109523974895,
+    "batch_sd": 0.01475423615778591,
+    "se": 0.0036885590394464774,
+    "t_crit": 2.131449545559776,
+    "ci95": [
+     0.11478646603468748,
+     0.1305104210114847
+    ],
+    "batch_spread": [
+     0.10322573879320554,
+     0.1519265057600543
+    ],
+    "batch_estimates": [
+     0.10953144475549391,
+     0.11916117205494958,
+     0.11669645029953009,
+     0.12461727872041573,
+     0.12130382682254834,
+     0.1365478025338212,
+     0.11814007269563424,
+     0.11061804149534135,
+     0.14484417201563957,
+     0.12300185683530349,
+     0.12387237587808099,
+     0.11193585305417242,
+     0.10686882422486249,
+     0.15617590600670314,
+     0.13790255890927547,
+     0.10103988753421136
+    ],
+    "n_batches": 16,
+    "N_eff_absw": 603.6039926345494,
+    "DPF": 6.705119061066786,
+    "detected": 8131
    }
   },
   "850": {
@@ -323,6 +412,43 @@
     "N_eff_absw": 4760.420554022101,
     "DPF": 5.316070229571076,
     "detected": 29316
+   },
+   "33.0": {
+    "f_cortex": 0.07708148673754964,
+    "batch_mean": 0.07707762525694702,
+    "batch_sd": 0.004281156637766736,
+    "se": 0.001070289159441684,
+    "t_crit": 2.131449545559776,
+    "ci95": [
+     0.0748002193950401,
+     0.07936275408005918
+    ],
+    "batch_spread": [
+     0.07130572492768104,
+     0.08401062848092672
+    ],
+    "batch_estimates": [
+     0.08144209386873882,
+     0.07784038029028859,
+     0.08074780367277219,
+     0.07412148068634307,
+     0.07782280481413785,
+     0.07056780525206154,
+     0.07837155715946137,
+     0.08417048561379159,
+     0.08374419992615195,
+     0.07606573249685526,
+     0.07350586393357249,
+     0.07344155755187096,
+     0.07277237283086554,
+     0.07446268547463486,
+     0.08162958948589263,
+     0.07253559105371354
+    ],
+    "n_batches": 16,
+    "N_eff_absw": 2885.7860783237443,
+    "DPF": 5.362595469557363,
+    "detected": 23022
    },
    "35.0": {
     "f_cortex": 0.08495869497641025,
@@ -434,6 +560,43 @@
     "N_eff_absw": 963.9445357618381,
     "DPF": 5.364706153765959,
     "detected": 13284
+   },
+   "42.0": {
+    "f_cortex": 0.11695251604723944,
+    "batch_mean": 0.11728363059029018,
+    "batch_sd": 0.007871403063898932,
+    "se": 0.001967850765974733,
+    "t_crit": 2.131449545559776,
+    "ci95": [
+     0.11275814142637314,
+     0.12114689066810574
+    ],
+    "batch_spread": [
+     0.10365874203002408,
+     0.12877254614768402
+    ],
+    "batch_estimates": [
+     0.1273182489093008,
+     0.10790900796375845,
+     0.11115486324894504,
+     0.11204189155734325,
+     0.11966417031366845,
+     0.11554773628244334,
+     0.10864352826662059,
+     0.11537741669488909,
+     0.10110858246978345,
+     0.11635959402382542,
+     0.12431804176498824,
+     0.12585127610077798,
+     0.12392761615051605,
+     0.12964512449071394,
+     0.11974806955778818,
+     0.11792292164928043
+    ],
+    "n_batches": 16,
+    "N_eff_absw": 704.3565171232235,
+    "DPF": 5.347843138126761,
+    "detected": 11510
    }
   }
  },
@@ -458,6 +621,16 @@
     "n_paired_batches": 16,
     "gamma_se_indep": 0.023064793179671073,
     "f3L_detected": 24337
+   },
+   "33.0": {
+    "f2L": 0.07741842590421316,
+    "f3L": 0.12385031851849176,
+    "gamma": 1.5997524758734696,
+    "gamma_batch_mean": 1.6081520695859308,
+    "gamma_se": 0.04668764990937119,
+    "n_paired_batches": 16,
+    "gamma_se_indep": 0.04241181013498493,
+    "f3L_detected": 19595
    },
    "35.0": {
     "f2L": 0.08788503634328954,
@@ -488,6 +661,16 @@
     "n_paired_batches": 16,
     "gamma_se_indep": 0.04454673819272687,
     "f3L_detected": 12182
+   },
+   "42.0": {
+    "f2L": 0.12264844352308608,
+    "f3L": 0.16834982650803187,
+    "gamma": 1.372620978074976,
+    "gamma_batch_mean": 1.3914064267532218,
+    "gamma_se": 0.03995640870484854,
+    "n_paired_batches": 16,
+    "gamma_se_indep": 0.045109202050954963,
+    "f3L_detected": 10653
    }
   },
   "850": {
@@ -510,6 +693,16 @@
     "n_paired_batches": 16,
     "gamma_se_indep": 0.029862166761762964,
     "f3L_detected": 32014
+   },
+   "33.0": {
+    "f2L": 0.07708148673754964,
+    "f3L": 0.12357682837000672,
+    "gamma": 1.6031972604623783,
+    "gamma_batch_mean": 1.611810419482063,
+    "gamma_se": 0.03641208582624394,
+    "n_paired_batches": 16,
+    "gamma_se_indep": 0.031255113450445564,
+    "f3L_detected": 25890
    },
    "35.0": {
     "f2L": 0.08495869497641025,
@@ -540,6 +733,16 @@
     "n_paired_batches": 16,
     "gamma_se_indep": 0.05017450202008756,
     "f3L_detected": 16440
+   },
+   "42.0": {
+    "f2L": 0.11695251604723944,
+    "f3L": 0.16572538566706843,
+    "gamma": 1.4170313839176292,
+    "gamma_batch_mean": 1.4175601895274124,
+    "gamma_se": 0.02523309553953175,
+    "n_paired_batches": 16,
+    "gamma_se_indep": 0.030737285512152258,
+    "f3L_detected": 14022
    }
   }
  },
@@ -573,6 +776,21 @@
     "gamma_1mm": 1.3403930773961856,
     "gamma_1mm_se": 0.02833022722774683,
     "gamma_1mm_se_batch": 0.030440876095899867,
+    "gamma_1mm_n_paired_batches": 16
+   },
+   "33.0": {
+    "f3L_1mm": 0.10254143776316016,
+    "f3L_1mm_batch_sd": 0.007012133061307183,
+    "f3L_1mm_se": 0.0017530332653267957,
+    "f3L_1mm_ci95": [
+     0.09880493580642818,
+     0.10627793971989213
+    ],
+    "f3L_1mm_detected": 17882,
+    "f3L_1mm_DPF": 6.656956229109257,
+    "gamma_1mm": 1.3245094635485193,
+    "gamma_1mm_se": 0.03957747184152577,
+    "gamma_1mm_se_batch": 0.0496756171687233,
     "gamma_1mm_n_paired_batches": 16
    },
    "35.0": {
@@ -619,6 +837,21 @@
     "gamma_1mm_se": 0.04604302592869407,
     "gamma_1mm_se_batch": 0.054417662486293115,
     "gamma_1mm_n_paired_batches": 16
+   },
+   "42.0": {
+    "f3L_1mm": 0.15282963139324,
+    "f3L_1mm_batch_sd": 0.014986016911495193,
+    "f3L_1mm_se": 0.0037465042278737983,
+    "f3L_1mm_ci95": [
+     0.1448441466593006,
+     0.16081511612717939
+    ],
+    "f3L_1mm_detected": 9297,
+    "f3L_1mm_DPF": 6.61938113865334,
+    "gamma_1mm": 1.2460788494594546,
+    "gamma_1mm_se": 0.04834735608055702,
+    "gamma_1mm_se_batch": 0.046542196156740524,
+    "gamma_1mm_n_paired_batches": 16
    }
   },
   "850": {
@@ -650,6 +883,21 @@
     "gamma_1mm": 1.357955458445868,
     "gamma_1mm_se": 0.030404281848886203,
     "gamma_1mm_se_batch": 0.023006695601526767,
+    "gamma_1mm_n_paired_batches": 16
+   },
+   "33.0": {
+    "f3L_1mm": 0.10455086717451743,
+    "f3L_1mm_batch_sd": 0.00716045297009751,
+    "f3L_1mm_se": 0.0017901132425243774,
+    "f3L_1mm_ci95": [
+     0.10073533111723831,
+     0.10836640323179655
+    ],
+    "f3L_1mm_detected": 23957,
+    "f3L_1mm_DPF": 5.469673351358586,
+    "gamma_1mm": 1.3563680670884921,
+    "gamma_1mm_se": 0.029900410132579193,
+    "gamma_1mm_se_batch": 0.03435074843237804,
     "gamma_1mm_n_paired_batches": 16
    },
    "35.0": {
@@ -696,6 +944,21 @@
     "gamma_1mm_se": 0.04705250658329531,
     "gamma_1mm_se_batch": 0.045132360871624165,
     "gamma_1mm_n_paired_batches": 16
+   },
+   "42.0": {
+    "f3L_1mm": 0.1505744754496993,
+    "f3L_1mm_batch_sd": 0.01277259199436373,
+    "f3L_1mm_se": 0.0031931479985909325,
+    "f3L_1mm_ci95": [
+     0.14376844159919755,
+     0.15738050930020103
+    ],
+    "f3L_1mm_detected": 12906,
+    "f3L_1mm_DPF": 5.437864728813623,
+    "gamma_1mm": 1.2874838484781232,
+    "gamma_1mm_se": 0.03485324682020101,
+    "gamma_1mm_se_batch": 0.036792800698007576,
+    "gamma_1mm_n_paired_batches": 16
    }
   }
  },
@@ -726,6 +989,11 @@
      "2.5": 0.06418273246965443,
      "3.0": 0.06333283550105102
     },
+    "33.0": {
+     "2.0": 0.08030750369918213,
+     "2.5": 0.07741842590421316,
+     "3.0": 0.07720623637660495
+    },
     "35.0": {
      "2.0": 0.08967696289580308,
      "2.5": 0.08788503634328954,
@@ -740,6 +1008,11 @@
      "2.0": 0.11010738019386507,
      "2.5": 0.10980265879849886,
      "3.0": 0.10969503231062158
+    },
+    "42.0": {
+     "2.0": 0.12222071378748017,
+     "2.5": 0.12264844352308608,
+     "3.0": 0.12080823853510411
     }
    }
   },
@@ -769,6 +1042,11 @@
      "2.5": 0.06327118683843098,
      "3.0": 0.0627372506662357
     },
+    "33.0": {
+     "2.0": 0.07894410001865686,
+     "2.5": 0.07708148673754964,
+     "3.0": 0.07655112698209655
+    },
     "35.0": {
      "2.0": 0.0851050939767622,
      "2.5": 0.08495869497641025,
@@ -783,6 +1061,11 @@
      "2.0": 0.10856735930239964,
      "2.5": 0.10706288230513183,
      "3.0": 0.10640131067478104
+    },
+    "42.0": {
+     "2.0": 0.11461746782468564,
+     "2.5": 0.11695251604723944,
+     "3.0": 0.117953463555406
     }
    }
   }

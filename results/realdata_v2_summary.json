@@ -839,16 +839,32 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_realdata_v2.py",
-  "git_commit": "4ea6693",
-  "analysis_round": "round6",
-  "generated_utc": "2026-08-06T18:30:19Z",
-  "command": "python fnirs_kappa_realdata_v2.py",
+  "git_commit": "bd007a1",
+  "git_commit_full": "bd007a1d39dfb7461a02fce95b8bd5c4567f25b2",
+  "git_dirty": true,
+  "analysis_round": "round7",
+  "generated_utc": "2026-08-06T22:25:33Z",
+  "command": "python ",
   "python_version": "3.11.15",
-  "numpy_version": "2.4.4",
-  "mne_version": "1.12.1",
+  "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "packages": {
+   "numpy": "2.4.4",
+   "scipy": "1.17.1",
+   "pandas": "3.0.2",
+   "matplotlib": "3.10.9",
+   "mne": "1.12.1",
+   "mne_bids": "0.19.0",
+   "h5py": "3.16.0"
+  },
+  "input_hashes": {
+   "fcortex_production_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
+   "fcortex_production_git": "bd007a1",
+   "fcortex_production_schema": "2.0"
+  },
   "forward_model": {
-   "fcortex_production_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
-   "fcortex_production_git": "4ea6693",
+   "fcortex_production_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
+   "fcortex_production_git": "bd007a1",
    "fcortex_production_schema": "2.0"
   },
   "dataset": {
@@ -856,11 +872,25 @@
    "doi": "10.5281/zenodo.5529797",
    "zenodo_record": "5529797",
    "citation": "Luke et al., 2021",
-   "note": "pinned immutable Zenodo release, md5-verified on download"
+   "verification": "pinned Zenodo record; each file verified against the Zenodo-published md5; local SHA-256 also recorded"
   },
   "seeds": {
    "note": "deterministic pipeline; no stochastic step in the real-data analysis"
   },
-  "note": "Provenance stamped for the round-6 release; the f_cortex/gamma point values are identical to the prior run, so the per-subject and group numbers are unchanged."
+  "note": "Provenance stamped for the round-7 release; f_cortex/gamma point values identical to the prior run, so per-subject and group numbers are unchanged."
+ },
+ "sds_range_sensitivity": {
+  "note": "Contralateral channel SDS range and the effect of the grid clipping on the applied kappa_PV. Band-restricted corrected-amplitude means (35-40mm vs <35 / >40mm) are emitted by fnirs_kappa_realdata_v2.py when the pipeline is re-run on the dataset (per-channel contra_amp); this frozen summary reports the geometry and the applied-kappa clipping effect.",
+  "n_channels": 79,
+  "sds_min": 33.44,
+  "sds_max": 40.9,
+  "sds_median": 37.22,
+  "sds_mean": 37.88987341772152,
+  "n_below_35": 10,
+  "n_35_40": 48,
+  "n_above_40": 21,
+  "mean_kappa_clipped_oldgrid": 6.779424050632909,
+  "mean_kappa_extended_grid": 6.752208152174143,
+  "group_kappa_pct_change_from_unclipping": -0.4014485339093848
  }
 }

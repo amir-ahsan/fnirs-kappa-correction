@@ -42,17 +42,35 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_synthetic_validation.py:multiseed_operating_regime",
-  "git_commit": "4ea6693-dirty",
-  "analysis_round": "round6",
-  "generated_utc": "2026-08-06T19:00:23Z",
-  "command": "python fnirs_kappa_synthetic_validation.py",
+  "git_commit": "bd007a1",
+  "git_commit_full": "bd007a1d39dfb7461a02fce95b8bd5c4567f25b2",
+  "git_dirty": true,
+  "analysis_round": "round7",
+  "generated_utc": "2026-08-06T22:25:50Z",
+  "command": "python ",
   "python_version": "3.11.15",
-  "numpy_version": "2.4.4",
-  "forward_model": {
-   "fcortex_production_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
-   "fcortex_production_git": "4ea6693",
+  "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "packages": {
+   "numpy": "2.4.4",
+   "scipy": "1.17.1",
+   "pandas": "3.0.2",
+   "matplotlib": "3.10.9",
+   "mne": "1.12.1",
+   "mne_bids": "0.19.0",
+   "h5py": "3.16.0"
+  },
+  "input_hashes": {
+   "fcortex_production_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
+   "fcortex_production_git": "bd007a1",
    "fcortex_production_schema": "2.0"
   },
-  "seed": 42
+  "forward_model": {
+   "fcortex_production_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
+   "fcortex_production_git": "bd007a1",
+   "fcortex_production_schema": "2.0"
+  },
+  "seed": 42,
+  "note": "deterministic (base_seed=1000); values identical to the prior run."
  }
 }

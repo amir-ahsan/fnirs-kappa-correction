@@ -92,79 +92,75 @@ draw Figure 3 and the robustness numbers, giving one exact path
 ```
 .
 ├── README.md                     This file
-├── REVIEW_NOTES.md               Pre-submission review summary
-├── requirements.txt              Python dependencies
+├── reproduce_all.sh              One-command end-to-end regeneration + manuscript build
+├── requirements.txt              Python dependencies (loose)
+├── requirements-lock.txt         Exact pinned environment (pip freeze) for the frozen release
+├── RELEASE_MANIFEST.md           SHA-256 of every tracked file + production provenance
+├── REVISION_RESPONSE.md          Point-by-point response to the reviews
+├── CITATION.cff                  Citation metadata
+├── LICENSE / LICENSE-manuscript.md   Code (MIT) and manuscript (CC BY 4.0) licenses
 │
-├── arxiv_submission/             <-- upload the CONTENTS of this folder to arXiv
+├── manuscript/                   <-- upload the CONTENTS of this folder to arXiv
 │   ├── main.tex                  Manuscript source (standard article class, 11pt)
+│   ├── main.pdf                  Compiled manuscript
 │   └── figures/
-│       ├── figure1_timeseries.png
-│       ├── figure2_summary.png
-│       ├── figure3_robustness.png
-│       ├── figure4_realdata_timeseries.png
-│       ├── figure5_realdata_hrf.png
-│       ├── figure6_realdata_summary.png
-│       └── figure7_group_block_average.png
+│       ├── figure1_timeseries.png … figure7_group_block_average.png
 │
 ├── code/
 │   ├── mc_production.py                      SINGLE SOURCE OF TRUTH: one converged
-│   │                                         batched MC → fcortex_production.json
-│   │                                         (wavelength-specific f_cortex ± CI, DPF,
-│   │                                         N_eff, CSF γ, thickness + L_max/z_max sweeps)
-│   ├── fcortex_source.py                     Loader both pipelines import (no hard-coded
-│   │                                         tables, no 760→850 shortcut)
-│   ├── fcortex_production.json / .csv        The versioned MC output (copied to results/)
-│   ├── mc_robustness_sweeps.py               AUTHORITATIVE secondary-sweep generator:
-│   │                                         thickness + optical MC sweeps →
+│   │                                         batched MC → fcortex_production.json (SDS grid
+│   │                                         25–42 mm; f_cortex ± CI, DPF, CSF γ at 2/1 mm,
+│   │                                         L_max/z_max sweeps; schema 2.0 + payload hash)
+│   ├── mc_robustness_sweeps.py               AUTHORITATIVE secondary-sweep generator →
 │   │                                         results/robustness_secondary.json (Fig 3 source)
 │   ├── validate_homogeneous_fluence.py       Executable homogeneous-limit fluence check
 │   │                                         (adaptive quad vs closed-form semi-infinite)
-│   ├── mc_2layer.py                          MC engine (per-photon partial-pathlength
-│   │                                         scoring; return_raw for mc_production)
-│   ├── fnirs_kappa_synthetic_validation.py   Synthetic validation (Results tables;
-│   │                                         Figs 1–3; SNR, convergence, CSF, model-
-│   │                                         mismatch; reads robustness_secondary.json)
-│   ├── fnirs_kappa_realdata_v2.py            PRIMARY in-vivo pipeline: per-channel
-│   │                                         SDS/f_cortex, TDDR+SCI QC, nearest-short
-│   │                                         SSR, contralateral condition-resolved,
-│   │                                         window-mean (Figs 4–7; Tables 5–6)
-│   ├── fnirs_kappa_realdata_analysis.py      Earlier single-subject pipeline (reference;
-│   │                                         now also reads fcortex_source); pinned dataset
+│   ├── fcortex_source.py                     Loader both pipelines import (schema 2.0 +
+│   │                                         hash required; interpolates f_cortex on the grid)
+│   ├── provenance.py                         Shared provenance helper (uniform schema)
+│   ├── mc_2layer.py                          MC engine (per-photon partial-pathlength scoring)
+│   ├── fnirs_kappa_synthetic_validation.py   Synthetic validation (Results tables; Figs 1–3;
+│   │                                         reads robustness_secondary.json)
+│   ├── fnirs_kappa_realdata_v2.py            PRIMARY in-vivo pipeline (Figs 4–7; SDS-range
+│   │                                         sensitivity; pinned Zenodo dataset)
+│   ├── fnirs_kappa_realdata_analysis.py      Earlier single-subject pipeline (reference)
 │   ├── fnirs_kappa_group_analysis.py         Earlier five-subject group pipeline (reference)
 │   ├── fnirs_invivo_demo.py                  Single-channel pipeline walkthrough
-│   ├── mc_uncertainty.py                     LEGACY multi-seed MC (superseded by
-│   │                                         mc_production.py; NOT used for the tables)
+│   ├── mc_uncertainty.py                     LEGACY multi-seed MC (superseded; NOT used)
 │   └── mc_csf.py                             LEGACY isotropic CSF cross-check (superseded)
+│   (fcortex_production.json/.csv are regenerated here and are git-ignored; the tracked
+│    copies live under results/)
 │
-├── results/                                 Raw MC + real-data outputs (JSON/CSV)
-│   ├── fcortex_production.json / .csv        The single source of truth (schema 2.0, hash)
+├── results/                                 Tracked, versioned outputs (single source of truth)
+│   ├── fcortex_production.json / .csv        Production forward model (schema 2.0, hash)
 │   ├── robustness_secondary.json            Secondary sweeps (mc_robustness_sweeps.py; Fig 3)
 │   ├── homogeneous_fluence_validation.json  Fluence homogeneous-limit check output
 │   ├── multiseed_operating_regime.json      30-cohort operating-regime sweep
 │   ├── realdata_v2_summary.json              Per-subject + group in-vivo results
 │   └── legacy/                               Superseded mc_uncertainty outputs (NOT used)
-├── REVISION_RESPONSE.md                     Point-by-point response to the reviews
+│
 └── supplementary/
     ├── fnirs_kappa_beginner_notebook.ipynb  Annotated Jupyter walkthrough
-    └── fNIRS_Kappa_Pedagogical_Guide.tex    LaTeX pedagogical companion
+    ├── fNIRS_Kappa_Pedagogical_Guide.tex    LaTeX pedagogical companion
+    └── fNIRS_Kappa_Pedagogical_Guide.pdf    Compiled guide
 ```
 
 ---
 
 ## Building the manuscript (arXiv)
 
-The `arxiv_submission/` folder is self-contained: `main.tex` uses only standard
+The `manuscript/` folder is self-contained: `main.tex` uses only standard
 packages (`amsmath`, `graphicx`, `booktabs`, `multirow`, `array`, `enumitem`,
 `microtype`, `hyperref`, `authblk`, `geometry`) and a bundled `figures/` directory.
 The bibliography is inline (`thebibliography`), so **no `.bib`/BibTeX step is needed**.
 
 ```bash
-cd arxiv_submission
+cd manuscript
 pdflatex main.tex
 pdflatex main.tex        # second pass resolves cross-references
 ```
 
-This produces `main.pdf`. To submit, upload the contents of `arxiv_submission/`
+This produces `main.pdf`. To submit, upload the contents of `manuscript/`
 (i.e. `main.tex` and the `figures/` folder) as the arXiv source. Suggested
 categories: **physics.med-ph** (primary), cross-list **physics.optics** and
 **q-bio.NC**.
@@ -210,7 +206,7 @@ To regenerate the secondary robustness sweeps (Figure 3 source) and the
 homogeneous-limit fluence check:
 
 ```bash
-python mc_robustness_sweeps.py -N 120000 --seed 1 --out ../results/robustness_secondary.json
+python mc_robustness_sweeps.py -N 500000 --seed 1 --out ../results/robustness_secondary.json
 python validate_homogeneous_fluence.py --out ../results/homogeneous_fluence_validation.json
 ```
 

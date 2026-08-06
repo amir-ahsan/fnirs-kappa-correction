@@ -113,6 +113,31 @@ def main():
     print(f"\n  MAX relative error over rho <= 30 mm: {max_rel*100:.5f}%  "
           f"({'PASS' if max_rel < 1e-4 else 'FAIL'} the < 0.01% claim)")
 
+    # Also validate the EXACT pipeline code path: the fixed-point Hankel fluence
+    # actually used by the synthetic-validation module (fluence_two_layer_kienle),
+    # evaluated in the homogeneous limit, against the same closed form. This checks
+    # the shipped analytical function itself (not just this script's adaptive-quad
+    # re-implementation); its fixed-point quadrature is expected to be slightly less
+    # accurate than adaptive quad at large rho (as the manuscript notes).
+    pipeline_rows = []
+    pipeline_max = None
+    try:
+        from fnirs_kappa_synthetic_validation import fluence_two_layer_kienle, OpticalProperties
+        props = OpticalProperties(mua=MUA, musp=MUSP)
+        pipeline_max = 0.0
+        print(f"\n  Pipeline fixed-point fluence (fluence_two_layer_kienle) vs closed form:")
+        for rho in RHO_MM:
+            fp = fluence_two_layer_kienle(rho, Z_MM, Z_SUP_MM, props, props)
+            fc = fluence_semi_infinite_closed(rho, Z_MM, D, mueff, zp, zb)
+            rel = abs(fp - fc) / abs(fc)
+            pipeline_max = max(pipeline_max, rel)
+            pipeline_rows.append(dict(rho_mm=rho, fluence_pipeline_fixedpoint=float(fp),
+                                      fluence_semi_infinite_closed=float(fc), rel_error=float(rel)))
+            print(f"  {rho:9.1f} {fp:16.6e} {fc:18.6e} {rel*100:12.5f}")
+        print(f"  MAX relative error (pipeline fixed-point): {pipeline_max*100:.5f}%")
+    except Exception as e:
+        print(f"  [note] could not validate the pipeline fluence function directly ({e})")
+
     out = dict(
         description="Homogeneous-limit validation of the two-layer Kienle CW-diffusion "
                     "fluence: adaptive-quadrature Hankel inversion vs the closed-form "
@@ -123,6 +148,8 @@ def main():
                     A_extrap=A_EXTRAP),
         results=rows, max_rel_error=float(max_rel),
         passes_0p01pct=bool(max_rel < 1e-4),
+        pipeline_fixedpoint_check=dict(results=pipeline_rows,
+                                       max_rel_error=(float(pipeline_max) if pipeline_max is not None else None)),
         provenance=__import__("provenance").provenance(
             "validate_homogeneous_fluence.py",
             analysis_round=args.analysis_round, git_commit=args.git_commit,
