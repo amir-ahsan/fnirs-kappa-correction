@@ -11,17 +11,21 @@ derives BOTH:
       {2.0, 2.5, 3.0} mm (plus a separate z_max check) -- to demonstrate the
       long-SDS plateau; and
   (b) batch-based uncertainty -- the detected photons are split into K
-      INDEPENDENT batches and f_cortex (a ratio estimator) is recomputed on each
-      batch, so the reported mean +/- SD and percentile 95% interval reflect the
-      variance of the RATIO across independent batches (not a 3-seed bootstrap).
+      LAUNCH-DEFINED batches (batch id = launch_idx mod K) and f_cortex (a ratio
+      estimator) is recomputed on each batch, so the reported batch SD, standard
+      error (SD/sqrt(K)) and t-based 95% confidence interval of the combined
+      estimate reflect the variance of the RATIO across independent batches (not a
+      3-seed bootstrap).  Because the batches are keyed by launch index, batch b
+      is the same launched-photon cohort across geometries, which makes the CSF
+      ratio gamma_b = f3L,b/f2L,b and the z_max difference d_b genuinely PAIRED.
 
 Wavelength-specific two-layer fractions (760 and 850 nm) and wavelength-specific
 CSF light-piping ratios gamma(lambda, SDS) = f_cortex^3L / f_cortex^2L are written
 to ONE versioned JSON + CSV.  Both the synthetic-validation and the real-data
 pipelines read these values (no hard-coded tables, no 760->850 ratio shortcut).
 
-Run (background, ~1-2 h on 2 cores at the production N):
-    python mc_production.py --N 2500000 --batches 16 --out fcortex_production
+Canonical command used for the manuscript tables (background, ~1-1.5 h on 2 cores):
+    python mc_production.py -N 2000000 --batches 16 --out fcortex_production
 """
 import argparse, json, time, sys, platform, hashlib, subprocess
 from datetime import datetime, timezone
@@ -119,7 +123,18 @@ def ratio(w, Lcx, Lt, mask):
 
 
 def score(raw, sds, hw, K):
-    """Batch statistics for f_cortex at one SDS annulus."""
+    """Batch statistics for f_cortex at one SDS annulus.
+
+    Batches are LAUNCH-DEFINED: each detected photon is assigned to batch
+    (launch_idx mod K) using its original launch index, not its position in the
+    compacted detected-photon array.  Because photons are launched in index order
+    with a fixed seed, batch b contains the SAME launched-photon cohort in every
+    geometry -- so the per-batch two-/three-layer ratios gamma_b = f3L,b/f2L,b are
+    genuinely paired (common random numbers) rather than matched by an arbitrary
+    detected-array position.  The batches remain disjoint subsets of the detected
+    photons, so they are still valid independent batches for the single-geometry
+    SE/CI as well.  (Falls back to a fixed random partition if launch_idx is
+    absent, e.g. for a legacy raw dict.)"""
     er, Lcx, Lt, w = raw['exit_r'], raw['Lcortex'], raw['Ltot'], raw['w']
     m = np.abs(er - sds) <= hw
     idx = np.where(m)[0]
@@ -129,17 +144,25 @@ def score(raw, sds, hw, K):
     sw = w[m].sum(); sw2 = (w[m] ** 2).sum()
     neff = float(sw * sw / sw2) if sw2 > 0 else 0.0
     dpf = float((w[m] * Lt[m]).sum() / sw / sds) if sw > 0 else float('nan')
-    # K independent batches (disjoint photon subsets)
-    rng = np.random.default_rng(0)
-    perm = rng.permutation(idx)
-    batches = np.array_split(perm, K)
-    fb = []
+    # K launch-defined batches: group the annulus photons by (launch_idx mod K),
+    # so batch b is the same launched-photon cohort across geometries.
+    if 'launch_idx' in raw:
+        bt = raw['launch_idx'][idx] % K
+        batches = [idx[bt == b] for b in range(K)]
+    else:                                     # legacy fallback: fixed random split
+        rng = np.random.default_rng(0)
+        batches = np.array_split(rng.permutation(idx), K)
+    # Keep the per-batch estimates ALIGNED to batch id b (0..K-1): an empty or
+    # degenerate batch is stored as NaN rather than dropped, so batch b of the
+    # 2-layer run pairs with batch b of the 3-layer run (same launch cohort).
+    fb_aligned = []
     for b in batches:
         if b.size == 0:
-            continue
+            fb_aligned.append(float('nan')); continue
         bm = np.zeros_like(m); bm[b] = True
-        fb.append(ratio(w, Lcx, Lt, bm))
-    fb = np.array([x for x in fb if x == x])
+        fb_aligned.append(ratio(w, Lcx, Lt, bm))
+    fb_aligned = np.array(fb_aligned, float)
+    fb = fb_aligned[np.isfinite(fb_aligned)]   # non-empty batches for summary stats
     nb = int(fb.size)
     bsd = float(fb.std(ddof=1)) if nb > 1 else 0.0
     se = bsd / np.sqrt(nb) if nb > 0 else 0.0          # SE of the combined estimate
@@ -151,7 +174,7 @@ def score(raw, sds, hw, K):
                 batch_sd=bsd, se=float(se), t_crit=float(tcrit),
                 ci95=ci_t,
                 batch_spread=[float(np.percentile(fb, 2.5)), float(np.percentile(fb, 97.5))],
-                batch_estimates=[float(x) for x in fb],   # per-batch f_cortex (for paired stats)
+                batch_estimates=[float(x) for x in fb_aligned],   # length-K, aligned by batch id (NaN=empty); for paired stats
                 n_batches=nb, N_eff_absw=neff, DPF=dpf,
                 detected=int(idx.size))
 
@@ -170,7 +193,8 @@ def convergence(raw):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('-N', type=lambda v: int(float(v)), default=2500000)
+    ap.add_argument('-N', type=lambda v: int(float(v)), default=2000000,
+                    help="photons per configuration (manuscript tables use 2000000)")
     ap.add_argument('--batches', type=int, default=16)
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--zmax_check', type=float, default=220.0)
@@ -213,16 +237,24 @@ def main():
             f3s = score(raws[('3L', wl)], s, PROD_HW, args.batches)
             f3 = f3s['f_cortex']
             # gamma uncertainty from the distribution of the per-batch RATIOS
-            # gamma_b = f3L,b / f2L,b (batches matched by index; the 2L and 3L runs
-            # share the seed).  SE = SD(gamma_b)/sqrt(B).  This is the batch-ratio
-            # estimate the review asks for, not a quadrature of two separate SEs.
+            # gamma_b = f3L,b / f2L,b over LAUNCH-DEFINED batches: batch b of the
+            # 2L and 3L runs is the same launched-photon cohort (launch_idx mod B,
+            # shared seed = common random numbers), so gamma_b is a genuinely paired
+            # estimator.  SE = SD(gamma_b)/sqrt(B_paired).  We also report the
+            # independent-propagation SE (quadrature of the 2L and 3L standard
+            # errors) as a conservative cross-check that does not rely on pairing.
             b2 = np.array(f2s['batch_estimates']); b3 = np.array(f3s['batch_estimates'])
-            nb = min(b2.size, b3.size)
-            gb = b3[:nb] / b2[:nb]
-            gamma_se = float(gb.std(ddof=1) / np.sqrt(nb)) if nb > 1 else None
+            pair = np.isfinite(b2) & np.isfinite(b3) & (b2 != 0)
+            gb = b3[pair] / b2[pair]
+            nbp = int(gb.size)
+            gamma_se = float(gb.std(ddof=1) / np.sqrt(nbp)) if nbp > 1 else None
+            se2, se3 = f2s['se'], f3s['se']
+            gamma_se_indep = (float((f3 / f2) * np.hypot(se2 / f2, se3 / f3))
+                              if f2 and f3 else None)
             csf[wl][str(s)] = dict(f2L=f2, f3L=f3, gamma=float(f3 / f2) if f2 else None,
-                                   gamma_batch_mean=float(gb.mean()),
-                                   gamma_se=gamma_se)
+                                   gamma_batch_mean=float(gb.mean()) if nbp else None,
+                                   gamma_se=gamma_se, n_paired_batches=nbp,
+                                   gamma_se_indep=gamma_se_indep)
     # z_max=220 mm check, scored identically (same N, same seed, same batch
     # partition) as the z_max=150 mm production run, so the batches are truly
     # PAIRED.  Report the mean and SE of the per-batch paired difference
@@ -233,8 +265,9 @@ def main():
         z2 = zc_score[s]
         f150 = two_layer[760][s]
         b150 = np.array(f150['batch_estimates']); b220 = np.array(z2['batch_estimates'])
-        nb = min(b150.size, b220.size)
-        db = b150[:nb] - b220[:nb]
+        pair = np.isfinite(b150) & np.isfinite(b220)
+        db = b150[pair] - b220[pair]
+        nb = int(db.size)
         d = float(db.mean())
         d_se = float(db.std(ddof=1) / np.sqrt(nb)) if nb > 1 else 0.0
         zc_conv[s] = dict(f_150=f150['f_cortex'], f_220=z2['f_cortex'],
@@ -265,25 +298,33 @@ def main():
                    g=0.9, L_max=PROD_LMAX, z_max=PROD_ZMAX, half_width=PROD_HW,
                    sds=SDS, optical_properties=OPT,
                    uncertainty=f"f_cortex is a ratio estimator recomputed on each of "
-                               f"{args.batches} disjoint photon batches. Reported per SDS: "
-                               "batch_sd (spread of batch estimates), se=batch_sd/sqrt(B) "
-                               "(standard error of the combined estimate), and ci95 = the "
-                               "t interval f_all +/- t_{.975,B-1}*se (a 95% CI for the "
-                               "combined 2e6-photon estimate). batch_spread holds the 2.5/97.5 "
-                               "percentiles of the individual batch estimates (a prediction "
-                               "range, NOT a CI for the combined run). batch_estimates holds the "
-                               "per-batch f_cortex values used for the paired gamma/z_max stats.",
+                               f"{args.batches} LAUNCH-DEFINED photon batches (batch id = "
+                               "launch_idx mod B; disjoint subsets of the detected photons). "
+                               "Reported per SDS: batch_sd (spread of batch estimates), "
+                               "se=batch_sd/sqrt(B) (standard error of the combined estimate), "
+                               "and ci95 = the t interval f_all +/- t_{.975,B-1}*se (a 95% CI "
+                               f"for the combined {args.N:.0e}-photon estimate). batch_spread "
+                               "holds the 2.5/97.5 percentiles of the individual batch estimates "
+                               "(a prediction range, NOT a CI for the combined run). "
+                               "batch_estimates is length B, aligned by batch id (NaN=empty "
+                               "batch), so batch b pairs across geometries for the gamma/z_max "
+                               "paired statistics.",
                    N_eff_note="N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight "
                               "effective count only; it does not capture pathlength or "
                               "numerator-denominator covariance in the ratio (see se/ci95)",
-                   csf_note="csf gamma at nominal 2 mm; gamma_se is SD(gamma_b)/sqrt(B) over the "
-                            "per-batch ratios gamma_b=f3L,b/f2L,b (2L and 3L share the seed); "
+                   csf_note="csf gamma at nominal 2 mm. gamma_se is SD(gamma_b)/sqrt(B_paired) "
+                            "over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b is the "
+                            "SAME launched-photon cohort in the 2L and 3L runs (launch_idx mod B, "
+                            "shared seed) -- a genuinely PAIRED estimator, not a quadrature of two "
+                            "separate SEs. gamma_se_indep is the independent-propagation SE "
+                            "(quadrature of the 2L and 3L standard errors), reported as a "
+                            "conservative cross-check that does not assume pairing. "
                             "csf_thickness_1mm holds gamma for a thinner 1 mm CSF layer.",
                    convergence_note="L_max/annulus sweeps re-scored from the same run; the "
-                                    "z_max=220 check uses the SAME N, seed and batch partition "
-                                    "(common random numbers) as the z_max=150 run, so zmax_check "
-                                    "reports the mean and SE of the per-batch PAIRED difference "
-                                    "d_b=f_150,b-f_220,b.",
+                                    "z_max=220 check uses the SAME N, seed and LAUNCH-DEFINED "
+                                    "batches (common random numbers) as the z_max=150 run, so "
+                                    "zmax_check reports the mean and SE of the per-batch PAIRED "
+                                    "difference d_b=f_150,b-f_220,b.",
                    data_sha256=None, secs=None),
         two_layer=two_layer, csf=csf, csf_thickness_1mm=csf_thickness,
         convergence=conv, zmax_check=zc_conv)
@@ -292,14 +333,15 @@ def main():
     json.dump(result, open(f"{args.out}.json", 'w'), indent=1)
     with open(f"{args.out}.csv", 'w') as f:
         f.write("geometry,wavelength_nm,SDS_mm,f_cortex,batch_sd,se,ci95_lo,ci95_hi,"
-                "n_batches,N_eff_absw,DPF,detected,gamma,gamma_se\n")
+                "n_batches,N_eff_absw,DPF,detected,gamma,gamma_se,gamma_se_indep\n")
         for wl in (760, 850):
             for s in SDS:
                 d = two_layer[wl][str(s)]; c = csf[wl][str(s)]
+                gsi = c['gamma_se_indep'] if c['gamma_se_indep'] is not None else float('nan')
                 f.write(f"2L,{wl},{s:g},{d['f_cortex']:.5f},{d['batch_sd']:.5f},"
                         f"{d['se']:.5f},{d['ci95'][0]:.5f},{d['ci95'][1]:.5f},{d['n_batches']},"
                         f"{d['N_eff_absw']:.1f},{d['DPF']:.3f},{d['detected']},"
-                        f"{c['gamma']:.4f},{c['gamma_se']:.4f}\n")
+                        f"{c['gamma']:.4f},{c['gamma_se']:.4f},{gsi:.4f}\n")
     # console summary
     print(f"\n=== convergence (2L 760nm, f_cortex vs L_max) ===")
     for s in ('38.0', '40.0'):

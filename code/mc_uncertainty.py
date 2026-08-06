@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """
+LEGACY / NOT USED FOR THE MANUSCRIPT TABLES.
+
+This earlier uncertainty/provenance driver has been SUPERSEDED by
+mc_production.py, which is the single source of truth for every f_cortex and CSF
+ratio reported in the manuscript (written to fcortex_production.json with schema
+version, provenance, launch-defined paired batches, and a payload hash).
+mc_uncertainty.py is retained only for historical reference; it is not imported
+by any analysis script and must not be used to regenerate the manuscript numbers.
+
 Monte-Carlo uncertainty / provenance driver for the cortical sensitivity
 fraction f_cortex and the CSF light-piping ratio gamma.
 
-This is the reproducible production workflow behind the paper's Monte-Carlo
-tables.  It uses the SAME anisotropic Henyey-Greenstein transport (g=0.9) as
-mc_2layer.py for BOTH wavelengths and for BOTH the two-layer and three-layer
-(CSF) geometries, so the two-layer table and the CSF ratio are computed under
-identical transport assumptions (addressing the reviewer's consistency point).
+It uses the SAME anisotropic Henyey-Greenstein transport (g=0.9) as mc_2layer.py
+for BOTH wavelengths and for BOTH the two-layer and three-layer (CSF) geometries,
+so the two-layer table and the CSF ratio are computed under identical transport
+assumptions.
 
 For every (geometry, wavelength, SDS) it reports, aggregated over several
 independent seeds:

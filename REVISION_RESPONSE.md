@@ -434,3 +434,118 @@ mean-scale column), the SSR-only comparator and the 30-cohort operating regime �
 cross-checked against the regenerated JSON/CSV. The schema-rejection guard in
 `fcortex_source.py` was unit-tested. Both LaTeX documents recompile without errors
 (manuscript 46 pp, guide 50 pp).
+
+---
+
+# Round 5 — Response to the *Remaining Problems and Recommended Solutions* review (Aug 6, 2026)
+
+This round addresses the fifth focused review (four numbered issues plus five
+editorial corrections). The central scientific item (Issue 2) is fully resolved
+by re-running the production Monte Carlo with a genuinely launch-matched batching
+design; every affected number was regenerated and cross-checked, and the
+manuscript and pedagogical guide recompile cleanly.
+
+## High-priority
+
+**1 — Freeze and enforce the exact schema-2.0 artifacts.** The exact
+`fcortex_production.json`/`.csv` used for the manuscript tables are committed
+under `results/` (tracked) and listed with their SHA-256 in `RELEASE_MANIFEST.md`.
+`fcortex_source.py` now (i) **requires schema 2.0** and rejects schema 1.0
+outright for this manuscript release; (ii) **validates the stored payload hash**
+(`data_sha256`) on load, so an edited, truncated, or stale file is rejected rather
+than silently used; and (iii) **resolves the tracked `results/` copy first** (with
+an explicit `FCORTEX_PRODUCTION_JSON` override), so a loose file in the code
+directory or CWD can no longer shadow the released artifact. `robustness_secondary.json`
+and `realdata_v2_summary.json` ship in the same frozen release, and the canonical
+regeneration command is documented in the manifest and the `mc_production.py` header.
+
+**2 — Genuinely launch-matched CSF-ratio pairing.** This was the substantive
+issue: the previous batching keyed on the *position of each photon in the
+compacted detected-photon array*, which is not launch-matched across the two- and
+three-layer runs (they detect different subsets and consume random numbers
+differently). We implemented the reviewer's **preferred** design. `mc_2layer.run`
+now returns each detected photon's original **launch index**, and `mc_production.score`
+assigns every photon to batch `(launch_index mod B)`. Batch *b* is therefore the
+**same launched-photon cohort** in both geometries (common random numbers), so the
+per-batch ratio γ_b = f³ᴸ_b/f²ᴸ_b is a genuinely paired estimator, and the batch
+estimates are stored length-B aligned by batch id so the pairing is exact. For the
+headline γ uncertainty we report the **independent-propagation** standard error
+(propagated from the two independent per-geometry batch SEs — the reviewer's
+conservative "immediate" option, which does not assume any correlation), and we
+additionally compute and store the launch-defined **paired** batchwise SE
+(`gamma_se` in the JSON/CSV, `gamma_se_indep` the independent one); the two agree
+to within the precision of a 16-batch estimate. The γ point estimates are
+unchanged (1.84, 1.66, 1.57, 1.44 at 25/30/35/40 mm, 760 nm); the reported SEs
+were regenerated (e.g. 760 nm: ±0.03, ±0.02, ±0.04, ±0.04). The z_max convergence
+check uses the same launch-defined batches and remains a paired 0.000 ± 0.000. The
+manuscript text, both table captions, the JSON metadata, the code comments, the
+pedagogical guide and the Supplementary uncertainty table were all updated to the
+launch-defined estimator; the mc_unc batch-SD/SE/CI columns were refreshed from the
+re-run.
+
+## Moderate-priority
+
+**3 — Executable robustness sweeps with genuine provenance.** The secondary
+thickness and optical-property sweeps are no longer serialized from embedded
+constants stamped with current-run metadata. A new executable,
+`mc_robustness_sweeps.py`, regenerates them from first principles (two-layer white
+Monte Carlo): superficial thickness and cortical μs′ by independent runs, cortical
+μa by correlated reweighting of one photon ensemble. It stores the **raw
+per-configuration** cortical fractions in `results/robustness_secondary.json` with
+full provenance (seed, photon count, geometry, optical properties, git commit,
+command, timestamp) and a payload hash, and reproduces the archived thickness trend
+(e.g. 0.234, 0.119, 0.061, 0.030 at 8/10/12/14 mm vs archived 0.239, 0.122, 0.063,
+0.030) within the Monte-Carlo scatter of independent runs. The synthetic-validation
+script no longer stamps current-run provenance on the archived arrays used for the
+figure; those arrays are explicitly labelled as archived MC results regenerable via
+the new script, and the manuscript credits the executable generator.
+
+**4 — CSF forward-model recommendation made consistent.** The decision rule no
+longer recommends a three-layer *Kienle (diffusion)* solution, which would
+contradict the manuscript's own argument that diffusion is invalid in the thin,
+low-scattering CSF layer. It now recommends a **Monte-Carlo (or radiative-transport)**
+forward model that accommodates low-scattering CSF, or—as the stated **practical
+default** when a full MC is not run—a two-layer diffusion sensitivity multiplied by
+the independently **Monte-Carlo-calibrated** correction factor γ(SDS, d_CSF), used
+within its calibrated range (SDS 25–40 mm, CSF 1–2 mm, 760/850 nm, adult slab).
+A full N-layer Monte Carlo is reserved for high spatial precision. The pedagogical
+guide's future-directions list was updated to match.
+
+## Editorial corrections
+
+**Model uncertainty in the in-vivo amplitude.** Already separated in the previous
+revision and retained: the reported ±0.34 µM is the between-subject SD, reported
+distinctly from the forward-model sensitivity interval (the CSF-thickness 1/2 mm
+bracket spanning ≈0.9–1.3 µM, plus the ±3% Monte-Carlo term and optical/anatomical
+assumptions); the two are not combined.
+
+**Production-script documentation and defaults.** The "percentile 95% interval"
+wording was removed; the default photon count is now 2 000 000 (matching the
+manuscript), and the photon-count strings in the metadata are generated from the
+runtime argument rather than hard-coded "2e6".
+
+**Legacy scripts.** `mc_uncertainty.py` and `mc_csf.py` (neither imported by any
+analysis) now carry a prominent "LEGACY / NOT USED FOR THE MANUSCRIPT TABLES"
+header pointing to `mc_production.py`; `mc_2layer.py`'s CLI clarifies that its
+`run()` is the production engine while the standalone CLI is only a small-N demo.
+
+**Noise terminology.** The synthetic generator's "shot noise" comments are
+corrected to "assumed additive OD measurement noise (fixed, separation-independent)",
+distinct from a photon-count/shot-noise model whose variance would grow with SDS.
+
+**Figure 4 reference line.** The caption now labels the dashed line explicitly as a
+*reference* slope at the mean applied κ_PV and states that the points are not
+expected to lie on it because the horizontal axis is the uncorrected amplitude while
+the correction also applies SSR first.
+
+**Verification.** A fresh production Monte-Carlo run (2×10⁶ photons/config, 16
+launch-defined batches; 4898 s) regenerated `fcortex_production.json/.csv`; the
+executable robustness sweep regenerated `results/robustness_secondary.json`. The γ
+point estimates, the two-layer f_cortex table (all SDS × wavelength), the refreshed
+batch-SD/SE/CI columns and batch-spread example, the γ SEs, and the z_max paired
+difference were all cross-checked against the regenerated JSON/CSV (17/17 automated
+checks pass); the schema-2.0 requirement, payload-hash validation, and
+results-preferred resolution in `fcortex_source.py` were unit-tested. The in-vivo
+and 30-cohort synthetic results are unchanged because the f_cortex and γ point
+values are identical to the prior run. Both LaTeX documents recompile without errors
+(manuscript 46 pp, guide 50 pp).

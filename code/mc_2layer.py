@@ -94,11 +94,19 @@ def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
     det=detected&(exit_r>=0)
     if return_raw:
         # per-photon detected arrays for post-hoc convergence re-scoring and
-        # batch-based uncertainty (single big run serves both).
+        # batch-based uncertainty (single big run serves both).  launch_idx is the
+        # ORIGINAL launch index (array position, 0..N-1) of each detected photon.
+        # Photons are launched in index order, so launch_idx is a stable launch
+        # identifier shared across geometries run with the same seed; grouping
+        # detected photons by (launch_idx mod B) yields LAUNCH-DEFINED batches, so
+        # batch b of the two-layer run and batch b of the three-layer run are the
+        # same launched-photon cohort (common random numbers) -- this is what makes
+        # the per-batch ratio gamma_b = f3L,b/f2L,b a genuinely paired estimator.
         return dict(exit_r=exit_r[det].astype('float32'),
                     Lcortex=Lcortex[det].astype('float32'),
                     Ltot=Ltot[det].astype('float32'),
                     w=w[det].astype('float64'),
+                    launch_idx=np.where(det)[0].astype('int64'),
                     N=int(N), seed=int(seed), g=float(g), z_max=float(z_max),
                     L_max=float(L_max), detected=int(det.sum()))
     out={}
@@ -123,12 +131,16 @@ if __name__=='__main__':
             "sensitivity fraction f_cortex (and kappa_PV = 1/f_cortex) of the paper's "
             "two-layer head model, evaluated at SDS = 25, 30, 35, 38, 40 mm."),
         epilog=(
+            "NOTE: the run() function in this module is the PRODUCTION MC ENGINE "
+            "imported by mc_production.py (manuscript tables) and mc_robustness_sweeps.py. "
+            "This standalone CLI is only a lightweight demo at small N; the manuscript "
+            "f_cortex/kappa tables come from mc_production.py at N = 2e6, 16 batches, "
+            "NOT from this CLI's small defaults.\n\n"
             "Examples:\n"
-            "  python mc_2layer.py                       # run with the paper defaults\n"
+            "  python mc_2layer.py                       # quick demo at small N\n"
             "  python mc_2layer.py --N 900000 --out f_cortex.json\n"
-            "\nThe converged f_cortex is seed-insensitive; the paper used N = 3e5-9e5, "
-            "seed = 1, g = 0.9. Results (per-SDS f_cortex, kappa_PV and photon counts) "
-            "are written to the --out JSON file."),
+            "\nThe converged f_cortex is seed-insensitive; g = 0.9 throughout. Results "
+            "(per-SDS f_cortex, kappa_PV and photon counts) are written to the --out JSON."),
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-N', '--N', type=lambda v: int(float(v)), default=300000,
                         help="number of photons to launch (default: 300000)")

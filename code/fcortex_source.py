@@ -13,52 +13,82 @@ If the production file is absent, a clear error is raised so that no analysis ca
 silently fall back to stale values.
 """
 from __future__ import annotations
-import json
+import json, os, hashlib
 from pathlib import Path
 import numpy as np
 
 _PROD_NAME = "fcortex_production.json"
 
+# This manuscript release is pinned to the schema-2.0 production artifact. Schema
+# 1.0 (which lacked the per-batch paired fields and the payload hash) is rejected
+# so a stale pre-2.0 file cannot silently reproduce different numbers.
+REQUIRED_SCHEMA = "2.0"
+
 
 def _find_production() -> Path:
+    """Resolve the production file, preferring the version-controlled release
+    artifact over arbitrary current-working-directory files.
+
+    Order: an explicit path in the FCORTEX_PRODUCTION_JSON environment variable;
+    then the tracked ``results/`` copy (the frozen release artifact) relative to
+    this module and to the CWD; then a locally regenerated copy next to this
+    module or in the CWD. Preferring ``results/`` first means a stale loose file
+    in the code directory or CWD cannot shadow the released, hash-stamped data."""
+    env = os.environ.get("FCORTEX_PRODUCTION_JSON")
     here = Path(__file__).resolve().parent
-    # Search order: next to this module (regenerated locally, git-ignored), the
-    # CWD, and the versioned copy under results/ (the tracked artifact shipped in
-    # the reproducibility package, so a fresh checkout loads without re-running MC).
-    candidates = (
-        here / _PROD_NAME,
-        Path.cwd() / _PROD_NAME,
-        here.parent / "results" / _PROD_NAME,
+    candidates = []
+    if env:
+        candidates.append(Path(env).expanduser())
+    candidates += [
+        here.parent / "results" / _PROD_NAME,   # tracked release artifact (preferred)
         Path.cwd() / "results" / _PROD_NAME,
-    )
+        here / _PROD_NAME,                       # locally regenerated (git-ignored)
+        Path.cwd() / _PROD_NAME,
+    ]
     for cand in candidates:
         if cand.exists():
             return cand
     raise FileNotFoundError(
-        f"{_PROD_NAME} not found next to fcortex_source.py, in the CWD, or under "
-        f"results/. Generate it first:  python mc_production.py -N 2000000 "
-        f"--batches 16 --out {Path(__file__).resolve().parent / 'fcortex_production'}")
+        f"{_PROD_NAME} not found via FCORTEX_PRODUCTION_JSON, under results/, next "
+        f"to fcortex_source.py, or in the CWD. Generate it first:  python "
+        f"mc_production.py -N 2000000 --batches 16 "
+        f"--out {Path(__file__).resolve().parent / 'fcortex_production'}")
 
 
-# Schema versions this loader knows how to read. The fields it actually uses
-# (two_layer[wl][sds]['f_cortex'] and csf[wl][sds]['gamma']) are stable across
-# these; an unrecognised schema is rejected rather than silently mis-read.
-SUPPORTED_SCHEMAS = {"1.0", "2.0"}
+def _payload_sha256(data: dict) -> str:
+    """SHA-256 over the numeric payload only (everything except _meta), matching
+    mc_production._payload_sha256, so the stored hash can be re-verified on load."""
+    payload = {k: data[k] for k in data if k != "_meta"}
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(blob).hexdigest()
 
 
 def _load_and_check(path: Path) -> dict:
     data = json.load(open(path))
     meta = data.get("_meta", {})
     ver = str(meta.get("schema_version", meta.get("version", "1.0")))
-    if ver not in SUPPORTED_SCHEMAS:
+    if ver != REQUIRED_SCHEMA:
         raise ValueError(
-            f"{path.name} has schema_version {ver!r}, which this fcortex_source.py "
-            f"does not support (supported: {sorted(SUPPORTED_SCHEMAS)}). Regenerate the "
-            f"production file with a matching mc_production.py, or update the loader.")
+            f"{path.name} has schema_version {ver!r}, but this manuscript release "
+            f"requires schema {REQUIRED_SCHEMA!r}. Regenerate the production file with "
+            f"the current mc_production.py (which stamps schema {REQUIRED_SCHEMA}).")
     for key in ("two_layer", "csf"):
         if key not in data:
             raise ValueError(f"{path.name} is missing the required '{key}' block "
                              f"(schema_version {ver}); it is not a valid production file.")
+    # Validate the stored numeric-payload hash so an edited/corrupted/truncated
+    # file cannot masquerade as the released artifact. Set FCORTEX_SKIP_HASH=1 to
+    # bypass (e.g. when intentionally hand-editing during development).
+    stored = meta.get("data_sha256")
+    if stored and not os.environ.get("FCORTEX_SKIP_HASH"):
+        actual = _payload_sha256(data)
+        if actual != stored:
+            raise ValueError(
+                f"{path.name} payload SHA-256 mismatch: stored {stored[:12]}... but "
+                f"recomputed {actual[:12]}.... The production file does not match its "
+                f"provenance hash (edited, corrupted, or regenerated without updating "
+                f"_meta). Regenerate it with mc_production.py or set FCORTEX_SKIP_HASH=1 "
+                f"to override.")
     return data
 
 

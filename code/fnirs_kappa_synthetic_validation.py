@@ -848,7 +848,9 @@ def generate_synthetic_fnirs_data(
     Each wavelength's ΔOD is generated using the wavelength-specific
     cortical fraction f_cortex(λ), so the forward model correctly exhibits
     the wavelength-dependent partial-volume effect that the correction removes.
-    Noise is added at the OD level (physically appropriate for shot-noise).
+    Noise is added at the OD level as a fixed, separation-independent additive
+    Gaussian term (assumed additive OD measurement noise, NOT a photon-count /
+    shot-noise model, whose variance would grow with source-detector separation).
 
     Short-channel ΔOD is stored per wavelength so that
     the SSR step can regress each long-channel ΔOD(λ) against the
@@ -982,7 +984,7 @@ def generate_synthetic_fnirs_data(
             # actual wavelength-dependent partial-volume bias that the
             # correction method is designed to remove.
             delta_OD: Dict[int, np.ndarray] = {}
-            noise_level_OD = 0.001  # σ = 0.001 OD, physically appropriate for shot noise
+            noise_level_OD = 0.001  # σ = 0.001 OD, assumed additive OD measurement noise (fixed, separation-independent)
 
             for wl in wavelengths:
                 f_ctx_wl  = f_cortex_dict[wl]
@@ -998,7 +1000,7 @@ def generate_synthetic_fnirs_data(
                 L_eff = dpf_true[wl] * sds
 
                 # Compute clean OD, then add noise at the OD level
-                # (physically appropriate for shot-noise / detector noise)
+                # (assumed additive OD measurement noise: fixed, separation-independent)
                 clean_OD = (eps_HbO2_mm * HbO_wl + eps_HbR_mm * HbR_wl) * L_eff
                 delta_OD[wl] = clean_OD + noise_level_OD * np.random.randn(n_samples)
 
@@ -1593,7 +1595,7 @@ def analyze_cortical_snr(data: Dict, wavelength_nm: int = 760) -> Dict:
         dOD_cortex(t) = eps_HbO2 * dHbO2_ctx(t) * L * DPF(lambda) * f_cortex(lambda),
 
     the f_cortex-weighted cortical HbO2 part of the forward signal model (Eq.
-    signal_model), expressed in the same base-10 units as the shot-noise level
+    signal_model), expressed in the same base-10 units as the assumed OD-noise level
     sigma_OD = 1e-3 (equivalently sigma_OD = ln(10) * 1e-3 in Napierian OD; the
     ln(10) cancels between signal and noise so the SNR is convention-independent).
     The HbO2 term alone is used because the short-SDS limit analysed in the text
@@ -1611,7 +1613,7 @@ def analyze_cortical_snr(data: Dict, wavelength_nm: int = 760) -> Dict:
     E = extinction.get_matrix([wavelength_nm])[0]      # [eps_HbO2, eps_HbR] mM^-1 cm^-1 (decadic)
     eps_hbo2, eps_hbr = float(E[0]), float(E[1])
     dpf = scholkmann_dpf(wavelength_nm)
-    sigma_OD = 1e-3                                     # base-10 OD shot-noise floor
+    sigma_OD = 1e-3                                     # assumed additive OD measurement-noise floor (fixed, separation-independent)
 
     print(f"\n  lambda = {wavelength_nm} nm | DPF = {dpf:.3f} | "
           f"sigma_OD = {sigma_OD:.3e} (base-10 OD)")
@@ -1659,12 +1661,14 @@ def analyze_thickness_robustness(sds_mm: float = 30.0, wavelength_nm: int = 760)
     thicknesses = [8, 9, 10, 11, 12, 13, 14, 15, 16]
     results = {}
 
-    # Converged Monte-Carlo f_cortex vs superficial thickness at SDS = 30 mm
-    # (code/mc_2layer.py, g=0.9).  Replaces the non-converged analytical Hankel,
-    # which mis-scaled the absolute fractions (see KAPPA_PV_ATLAS_CHECK.md).
+    # ARCHIVED Monte-Carlo f_cortex vs superficial thickness at SDS = 30 mm
+    # (two-layer white MC, code/mc_2layer.py, g=0.9).  These are archived results
+    # from a prior MC sweep, kept here for the figure; they are REGENERATED from
+    # first principles by mc_robustness_sweeps.py (-> results/robustness_secondary.json)
+    # with full provenance, and agree with a fresh run within a few percent.
     # Log-linear interpolation in thickness; the trend is the key robustness result.
     _MC_T = [8.0, 10.0, 12.0, 14.0, 16.0]
-    _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]
+    _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]   # archived MC results
     def _f_mc(T):
         return float(np.exp(np.interp(float(T), _MC_T, np.log(_MC_F))))
 
@@ -1704,6 +1708,10 @@ def analyze_thickness_robustness(sds_mm: float = 30.0, wavelength_nm: int = 760)
 # 30 mm, an order of magnitude too high; see fcortex_source / mc_production and Hankel
 # convergence) and (ii) had its kappa column decoupled from f.  Grid is
 # -30,-15,0,+15,+30 % perturbation of the cortical optical property.
+# ARCHIVED MC results (two-layer white MC at SDS=30 mm, 760 nm): mu_a by correlated
+# reweighting of one photon ensemble, mu_s' by independent runs.  Regenerated from
+# first principles by mc_robustness_sweeps.py (-> results/robustness_secondary.json)
+# with full provenance; kept here for the figure and consistent within MC noise.
 _OPT_SENS_MC = {
     'variations_pct': [-30, -15, 0, 15, 30],
     # cortical mu_a perturbation (correlated estimator -> precise)
@@ -2312,47 +2320,20 @@ def main():
     analyze_grid_convergence()
     time_results   = benchmark_computation_time()
 
-    # Persist the SECONDARY robustness sweeps to a separately versioned file with
-    # explicit provenance.  These are NOT the production baselines: they perturb
-    # the geometry (superficial thickness) or the cortical optical properties away
-    # from the production configuration and are generated here (mc_2layer.py,
-    # single-ensemble correlated reweighting), distinct from fcortex_production.json.
-    def _jsonable(o):
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, np.generic):   # numpy scalar
-            return o.item()
-        return str(o)
-
-    def _git_commit():
-        try:
-            import subprocess
-            h = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"],
-                                        stderr=subprocess.DEVNULL).decode().strip()
-            dirty = subprocess.call(["git", "diff", "--quiet"],
-                                    stderr=subprocess.DEVNULL) != 0
-            return h + ("-dirty" if dirty else "")
-        except Exception:
-            return "unknown"
-    import platform as _platform
-    from datetime import datetime as _dt, timezone as _tz
-    json.dump(dict(
-        description="SECONDARY robustness sweeps (NOT production baselines): "
-                    "f_cortex vs superficial thickness, and vs cortical mu_a/mu_s'. "
-                    "Perturb geometry/optics away from the production config; generated "
-                    "by analyze_thickness_robustness / analyze_optical_property_robustness "
-                    "(mc_2layer.py). Reported as relative sensitivities, not baselines.",
-        provenance=dict(schema_version="2.0", source="fnirs_kappa_synthetic_validation.py",
-                        engine="mc_2layer.py",
-                        git_commit=_git_commit(),
-                        generated_utc=_dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                        python_version=_platform.python_version(),
-                        numpy_version=np.__version__,
-                        baseline_sds_mm=30.0, baseline_wavelength_nm=760),
-        thickness_sweep=thickness_results,
-        optical_property_sweep=opt_results),
-        open('robustness_secondary.json', 'w'), indent=1, default=_jsonable)
-    print("  Saved: robustness_secondary.json (secondary robustness sweeps)")
+    # NOTE: the secondary robustness sweeps (f_cortex vs superficial thickness and
+    # vs cortical mu_a/mu_s') are NO LONGER serialized here.  Stamping the embedded
+    # archived arrays (_MC_F / _OPT_SENS_MC below) with this script's current run
+    # metadata would misattribute provenance -- it would record when the constants
+    # were written out, not when the Monte-Carlo sweeps that produced them ran.
+    # Those sweeps are now regenerated FROM FIRST PRINCIPLES by a dedicated,
+    # executable script (mc_robustness_sweeps.py), which writes
+    # results/robustness_secondary.json with genuine per-configuration provenance
+    # (seed, photon count, geometry, optical properties, git commit, command,
+    # timestamp).  The plotted values used here (analyze_thickness_robustness /
+    # analyze_optical_property_robustness) are archived MC results and agree with
+    # that fresh run at the few-percent level expected between independent MC runs.
+    print("  Secondary robustness sweeps: see mc_robustness_sweeps.py -> "
+          "results/robustness_secondary.json (executable, first-principles MC).")
 
     # =========================================================================
     # STEP 4B: Multi-layer and validation analyses (NEW)

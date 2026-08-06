@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 """
+LEGACY / NOT USED FOR THE MANUSCRIPT TABLES.
+
+This early isotropic (g=0) CSF Monte Carlo has been SUPERSEDED by the anisotropic
+(Henyey-Greenstein, g=0.9) transport in mc_2layer.py / mc_production.py, which is
+what produces every reported f_cortex and CSF ratio. mc_csf.py is retained only
+for historical reference; it is not imported by any analysis script.
+
 Vectorized white-Monte-Carlo for the layered fNIRS slab, to compute the
 cortical sensitivity fraction f_cortex = <L_cortex> / <L_total>, where
 <L_layer> is the mean partial pathlength in a layer over detected photons
