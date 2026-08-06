@@ -148,7 +148,7 @@ def kappa_pv(sds_mm: float, wavelength_nm: int, invivo: bool = False) -> float:
 
 def provenance() -> dict:
     m = _DATA["_meta"]
-    keys = ("schema_version", "data_version", "version", "git_commit", "generated_utc",
-            "command", "python_version", "numpy_version", "data_sha256",
-            "N_per_config", "n_batches", "seed", "L_max", "z_max", "half_width", "g")
+    keys = ("schema_version", "data_version", "version", "git_commit", "analysis_round",
+            "generated_utc", "command", "python_version", "numpy_version", "data_sha256",
+            "N_per_config", "n_batches", "seed", "N_thin_csf", "L_max", "z_max", "half_width", "g")
     return {k: m[k] for k in keys if k in m}

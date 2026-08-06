@@ -3,14 +3,16 @@
   "schema_version": "2.0",
   "data_version": "2.0",
   "produced_by": "mc_production.py",
-  "git_commit": "round5",
-  "generated_utc": "2026-08-06T07:31:50Z",
-  "command": "python mc_production.py -N 2000000 --batches 16 --out fcortex_production --git_commit round5",
+  "git_commit": "4ea6693",
+  "analysis_round": "round6",
+  "generated_utc": "2026-08-06T18:25:12Z",
+  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit 4ea6693 --analysis_round round6",
   "python_version": "3.11.15",
   "numpy_version": "2.4.4",
   "N_per_config": 2000000,
   "n_batches": 16,
   "seed": 1,
+  "N_thin_csf": 2000000,
   "g": 0.9,
   "L_max": 1200.0,
   "z_max": 150.0,
@@ -54,10 +56,10 @@
   },
   "uncertainty": "f_cortex is a ratio estimator recomputed on each of 16 LAUNCH-DEFINED photon batches (batch id = launch_idx mod B; disjoint subsets of the detected photons). Reported per SDS: batch_sd (spread of batch estimates), se=batch_sd/sqrt(B) (standard error of the combined estimate), and ci95 = the t interval f_all +/- t_{.975,B-1}*se (a 95% CI for the combined 2e+06-photon estimate). batch_spread holds the 2.5/97.5 percentiles of the individual batch estimates (a prediction range, NOT a CI for the combined run). batch_estimates is length B, aligned by batch id (NaN=empty batch), so batch b pairs across geometries for the gamma/z_max paired statistics.",
   "N_eff_note": "N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight effective count only; it does not capture pathlength or numerator-denominator covariance in the ratio (see se/ci95)",
-  "csf_note": "csf gamma at nominal 2 mm. gamma_se is SD(gamma_b)/sqrt(B_paired) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b is the SAME launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed) -- a genuinely PAIRED estimator, not a quadrature of two separate SEs. gamma_se_indep is the independent-propagation SE (quadrature of the 2L and 3L standard errors), reported as a conservative cross-check that does not assume pairing. csf_thickness_1mm holds gamma for a thinner 1 mm CSF layer.",
+  "csf_note": "csf gamma at nominal 2 mm. gamma_se is SD(gamma_b)/sqrt(B_paired) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b is the SAME launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed) -- a genuinely PAIRED estimator, not a quadrature of two separate SEs. gamma_se_indep is the independent-propagation SE (quadrature of the 2L and 3L standard errors), reported as a conservative cross-check that does not assume pairing. csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully characterised (own photon count N_thin_csf, detected count, f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
   "convergence_note": "L_max/annulus sweeps re-scored from the same run; the z_max=220 check uses the SAME N, seed and LAUNCH-DEFINED batches (common random numbers) as the z_max=150 run, so zmax_check reports the mean and SE of the per-batch PAIRED difference d_b=f_150,b-f_220,b.",
-  "data_sha256": "3c34cbc66dfdf91e332c6d52dfccd8886f53f56929348b75aa56b27b4ca66217",
-  "secs": 4897.8
+  "data_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
+  "secs": 4197.4
  },
  "two_layer": {
   "760": {
@@ -444,7 +446,8 @@
     "gamma_batch_mean": 1.8428318988501984,
     "gamma_se": 0.0260531051826507,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.02932335132213256
+    "gamma_se_indep": 0.02932335132213256,
+    "f3L_detected": 35006
    },
    "30.0": {
     "f2L": 0.06418273246965443,
@@ -453,7 +456,8 @@
     "gamma_batch_mean": 1.660216352982914,
     "gamma_se": 0.01274479239826822,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.023064793179671073
+    "gamma_se_indep": 0.023064793179671073,
+    "f3L_detected": 24337
    },
    "35.0": {
     "f2L": 0.08788503634328954,
@@ -462,7 +466,8 @@
     "gamma_batch_mean": 1.5784256391126426,
     "gamma_se": 0.03976754956832023,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.03732783528331092
+    "gamma_se_indep": 0.03732783528331092,
+    "f3L_detected": 17028
    },
    "38.0": {
     "f2L": 0.10102792893760197,
@@ -471,7 +476,8 @@
     "gamma_batch_mean": 1.5052071671802065,
     "gamma_se": 0.04302281778525634,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.041185357948974724
+    "gamma_se_indep": 0.041185357948974724,
+    "f3L_detected": 14042
    },
    "40.0": {
     "f2L": 0.10980265879849886,
@@ -480,7 +486,8 @@
     "gamma_batch_mean": 1.4657514975141668,
     "gamma_se": 0.05790500353314197,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.04454673819272687
+    "gamma_se_indep": 0.04454673819272687,
+    "f3L_detected": 12182
    }
   },
   "850": {
@@ -491,7 +498,8 @@
     "gamma_batch_mean": 1.7384365332999683,
     "gamma_se": 0.02699896629997076,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.02365574429536252
+    "gamma_se_indep": 0.02365574429536252,
+    "f3L_detected": 45956
    },
    "30.0": {
     "f2L": 0.06327118683843098,
@@ -500,7 +508,8 @@
     "gamma_batch_mean": 1.665799491370402,
     "gamma_se": 0.03289137878049267,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.029862166761762964
+    "gamma_se_indep": 0.029862166761762964,
+    "f3L_detected": 32014
    },
    "35.0": {
     "f2L": 0.08495869497641025,
@@ -509,7 +518,8 @@
     "gamma_batch_mean": 1.5694940063236054,
     "gamma_se": 0.03833914145900115,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.04766107162174408
+    "gamma_se_indep": 0.04766107162174408,
+    "f3L_detected": 22598
    },
    "38.0": {
     "f2L": 0.09825941236355681,
@@ -518,7 +528,8 @@
     "gamma_batch_mean": 1.526344052209344,
     "gamma_se": 0.04740866893089973,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.04801343008561562
+    "gamma_se_indep": 0.04801343008561562,
+    "f3L_detected": 18808
    },
    "40.0": {
     "f2L": 0.10706288230513183,
@@ -527,53 +538,164 @@
     "gamma_batch_mean": 1.5002978236369433,
     "gamma_se": 0.04743454685854621,
     "n_paired_batches": 16,
-    "gamma_se_indep": 0.05017450202008756
+    "gamma_se_indep": 0.05017450202008756,
+    "f3L_detected": 16440
    }
   }
  },
  "csf_thickness_1mm": {
   "760": {
    "25.0": {
-    "f3L_1mm": 0.05768723448584119,
-    "gamma_1mm": 1.3814737093155198
+    "f3L_1mm": 0.060153469110987144,
+    "f3L_1mm_batch_sd": 0.0024885264574311433,
+    "f3L_1mm_se": 0.0006221316143577858,
+    "f3L_1mm_ci95": [
+     0.05882742696428587,
+     0.06147951125768842
+    ],
+    "f3L_1mm_detected": 34075,
+    "f3L_1mm_DPF": 6.4768625930322345,
+    "gamma_1mm": 1.440534233294685,
+    "gamma_1mm_se": 0.023554756830029576,
+    "gamma_1mm_se_batch": 0.020770900768003375,
+    "gamma_1mm_n_paired_batches": 16
    },
    "30.0": {
-    "f3L_1mm": 0.08502634174594867,
-    "gamma_1mm": 1.3247541585448872
+    "f3L_1mm": 0.08603009029069619,
+    "f3L_1mm_batch_sd": 0.006320634429424006,
+    "f3L_1mm_se": 0.0015801586073560016,
+    "f3L_1mm_ci95": [
+     0.08266206194513487,
+     0.08939811863625752
+    ],
+    "f3L_1mm_detected": 22437,
+    "f3L_1mm_DPF": 6.640819213499641,
+    "gamma_1mm": 1.3403930773961856,
+    "gamma_1mm_se": 0.02833022722774683,
+    "gamma_1mm_se_batch": 0.030440876095899867,
+    "gamma_1mm_n_paired_batches": 16
    },
    "35.0": {
-    "f3L_1mm": 0.11822152748348749,
-    "gamma_1mm": 1.3451838037786088
+    "f3L_1mm": 0.11484321640501871,
+    "f3L_1mm_batch_sd": 0.009474610869725791,
+    "f3L_1mm_se": 0.0023686527174314478,
+    "f3L_1mm_ci95": [
+     0.10979455264686053,
+     0.1198918801631769
+    ],
+    "f3L_1mm_detected": 15478,
+    "f3L_1mm_DPF": 6.6550458818182125,
+    "gamma_1mm": 1.3067436867913131,
+    "gamma_1mm_se": 0.038072981959113725,
+    "gamma_1mm_se_batch": 0.0339423101528493,
+    "gamma_1mm_n_paired_batches": 16
    },
    "38.0": {
-    "f3L_1mm": 0.13347946907295488,
-    "gamma_1mm": 1.3212135542776098
+    "f3L_1mm": 0.13719954997082337,
+    "f3L_1mm_batch_sd": 0.008854036017342791,
+    "f3L_1mm_se": 0.002213509004335698,
+    "f3L_1mm_ci95": [
+     0.13248156720943957,
+     0.14191753273220717
+    ],
+    "f3L_1mm_detected": 12434,
+    "f3L_1mm_DPF": 6.700236862887992,
+    "gamma_1mm": 1.358035856159757,
+    "gamma_1mm_se": 0.0412902747608174,
+    "gamma_1mm_se_batch": 0.044366398625227024,
+    "gamma_1mm_n_paired_batches": 16
    },
    "40.0": {
-    "f3L_1mm": 0.14628272466618436,
-    "gamma_1mm": 1.3322329920501363
+    "f3L_1mm": 0.1521070499320479,
+    "f3L_1mm_batch_sd": 0.010921488240977405,
+    "f3L_1mm_se": 0.002730372060244351,
+    "f3L_1mm_ci95": [
+     0.14628739964503099,
+     0.15792670021906483
+    ],
+    "f3L_1mm_detected": 10773,
+    "f3L_1mm_DPF": 6.706964975855499,
+    "gamma_1mm": 1.3852765643059948,
+    "gamma_1mm_se": 0.04604302592869407,
+    "gamma_1mm_se_batch": 0.054417662486293115,
+    "gamma_1mm_n_paired_batches": 16
    }
   },
   "850": {
    "25.0": {
-    "f3L_1mm": 0.058218017781067596,
-    "gamma_1mm": 1.3427523204730711
+    "f3L_1mm": 0.05938960016669359,
+    "f3L_1mm_batch_sd": 0.002312832297016664,
+    "f3L_1mm_se": 0.000578208074254166,
+    "f3L_1mm_ci95": [
+     0.05815717882958556,
+     0.060622021503801624
+    ],
+    "f3L_1mm_detected": 44812,
+    "f3L_1mm_DPF": 5.287543785025256,
+    "gamma_1mm": 1.369773937266013,
+    "gamma_1mm_se": 0.02051831098109666,
+    "gamma_1mm_se_batch": 0.017472320786564834,
+    "gamma_1mm_n_paired_batches": 16
    },
    "30.0": {
-    "f3L_1mm": 0.08451187470999685,
-    "gamma_1mm": 1.3357086998511027
+    "f3L_1mm": 0.08591945352959571,
+    "f3L_1mm_batch_sd": 0.0053835737346274075,
+    "f3L_1mm_se": 0.0013458934336568519,
+    "f3L_1mm_ci95": [
+     0.08305074958205592,
+     0.08878815747713549
+    ],
+    "f3L_1mm_detected": 29986,
+    "f3L_1mm_DPF": 5.376520528881004,
+    "gamma_1mm": 1.357955458445868,
+    "gamma_1mm_se": 0.030404281848886203,
+    "gamma_1mm_se_batch": 0.023006695601526767,
+    "gamma_1mm_n_paired_batches": 16
    },
    "35.0": {
-    "f3L_1mm": 0.11216579278121669,
-    "gamma_1mm": 1.320239121050068
+    "f3L_1mm": 0.11628971016585349,
+    "f3L_1mm_batch_sd": 0.00870757403706141,
+    "f3L_1mm_se": 0.0021768935092653526,
+    "f3L_1mm_ci95": [
+     0.11164977148479782,
+     0.12092964884690915
+    ],
+    "f3L_1mm_detected": 20657,
+    "f3L_1mm_DPF": 5.477484633041344,
+    "gamma_1mm": 1.3687793838893436,
+    "gamma_1mm_se": 0.04470308457473412,
+    "gamma_1mm_se_batch": 0.03920997220610392,
+    "gamma_1mm_n_paired_batches": 16
    },
    "38.0": {
-    "f3L_1mm": 0.1304685466895912,
-    "gamma_1mm": 1.32779693620456
+    "f3L_1mm": 0.1290820342262293,
+    "f3L_1mm_batch_sd": 0.008199591948610021,
+    "f3L_1mm_se": 0.0020498979871525053,
+    "f3L_1mm_ci95": [
+     0.12471278009306919,
+     0.1334512883593894
+    ],
+    "f3L_1mm_detected": 16626,
+    "f3L_1mm_DPF": 5.494368434954294,
+    "gamma_1mm": 1.3136862018737678,
+    "gamma_1mm_se": 0.04283287505334491,
+    "gamma_1mm_se_batch": 0.04669119375125068,
+    "gamma_1mm_n_paired_batches": 16
    },
    "40.0": {
-    "f3L_1mm": 0.14555268040845173,
-    "gamma_1mm": 1.3595064626937936
+    "f3L_1mm": 0.13815387902216722,
+    "f3L_1mm_batch_sd": 0.010647201323656676,
+    "f3L_1mm_se": 0.002661800330914169,
+    "f3L_1mm_ci95": [
+     0.13248038591646935,
+     0.1438273721278651
+    ],
+    "f3L_1mm_detected": 14522,
+    "f3L_1mm_DPF": 5.494440471479279,
+    "gamma_1mm": 1.2903993993775105,
+    "gamma_1mm_se": 0.04705250658329531,
+    "gamma_1mm_se_batch": 0.045132360871624165,
+    "gamma_1mm_n_paired_batches": 16
    }
   }
  },

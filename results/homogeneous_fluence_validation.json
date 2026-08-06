@@ -1,0 +1,72 @@
+{
+ "description": "Homogeneous-limit validation of the two-layer Kienle CW-diffusion fluence: adaptive-quadrature Hankel inversion vs the closed-form semi-infinite image-source solution. Validates the fluence only, not f_cortex (which comes from the converged Monte Carlo).",
+ "config": {
+  "mua_mm": 0.015,
+  "musp_mm": 1.0,
+  "n_index": 1.4,
+  "z_mm": 10.0,
+  "rho_mm": [
+   5.0,
+   10.0,
+   15.0,
+   20.0,
+   25.0,
+   30.0
+  ],
+  "quad_epsrel": 1e-10,
+  "quad_limit": 200,
+  "A_extrap": 2.95
+ },
+ "results": [
+  {
+   "rho_mm": 5.0,
+   "fluence_kienle_adaptive": 0.002067258647031839,
+   "fluence_semi_infinite_closed": 0.0020672586470318376,
+   "rel_error": 6.293564711172632e-16
+  },
+  {
+   "rho_mm": 10.0,
+   "fluence_kienle_adaptive": 0.0007225466030014251,
+   "fluence_semi_infinite_closed": 0.0007225466030011137,
+   "rel_error": 4.309519450295678e-13
+  },
+  {
+   "rho_mm": 15.0,
+   "fluence_kienle_adaptive": 0.0002039797798055601,
+   "fluence_semi_infinite_closed": 0.00020397977980546263,
+   "rel_error": 4.778403790777922e-13
+  },
+  {
+   "rho_mm": 20.0,
+   "fluence_kienle_adaptive": 5.455090219221415e-05,
+   "fluence_semi_infinite_closed": 5.455090219273581e-05,
+   "rel_error": 9.562882634796589e-12
+  },
+  {
+   "rho_mm": 25.0,
+   "fluence_kienle_adaptive": 1.4557539343657519e-05,
+   "fluence_semi_infinite_closed": 1.455753934002263e-05,
+   "rel_error": 2.49691197276591e-10
+  },
+  {
+   "rho_mm": 30.0,
+   "fluence_kienle_adaptive": 3.9386455605621605e-06,
+   "fluence_semi_infinite_closed": 3.9386455804590195e-06,
+   "rel_error": 5.051700789444035e-09
+  }
+ ],
+ "max_rel_error": 5.051700789444035e-09,
+ "passes_0p01pct": true,
+ "provenance": {
+  "schema_version": "2.0",
+  "produced_by": "validate_homogeneous_fluence.py",
+  "git_commit": "4ea6693",
+  "analysis_round": "round6",
+  "generated_utc": "2026-08-06T19:01:14Z",
+  "command": "python validate_homogeneous_fluence.py --out ../results/homogeneous_fluence_validation.json --git_commit 4ea6693 --analysis_round round6",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "scipy_version": "1.17.1",
+  "data_sha256": "1406fb1256e8e352309495563744159cfe3a5f6781299b1a39ceff583db8c34d"
+ }
+}

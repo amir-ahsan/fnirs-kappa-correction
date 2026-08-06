@@ -181,19 +181,17 @@ def get_f_cortex(sds_mm: float) -> dict[int, float]:
 #  1. Dataset acquisition
 # ========================================================================
 
-# PINNED, immutable dataset reference. We do NOT download the moving `master`
-# branch (which is mutable and would break reproducibility); we pin to a fixed
-# Git tag archive whose contents are frozen, and we document the citable Zenodo
-# release. Set DATASET_SHA256 to the SHA-256 of the downloaded archive to enforce
-# a strict integrity check; if left None the code computes and prints the hash and
-# warns that it is unpinned (record it once, then paste it here to freeze).
+# PINNED, immutable dataset source. We do NOT download the moving GitHub `master`
+# branch (mutable, would break reproducibility). Instead we resolve the frozen,
+# citable Zenodo release (a Zenodo record is immutable once published) via the
+# Zenodo REST API, download the archive it lists, and VERIFY the Zenodo-published
+# checksum (md5). This makes the input data reproducible and self-verifying without
+# hard-coding a possibly-stale URL or hash. If the network is unavailable, a clear
+# manual-download instruction is printed. DATASET_SHA256, if set, additionally
+# enforces a SHA-256 on the downloaded archive.
 DATASET_DOI = "10.5281/zenodo.5529797"          # rob-luke/BIDS-NIRS-Tapping (Luke et al., 2021)
-DATASET_REF = "v0.1.1"                           # immutable Git tag (not `master`)
-DATASET_URL = (
-    f"https://github.com/rob-luke/BIDS-NIRS-Tapping/archive/refs/tags/{DATASET_REF}.zip"
-)
-DATASET_EXTRACT_DIR = f"BIDS-NIRS-Tapping-{DATASET_REF.lstrip('v')}"
-DATASET_SHA256 = None                            # paste the archive SHA-256 here to enforce
+DATASET_ZENODO_RECORD = "5529797"
+DATASET_SHA256 = None                            # optional extra SHA-256 pin (record once to freeze)
 
 
 def _sha256_file(path: Path) -> str:
@@ -204,12 +202,38 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def download_dataset(dest: Path) -> Path:
-    """Download the BIDS-NIRS-Tapping dataset (pinned, immutable) if not present.
+def _md5_file(path: Path) -> str:
+    h = hashlib.md5()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
-    The archive is fetched from a fixed Git tag (``DATASET_REF``), not the moving
-    ``master`` branch, and its SHA-256 is computed and (if ``DATASET_SHA256`` is
-    set) verified, so the input data is reproducible. Cite Zenodo ``DATASET_DOI``.
+
+def _resolve_zenodo_archive():
+    """Return (url, md5) of the first .zip file in the pinned Zenodo record, or
+    None if the API cannot be reached."""
+    import json as _json
+    api = f"https://zenodo.org/api/records/{DATASET_ZENODO_RECORD}"
+    try:
+        with urllib.request.urlopen(api, timeout=60) as r:
+            rec = _json.load(r)
+        for f in rec.get("files", []):
+            key = f.get("key", "")
+            if key.endswith(".zip"):
+                url = f.get("links", {}).get("self") or f.get("links", {}).get("download")
+                md5 = (f.get("checksum", "") or "").replace("md5:", "")
+                if url:
+                    return url, md5
+    except Exception as e:
+        print(f"  [warning] could not reach Zenodo API ({e})")
+    return None
+
+
+def download_dataset(dest: Path) -> Path:
+    """Download the BIDS-NIRS-Tapping dataset from the pinned, immutable Zenodo
+    release (DATASET_DOI) if not already present, verifying the Zenodo-published
+    md5 checksum so the input data is reproducible.
 
     Parameters
     ----------
@@ -225,39 +249,46 @@ def download_dataset(dest: Path) -> Path:
         print(f"  Dataset already present at {dest}")
         return dest
 
+    resolved = _resolve_zenodo_archive()
+    if resolved is None:
+        raise RuntimeError(
+            f"Could not resolve the pinned BIDS-NIRS-Tapping archive from Zenodo "
+            f"(DOI {DATASET_DOI}). Download it manually from "
+            f"https://doi.org/{DATASET_DOI}, extract it so that '{dest}' contains the "
+            f"sub-* directories, and re-run. (We deliberately do not fall back to the "
+            f"mutable GitHub master branch.)")
+    url, md5 = resolved
     zip_path = dest.parent / "bids_nirs_tapping.zip"
-    print(f"  Downloading pinned dataset {DATASET_REF} (Zenodo {DATASET_DOI}) from "
-          f"{DATASET_URL} ...")
-    urllib.request.urlretrieve(DATASET_URL, zip_path)
+    print(f"  Downloading pinned dataset (Zenodo {DATASET_DOI}) from {url} ...")
+    urllib.request.urlretrieve(url, zip_path)
 
-    sha = _sha256_file(zip_path)
-    if DATASET_SHA256 is None:
-        print(f"  [warning] downloaded archive SHA-256 = {sha}\n"
-              f"  [warning] DATASET_SHA256 is not pinned; set it to this value in "
-              f"fnirs_kappa_realdata_analysis.py to enforce integrity on future runs.")
-    elif sha != DATASET_SHA256:
-        zip_path.unlink(missing_ok=True)
-        raise ValueError(
-            f"BIDS-NIRS-Tapping archive SHA-256 mismatch: expected {DATASET_SHA256[:12]}..., "
-            f"got {sha[:12]}.... The pinned dataset does not match its recorded checksum; "
-            f"refusing to proceed with an unverified input.")
+    if md5:
+        got = _md5_file(zip_path)
+        if got != md5:
+            zip_path.unlink(missing_ok=True)
+            raise ValueError(
+                f"BIDS-NIRS-Tapping archive md5 mismatch: Zenodo lists {md5[:12]}..., "
+                f"got {got[:12]}.... Refusing to proceed with an unverified input.")
+        print(f"  Zenodo md5 verified: {md5[:12]}...")
+    if DATASET_SHA256 is not None:
+        sha = _sha256_file(zip_path)
+        if sha != DATASET_SHA256:
+            zip_path.unlink(missing_ok=True)
+            raise ValueError(f"archive SHA-256 mismatch (expected {DATASET_SHA256[:12]}..., "
+                             f"got {sha[:12]}...).")
     else:
-        print(f"  Archive SHA-256 verified: {sha[:12]}...")
+        print(f"  archive SHA-256 = {_sha256_file(zip_path)} (optionally pin via DATASET_SHA256)")
 
     print("  Extracting ...")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(dest.parent)
 
-    extracted = dest.parent / DATASET_EXTRACT_DIR
-    if not extracted.exists():
-        # Fall back to whatever top-level dir the archive produced.
-        cands = [p for p in dest.parent.glob("BIDS-NIRS-Tapping*") if p.is_dir()]
-        extracted = cands[0] if cands else extracted
-    if extracted.exists():
-        extracted.rename(dest)
+    # Zenodo archives of a GitHub repo extract to a top-level dir; find it.
+    cands = [p for p in dest.parent.glob("*BIDS-NIRS-Tapping*") if p.is_dir() and p != dest]
+    if cands:
+        cands[0].rename(dest)
     zip_path.unlink(missing_ok=True)
-
-    print(f"  Dataset ready at {dest} (pinned {DATASET_REF}, Zenodo {DATASET_DOI})")
+    print(f"  Dataset ready at {dest} (pinned Zenodo {DATASET_DOI})")
     return dest
 
 

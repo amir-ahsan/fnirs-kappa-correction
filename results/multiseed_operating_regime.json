@@ -38,5 +38,21 @@
    "sd_improvement": 7.7203915793750655,
    "frac_improving": 1.0
   }
- ]
+ ],
+ "_meta": {
+  "schema_version": "2.0",
+  "produced_by": "fnirs_kappa_synthetic_validation.py:multiseed_operating_regime",
+  "git_commit": "4ea6693-dirty",
+  "analysis_round": "round6",
+  "generated_utc": "2026-08-06T19:00:23Z",
+  "command": "python fnirs_kappa_synthetic_validation.py",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "forward_model": {
+   "fcortex_production_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
+   "fcortex_production_git": "4ea6693",
+   "fcortex_production_schema": "2.0"
+  },
+  "seed": 42
+ }
 }

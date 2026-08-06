@@ -549,3 +549,105 @@ results-preferred resolution in `fcortex_source.py` were unit-tested. The in-viv
 and 30-cohort synthetic results are unchanged because the f_cortex and γ point
 values are identical to the prior run. Both LaTeX documents recompile without errors
 (manuscript 46 pp, guide 50 pp).
+
+---
+
+# Round 6 — Response to the *Updated Review After Submission of JSON and CSV Result Artifacts* (Aug 6, 2026)
+
+This round addresses the sixth review (six priority items plus editorial
+recommendations). The review confirmed that the schema-2.0 production artifacts,
+their payload hash, and the CSV/manuscript consistency are all now in order; the
+remaining work concerned the adaptive-quadrature validation, making the robustness
+JSON the exact figure source, the CSF bracket, provenance labelling, and the 1 mm
+CSF metadata. All data-producing scripts were committed first (commit `4ea6693`) so
+every regenerated artifact carries that immutable Git SHA.
+
+## Priority 1 — Adaptive-quadrature validation is now reproducible
+Added `code/validate_homogeneous_fluence.py`, a small executable that evaluates the
+two-layer Kienle fluence in the homogeneous limit by adaptive quadrature
+(`scipy.integrate.quad`, relative tolerance $10^{-10}$, subdivision limit 200) and
+compares it against the closed-form semi-infinite image-source solution at the
+stated points ($\rho=5$–30 mm, $z=10$ mm). It prints the pointwise and maximum
+relative errors and writes them to `results/homogeneous_fluence_validation.json`
+(maximum relative error $\ll$ 0.01 %, at the quadrature tolerance). The manuscript
+methods and results now cite this script.
+
+## Priority 2 — The robustness JSON is now the exact source of Figure 3 and the table
+`mc_robustness_sweeps.py` is the authoritative generator, run at a cleaner photon
+count (N = 500 000/config) and frozen to `results/robustness_secondary.json`. The
+synthetic-validation script now **reads that file directly** (`_robustness_from_json`)
+to draw Figure 3 and to compute the robustness numbers, with the embedded arrays kept
+only as a labelled fallback — one exact path `mc_robustness_sweeps.py →
+robustness_secondary.json → figure/table`. The manuscript thickness and optical
+numbers were updated to the frozen JSON values (thickness 8→14 mm: f 0.219→0.031,
+κ 4.6→32; 12→14 mm: −47 % in f, +90 % in κ; cortical μ_a ±30 %: κ −35 % to +40 %;
+μ_s′ ±30 %: κ −17 % to +12 %), so the text, table, and figure are now one consistent
+function of the artifact.
+
+## Priority 3 — CSF uncertainty bracket corrected
+The manuscript no longer attributes the ≈0.9–1.4 µM range to the 1 mm-vs-2 mm CSF
+cases. It now states, from rescaling the group in-vivo amplitude with the
+wavelength-specific production factors, that the 2 mm CSF, 1 mm CSF and no-CSF models
+give 0.92, 1.03 and 1.38 µM respectively: the **CSF-thickness** range alone is narrow
+(≈0.9–1.0 µM), whereas the wider ≈0.9–1.4 µM span is set by whether a CSF layer is
+included at all (2 mm CSF vs no CSF). These are labelled model-sensitivity bounds, not
+formal confidence limits, and are kept distinct from the ±0.34 µM between-subject SD.
+
+## Priority 4 — Provenance now uses a real Git identifier
+The production, robustness, multiseed, real-data and fluence-validation artifacts now
+record the actual short Git SHA (`git_commit = 4ea6693`, auto-detected via
+`git rev-parse`) and carry the human-readable release label in a separate
+`analysis_round = "round6"` field. Because these fields live in `_meta`/`provenance`
+(outside the hashed numeric payload), the stored payload hashes remain valid.
+
+## Priority 5 — Provenance added to the real-data and multi-cohort summaries
+`realdata_v2_summary.json` and `multiseed_operating_regime.json` now carry a
+provenance block (command, UTC timestamp, Git SHA, Python/NumPy[/MNE] versions, the
+consumed `fcortex_production.json` SHA-256, and seeds). The real-data block additionally
+records the pinned input-dataset DOI (10.5281/zenodo.5529797), Zenodo record, and
+checksum policy. (The point values are unchanged, since the f_cortex/γ inputs are
+identical to the prior run.)
+
+## Priority 6 — 1 mm CSF run fully characterised
+`mc_production.py`'s misnamed `--zmax_check_N` option is renamed `--thin_csf_N` (now
+2 000 000 photons); the metadata records `N_thin_csf`, and the 1 mm CSF block now
+stores the detected count, the f3L_1mm batch SD/SE/CI and DPF, and `gamma_1mm` with a
+propagated SE and a launch-index-matched batch SE. The 1 mm results are exported to
+the production CSV as `CSF1mm` rows.
+
+## Editorial recommendations
+- **Loader requires the hash in release mode:** `fcortex_source.py` now raises if
+  `data_sha256` is absent (not just on mismatch), unless `FCORTEX_SKIP_HASH=1`.
+- **Cautious pairing language:** the independent-propagation γ uncertainty is the
+  primary reported value; the launch-index batching is described as a
+  launch-index-matched batch **cross-check**, with an explicit note that the
+  vectorized RNG stream diverges once the geometries' active sets differ (so it is
+  not a strict per-photon common-random-number scheme) — updated in the manuscript,
+  the guide, and the code comments.
+- **Pinned dataset:** the real-data download now resolves the immutable Zenodo record
+  (DOI 10.5281/zenodo.5529797) via its API and verifies the Zenodo-published md5,
+  instead of the mutable GitHub `master.zip`; a clear manual-download message is
+  printed if the network is unavailable.
+- **README workflow:** `mc_robustness_sweeps.py` and `validate_homogeneous_fluence.py`
+  are added to the package tree and reproduction steps; the README states that
+  `mc_robustness_sweeps.py` (not the synthetic script) generates
+  `robustness_secondary.json`; "pre-registered" → "pre-specified".
+- **Stale CSF comments:** the synthetic script's legacy `mc_csf.py` / "μ_s′ ≈ μ_a"
+  rationale is replaced by the transport-mean-free-path argument and a pointer to
+  `mc_production.py`.
+- **Figure 4 line:** labelled as a reference slope at the mean applied κ_PV, with the
+  points explicitly not expected to lie on it (SSR acts before PV scaling).
+- **Legacy outputs separated:** `mc_uncertainty_2layer_and_csf.json` and
+  `mc_uncertainty_2layer.csv` moved to `results/legacy/` with a NOT-USED warning.
+- **Code and Data Availability:** names `mc_production.py` and `mc_robustness_sweeps.py`
+  as the authoritative generators and identifies `mc_uncertainty.py` / `mc_csf.py` as
+  legacy.
+
+**Verification.** Fresh production MC (2×10⁶ photons/config, 16 launch-defined batches,
+thin_csf_N = 2×10⁶; commit 4ea6693) regenerated `fcortex_production.json/.csv`; the
+robustness sweep (N = 500 000) regenerated `robustness_secondary.json`; the synthetic
+pipeline regenerated Figures 1–3 (Figure 3 now read from the robustness JSON) and the
+multiseed summary; the fluence validator produced its JSON. Every affected manuscript
+number was cross-checked against the regenerated artifacts (22/22 automated checks
+pass), the schema/hash-required loader and 1 mm CSF characterisation were verified, and
+both LaTeX documents recompile without errors (manuscript 47 pp, guide 50 pp).

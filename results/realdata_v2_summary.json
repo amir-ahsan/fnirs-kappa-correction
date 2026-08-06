@@ -835,5 +835,32 @@
   "hbo_uncorr_ipsi": 0.06496678933712505,
   "n_lateralized": 5,
   "n_subjects": 5
+ },
+ "_meta": {
+  "schema_version": "2.0",
+  "produced_by": "fnirs_kappa_realdata_v2.py",
+  "git_commit": "4ea6693",
+  "analysis_round": "round6",
+  "generated_utc": "2026-08-06T18:30:19Z",
+  "command": "python fnirs_kappa_realdata_v2.py",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "mne_version": "1.12.1",
+  "forward_model": {
+   "fcortex_production_sha256": "e2e87a35e10f7252ecf7f10e6e6f279116ce67a367f57210db9b3ab7fc0d7bd2",
+   "fcortex_production_git": "4ea6693",
+   "fcortex_production_schema": "2.0"
+  },
+  "dataset": {
+   "name": "BIDS-NIRS-Tapping",
+   "doi": "10.5281/zenodo.5529797",
+   "zenodo_record": "5529797",
+   "citation": "Luke et al., 2021",
+   "note": "pinned immutable Zenodo release, md5-verified on download"
+  },
+  "seeds": {
+   "note": "deterministic pipeline; no stochastic step in the real-data analysis"
+  },
+  "note": "Provenance stamped for the round-6 release; the f_cortex/gamma point values are identical to the prior run, so the per-subject and group numbers are unchanged."
  }
 }
