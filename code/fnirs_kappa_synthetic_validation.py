@@ -832,7 +832,9 @@ def generate_synthetic_fnirs_data(
     """
     Generate synthetic fNIRS data with known ground truth.
 
-    The paradigm is designed to match the BIDS-NIRS-Tapping dataset
+    The synthetic paradigm is INSPIRED BY the BIDS-NIRS-Tapping dataset (it parameterizes
+    selected acquisition features; the real experiment has irregular inter-onset
+    intervals and a control condition, which this idealized block design does not reproduce)
     (Luke et al., 2021) used in the real-data validation: 5 subjects,
     60 tapping blocks (5 s on, 5 s rest), sampling rate 7.8125 Hz,
     wavelengths 760 and 850 nm.  This parallel design enables direct
@@ -2168,12 +2170,15 @@ def analyze_fcortex_sensitivity(sds_mm: float = 30.0,
 
 def multiseed_operating_regime(n_seeds: int = 30, base_seed: int = 1000,
                                sds_list=(25.0, 30.0, 35.0, 38.0, 40.0)) -> List[Dict]:
-    """Repeat the HbO2 RMSE-improvement evaluation over many independent noise
-    realizations (seeds) to quantify how noise-dependent the operating-regime
-    result is.  The single-seed (seed 42) numbers are one draw from this
-    distribution; this reports mean +/- SD and the fraction of seeds improving
-    at each separation, so the crossover can be described as noise-dependent
-    rather than a hard threshold.
+    """Repeat the HbO2 RMSE-improvement evaluation over many independently
+    GENERATED five-subject synthetic COHORTS.  NOTE: each seed regenerates the
+    entire cohort -- subject amplitudes, systemic oscillations, phases,
+    superficial signals AND the additive OD noise -- so this quantifies
+    variability across independent synthetic-cohort realizations, not sensitivity
+    to the measurement-noise draw alone.  The single-seed (seed 42) numbers are
+    one such realization; this reports mean +/- SD and the fraction of cohorts
+    improving at each separation, so the crossover can be described as conditional
+    on the assumed signal-and-noise model rather than a hard threshold.
 
     Returns a list of dicts (one per SDS) with mean, sd and fraction-improving.
     """
@@ -2307,6 +2312,48 @@ def main():
     analyze_grid_convergence()
     time_results   = benchmark_computation_time()
 
+    # Persist the SECONDARY robustness sweeps to a separately versioned file with
+    # explicit provenance.  These are NOT the production baselines: they perturb
+    # the geometry (superficial thickness) or the cortical optical properties away
+    # from the production configuration and are generated here (mc_2layer.py,
+    # single-ensemble correlated reweighting), distinct from fcortex_production.json.
+    def _jsonable(o):
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        if isinstance(o, np.generic):   # numpy scalar
+            return o.item()
+        return str(o)
+
+    def _git_commit():
+        try:
+            import subprocess
+            h = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"],
+                                        stderr=subprocess.DEVNULL).decode().strip()
+            dirty = subprocess.call(["git", "diff", "--quiet"],
+                                    stderr=subprocess.DEVNULL) != 0
+            return h + ("-dirty" if dirty else "")
+        except Exception:
+            return "unknown"
+    import platform as _platform
+    from datetime import datetime as _dt, timezone as _tz
+    json.dump(dict(
+        description="SECONDARY robustness sweeps (NOT production baselines): "
+                    "f_cortex vs superficial thickness, and vs cortical mu_a/mu_s'. "
+                    "Perturb geometry/optics away from the production config; generated "
+                    "by analyze_thickness_robustness / analyze_optical_property_robustness "
+                    "(mc_2layer.py). Reported as relative sensitivities, not baselines.",
+        provenance=dict(schema_version="2.0", source="fnirs_kappa_synthetic_validation.py",
+                        engine="mc_2layer.py",
+                        git_commit=_git_commit(),
+                        generated_utc=_dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        python_version=_platform.python_version(),
+                        numpy_version=np.__version__,
+                        baseline_sds_mm=30.0, baseline_wavelength_nm=760),
+        thickness_sweep=thickness_results,
+        optical_property_sweep=opt_results),
+        open('robustness_secondary.json', 'w'), indent=1, default=_jsonable)
+    print("  Saved: robustness_secondary.json (secondary robustness sweeps)")
+
     # =========================================================================
     # STEP 4B: Multi-layer and validation analyses (NEW)
     # =========================================================================
@@ -2347,17 +2394,23 @@ def main():
     summary.to_csv('fnirs_kappa_summary_by_sds.csv')
     print("  Saved: fnirs_kappa_summary_by_sds.csv")
 
-    # --- Multi-seed operating-regime variability (noise-realization spread) ---
+    # --- Operating-regime variability across independent synthetic cohorts ---
     print("\n" + "="*70)
-    print("ANALYSIS I: MULTI-SEED OPERATING REGIME (HbO2 improvement over 30 seeds)")
+    print("ANALYSIS I: SYNTHETIC-COHORT OPERATING REGIME")
+    print("  (HbO2 RMSE improvement across 30 independently generated 5-subject cohorts)")
     print("="*70)
     ms_rows = multiseed_operating_regime(n_seeds=30, base_seed=1000)
-    print(f"\n{'SDS (mm)':<10}{'Mean impr.':<13}{'SD':<9}{'Frac. improving':<16}")
-    print("-"*48)
+    print(f"\n{'SDS (mm)':<10}{'Mean impr.':<13}{'SD':<9}{'Frac. cohorts improving':<24}")
+    print("-"*56)
     for r in ms_rows:
         print(f"{r['sds_mm']:<10.0f}{r['mean_improvement']:<+13.1f}"
-              f"{r['sd_improvement']:<9.1f}{100*r['frac_improving']:<16.0f}")
-    json.dump(ms_rows, open('multiseed_operating_regime.json', 'w'), indent=1)
+              f"{r['sd_improvement']:<9.1f}{100*r['frac_improving']:<24.0f}")
+    json.dump(dict(
+        description="HbO2 RMSE improvement across 30 independently generated 5-subject "
+                    "synthetic cohorts (each seed regenerates amplitudes, systemics, phases, "
+                    "superficial signals and additive OD noise); not a noise-only analysis.",
+        base_seed=1000, n_cohorts=30, per_sds=ms_rows),
+        open('multiseed_operating_regime.json', 'w'), indent=1)
     print("  Saved: multiseed_operating_regime.json")
 
     print()

@@ -541,7 +541,7 @@ as a per-wavelength \textbf{diagnostic of how much long-channel variance the sho
 In the five-subject finger-tapping data (upgraded contralateral analysis), the nearest short channel explains $R^2_{\mathrm{SS}}(760) \approx 0.44$ of the long-channel variance at 760~nm, so
 \begin{align}
 V_{\mathrm{SSR}}(760) &= \frac{1}{1-0.44} \approx 1.78, \\
-\text{amplitude ratio} &= \sqrt{1-0.44} \approx 0.75 .
+\text{residual/original SD ratio} &= \sqrt{1-0.44} \approx 0.75 .
 \end{align}
 The interpretation is a \emph{report}: ``at 760~nm the short channel removed about 44\% of the long-channel variance, leaving roughly 75\% of the amplitude.'' At 850~nm the systemic oscillations dominate the long-channel variance, so $R^2_{\mathrm{SS}}(850)\approx0.57$ and $V_{\mathrm{SSR}}(850)\approx2.34$ --- a much larger diagnostic value, which is precisely why $V_{\mathrm{SSR}}$ is reported \emph{per wavelength} and never averaged across wavelengths. Neither number is multiplied into the recovered concentration.
 \end{workexample}
@@ -1189,7 +1189,7 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 
 \paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is large at 850\,nm ($V_{\mathrm{SSR}}(850)\approx9.8$). \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
 
-\paragraph{Moderate-to-long separations (35--40 mm):} The cortical fraction rises to $\sim$9--11\%, so $\kappa_{\text{PV}}$ falls to $\sim$9--11 and, crucially, the cortical signal climbs above the noise floor. This is the regime where the correction is reliable (HbO$_2$ RMSE reduced by $\sim$44\% at 38--40~mm; a 30-seed noise sweep is positive in every seed from 35~mm up). The recommended operating range is SDS~$\gtrsim$~35~mm, strongest at 38--40~mm, with the exact onset set by the instrument noise.
+\paragraph{Moderate-to-long separations (35--40 mm):} The cortical fraction rises to $\sim$9--11\%, so $\kappa_{\text{PV}}$ falls to $\sim$9--11 and, crucially, the cortical signal climbs above the noise floor. This is the regime where the correction is reliable (HbO$_2$ RMSE reduced by $\sim$44\% at 38--40~mm; a 30-cohort synthetic sweep is positive in every cohort from 35~mm up). The recommended operating range is SDS~$\gtrsim$~35~mm, strongest at 38--40~mm, with the exact onset set by the instrument noise.
 
 \paragraph{Long separations (40 mm):} The cortical fraction is largest here ($\sim$11\%), so the partial-volume factor is smallest ($\kappa_{\text{PV}} = 9.1$) and the cortical SNR is highest, the most favourable regime for the correction. Even so, the cortex still contributes only about a tenth of the channel sensitivity, so $\kappa_{\text{PV}}$ remains an order-of-magnitude correction.
 
@@ -1478,7 +1478,7 @@ Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm causes 30\% error 
 \begin{caution}
 \textbf{Pitfall 5: Treating the SSR $R^2$ as an amplitude correction, or averaging it across wavelengths.}
 
-$V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph{variance} ratio, not an amplitude factor (the amplitude ratio is $\sqrt{1-R^2_{\mathrm{SS}}}$), and its value differs by nearly an order of magnitude between 760 and 850~nm, so a cross-wavelength average is meaningless.
+$V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph{variance} ratio, not an amplitude factor (the residual-to-original standard-deviation ratio is $\sqrt{1-R^2_{\mathrm{SS}}}$, still not a task-response amplitude ratio), and its value differs by nearly an order of magnitude between 760 and 850~nm, so a cross-wavelength average is meaningless.
 
 \textbf{Fix}: Report $V_{\mathrm{SSR}}(\lambda)$ per wavelength as a variance-removal \emph{diagnostic} and never multiply it into the recovered concentration; apply only $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$.
 \end{caution}

@@ -22,16 +22,47 @@ _PROD_NAME = "fcortex_production.json"
 
 def _find_production() -> Path:
     here = Path(__file__).resolve().parent
-    for cand in (here / _PROD_NAME, Path.cwd() / _PROD_NAME):
+    # Search order: next to this module (regenerated locally, git-ignored), the
+    # CWD, and the versioned copy under results/ (the tracked artifact shipped in
+    # the reproducibility package, so a fresh checkout loads without re-running MC).
+    candidates = (
+        here / _PROD_NAME,
+        Path.cwd() / _PROD_NAME,
+        here.parent / "results" / _PROD_NAME,
+        Path.cwd() / "results" / _PROD_NAME,
+    )
+    for cand in candidates:
         if cand.exists():
             return cand
     raise FileNotFoundError(
-        f"{_PROD_NAME} not found next to fcortex_source.py or in the CWD. "
-        f"Generate it first:  python mc_production.py -N 2000000 --batches 16 "
-        f"--out {Path(__file__).resolve().parent / 'fcortex_production'}")
+        f"{_PROD_NAME} not found next to fcortex_source.py, in the CWD, or under "
+        f"results/. Generate it first:  python mc_production.py -N 2000000 "
+        f"--batches 16 --out {Path(__file__).resolve().parent / 'fcortex_production'}")
 
 
-_DATA = json.load(open(_find_production()))
+# Schema versions this loader knows how to read. The fields it actually uses
+# (two_layer[wl][sds]['f_cortex'] and csf[wl][sds]['gamma']) are stable across
+# these; an unrecognised schema is rejected rather than silently mis-read.
+SUPPORTED_SCHEMAS = {"1.0", "2.0"}
+
+
+def _load_and_check(path: Path) -> dict:
+    data = json.load(open(path))
+    meta = data.get("_meta", {})
+    ver = str(meta.get("schema_version", meta.get("version", "1.0")))
+    if ver not in SUPPORTED_SCHEMAS:
+        raise ValueError(
+            f"{path.name} has schema_version {ver!r}, which this fcortex_source.py "
+            f"does not support (supported: {sorted(SUPPORTED_SCHEMAS)}). Regenerate the "
+            f"production file with a matching mc_production.py, or update the loader.")
+    for key in ("two_layer", "csf"):
+        if key not in data:
+            raise ValueError(f"{path.name} is missing the required '{key}' block "
+                             f"(schema_version {ver}); it is not a valid production file.")
+    return data
+
+
+_DATA = _load_and_check(_find_production())
 WAVELENGTHS = sorted(int(w) for w in _DATA["two_layer"].keys())
 
 
@@ -78,5 +109,7 @@ def kappa_pv(sds_mm: float, wavelength_nm: int, invivo: bool = False) -> float:
 
 def provenance() -> dict:
     m = _DATA["_meta"]
-    return {k: m[k] for k in ("version", "N_per_config", "n_batches", "L_max",
-                              "z_max", "half_width", "g") if k in m}
+    keys = ("schema_version", "data_version", "version", "git_commit", "generated_utc",
+            "command", "python_version", "numpy_version", "data_sha256",
+            "N_per_config", "n_batches", "seed", "L_max", "z_max", "half_width", "g")
+    return {k: m[k] for k in keys if k in m}

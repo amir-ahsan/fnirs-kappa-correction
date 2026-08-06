@@ -4,10 +4,12 @@ In Vivo Proof-of-Concept Demonstration: kappa-Correction of fNIRS Data
 Simulates a realistic finger-tapping fNIRS experiment to demonstrate
 the kappa-correction pipeline on physiologically realistic data.
 
-The paradigm is designed to match the BIDS-NIRS-Tapping dataset
-(Luke et al., 2021): 60 tapping blocks (5 s task, 5 s rest),
-sampling rate 7.8125 Hz, wavelengths 760 and 850 nm, SDS ~ 38 mm.
-This parallel design enables direct comparison between the simulated
+The paradigm is INSPIRED BY the BIDS-NIRS-Tapping dataset (Luke et al.,
+2021): it parameterizes selected acquisition features (regular 60 blocks of
+5 s task / 5 s rest, sampling rate 7.8125 Hz, wavelengths 760 and 850 nm,
+SDS ~ 38 mm). It is an idealized block design and does NOT reproduce the real
+experiment's irregular inter-onset intervals or its control condition.
+This parallel design enables a qualitative comparison between the simulated
 pipeline demonstration and the subsequent real-data analysis.
 
 Based on: Sagara N and Ahsan A, "A diffusion-theory framework for

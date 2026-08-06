@@ -23,10 +23,36 @@ pipelines read these values (no hard-coded tables, no 760->850 ratio shortcut).
 Run (background, ~1-2 h on 2 cores at the production N):
     python mc_production.py --N 2500000 --batches 16 --out fcortex_production
 """
-import argparse, json, time
+import argparse, json, time, sys, platform, hashlib, subprocess
+from datetime import datetime, timezone
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from mc_2layer import run
+
+SCHEMA_VERSION = "2.0"   # bumped when the JSON schema changes (SE/CI/paired fields)
+
+
+def _git_commit(cli_value=None):
+    if cli_value:
+        return cli_value
+    try:
+        here = __file__
+        import os
+        root = os.path.dirname(os.path.abspath(here))
+        h = subprocess.check_output(["git", "-C", root, "rev-parse", "--short", "HEAD"],
+                                    stderr=subprocess.DEVNULL).decode().strip()
+        dirty = subprocess.call(["git", "-C", root, "diff", "--quiet"],
+                                stderr=subprocess.DEVNULL) != 0
+        return h + ("-dirty" if dirty else "")
+    except Exception:
+        return "unknown"
+
+
+def _payload_sha256(result):
+    """SHA-256 over the numeric payload only (excludes _meta), for provenance."""
+    payload = {k: result[k] for k in result if k != "_meta"}
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(blob).hexdigest()
 
 SDS = [25.0, 30.0, 35.0, 38.0, 40.0]
 LMAX_SWEEP = [400.0, 500.0, 800.0, 1200.0]
@@ -125,6 +151,7 @@ def score(raw, sds, hw, K):
                 batch_sd=bsd, se=float(se), t_crit=float(tcrit),
                 ci95=ci_t,
                 batch_spread=[float(np.percentile(fb, 2.5)), float(np.percentile(fb, 97.5))],
+                batch_estimates=[float(x) for x in fb],   # per-batch f_cortex (for paired stats)
                 n_batches=nb, N_eff_absw=neff, DPF=dpf,
                 detected=int(idx.size))
 
@@ -149,6 +176,8 @@ def main():
     ap.add_argument('--zmax_check', type=float, default=220.0)
     ap.add_argument('--zmax_check_N', type=lambda v: int(float(v)), default=800000)
     ap.add_argument('--out', default='fcortex_production')
+    ap.add_argument('--git_commit', default=None,
+                    help="record this commit hash in provenance (else auto-detect)")
     args = ap.parse_args()
     t0 = time.time()
     two_layer, csf, conv = {}, {}, {}
@@ -179,30 +208,39 @@ def main():
         conv[wl] = convergence(raws[('2L', wl)])
         csf[wl] = {}
         for s in SDS:
-            f2 = two_layer[wl][str(s)]['f_cortex']
+            f2s = two_layer[wl][str(s)]
+            f2 = f2s['f_cortex']
             f3s = score(raws[('3L', wl)], s, PROD_HW, args.batches)
             f3 = f3s['f_cortex']
-            # gamma uncertainty as a STANDARD ERROR of the combined estimate:
-            # propagate the per-run standard errors (se = batch_sd/sqrt(B)) of f2 and
-            # f3 in quadrature (relative), NOT the raw batch SDs.
-            rse = np.hypot(two_layer[wl][str(s)]['se'] / f2 if f2 else 0,
-                           f3s['se'] / f3 if f3 else 0)
+            # gamma uncertainty from the distribution of the per-batch RATIOS
+            # gamma_b = f3L,b / f2L,b (batches matched by index; the 2L and 3L runs
+            # share the seed).  SE = SD(gamma_b)/sqrt(B).  This is the batch-ratio
+            # estimate the review asks for, not a quadrature of two separate SEs.
+            b2 = np.array(f2s['batch_estimates']); b3 = np.array(f3s['batch_estimates'])
+            nb = min(b2.size, b3.size)
+            gb = b3[:nb] / b2[:nb]
+            gamma_se = float(gb.std(ddof=1) / np.sqrt(nb)) if nb > 1 else None
             csf[wl][str(s)] = dict(f2L=f2, f3L=f3, gamma=float(f3 / f2) if f2 else None,
-                                   gamma_se=float((f3 / f2) * rse) if f2 else None)
-    # z_max=220 mm check, scored identically (same N, same seed) to the z_max=150 mm
-    # production run, so the paired difference isolates domain depth.  Report the
-    # z_max=220 estimate with its batch t-CI and the paired difference +/- combined SE.
+                                   gamma_batch_mean=float(gb.mean()),
+                                   gamma_se=gamma_se)
+    # z_max=220 mm check, scored identically (same N, same seed, same batch
+    # partition) as the z_max=150 mm production run, so the batches are truly
+    # PAIRED.  Report the mean and SE of the per-batch paired difference
+    # d_b = f_150,b - f_220,b (not a quadrature of two separate SEs).
     zc_score = {str(s): score(zc, s, PROD_HW, args.batches) for s in (38.0, 40.0)}
     zc_conv = {}
     for s in ('38.0', '40.0'):
         z2 = zc_score[s]
         f150 = two_layer[760][s]
-        d = f150['f_cortex'] - z2['f_cortex']
-        d_se = float(np.hypot(f150['se'], z2['se']))
+        b150 = np.array(f150['batch_estimates']); b220 = np.array(z2['batch_estimates'])
+        nb = min(b150.size, b220.size)
+        db = b150[:nb] - b220[:nb]
+        d = float(db.mean())
+        d_se = float(db.std(ddof=1) / np.sqrt(nb)) if nb > 1 else 0.0
         zc_conv[s] = dict(f_150=f150['f_cortex'], f_220=z2['f_cortex'],
                           f_220_ci95=z2['ci95'], f_150_ci95=f150['ci95'],
-                          delta=float(d), delta_se=d_se,
-                          within_ci=bool(abs(d) <= 1.96 * d_se))
+                          delta_paired=d, delta_paired_se=d_se, n_paired_batches=int(nb),
+                          within_ci=bool(abs(d) <= 1.96 * d_se) if d_se > 0 else True)
 
     # CSF-thickness sweep: gamma with a thinner 1 mm CSF layer (vs the nominal
     # 2 mm), scored against the same converged two-layer fractions.
@@ -216,7 +254,13 @@ def main():
                                              gamma_1mm=float(f3t / f2) if f2 else None)
 
     result = dict(
-        _meta=dict(version="1.0", produced_by="mc_production.py",
+        _meta=dict(schema_version=SCHEMA_VERSION, data_version=SCHEMA_VERSION,
+                   produced_by="mc_production.py",
+                   git_commit=_git_commit(getattr(args, 'git_commit', None)),
+                   generated_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   command="python mc_production.py " + " ".join(sys.argv[1:]),
+                   python_version=platform.python_version(),
+                   numpy_version=np.__version__,
                    N_per_config=args.N, n_batches=args.batches, seed=args.seed,
                    g=0.9, L_max=PROD_LMAX, z_max=PROD_ZMAX, half_width=PROD_HW,
                    sds=SDS, optical_properties=OPT,
@@ -227,21 +271,24 @@ def main():
                                "t interval f_all +/- t_{.975,B-1}*se (a 95% CI for the "
                                "combined 2e6-photon estimate). batch_spread holds the 2.5/97.5 "
                                "percentiles of the individual batch estimates (a prediction "
-                               "range, NOT a CI for the combined run).",
+                               "range, NOT a CI for the combined run). batch_estimates holds the "
+                               "per-batch f_cortex values used for the paired gamma/z_max stats.",
                    N_eff_note="N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight "
                               "effective count only; it does not capture pathlength or "
                               "numerator-denominator covariance in the ratio (see se/ci95)",
+                   csf_note="csf gamma at nominal 2 mm; gamma_se is SD(gamma_b)/sqrt(B) over the "
+                            "per-batch ratios gamma_b=f3L,b/f2L,b (2L and 3L share the seed); "
+                            "csf_thickness_1mm holds gamma for a thinner 1 mm CSF layer.",
                    convergence_note="L_max/annulus sweeps re-scored from the same run; the "
-                                    "z_max=220 check uses the SAME N and seed (common random "
-                                    "numbers) as the z_max=150 production run, so zmax_check "
-                                    "reports the paired difference +/- combined SE",
-                   csf_note="csf gamma at nominal 2 mm; csf_thickness_1mm holds the "
-                            "gamma for a thinner 1 mm CSF layer (superficial depth "
-                            "fixed at 12 mm) as a light-piping robustness check",
-                   secs=None),
+                                    "z_max=220 check uses the SAME N, seed and batch partition "
+                                    "(common random numbers) as the z_max=150 run, so zmax_check "
+                                    "reports the mean and SE of the per-batch PAIRED difference "
+                                    "d_b=f_150,b-f_220,b.",
+                   data_sha256=None, secs=None),
         two_layer=two_layer, csf=csf, csf_thickness_1mm=csf_thickness,
         convergence=conv, zmax_check=zc_conv)
     result['_meta']['secs'] = round(time.time() - t0, 1)
+    result['_meta']['data_sha256'] = _payload_sha256(result)
     json.dump(result, open(f"{args.out}.json", 'w'), indent=1)
     with open(f"{args.out}.csv", 'w') as f:
         f.write("geometry,wavelength_nm,SDS_mm,f_cortex,batch_sd,se,ci95_lo,ci95_hi,"
@@ -258,12 +305,12 @@ def main():
     for s in ('38.0', '40.0'):
         row = conv[760]['Lmax'][s]
         print(f"  SDS={s}: " + "  ".join(f"L{int(float(L))}={row[L]:.4f}" for L in map(str, LMAX_SWEEP)))
-    print(f"  z_max {PROD_ZMAX}->{args.zmax_check} (matched N={args.N}, seed={args.seed}, CRN):")
+    print(f"  z_max {PROD_ZMAX}->{args.zmax_check} (matched N={args.N}, seed={args.seed}, paired batches):")
     for s in ('38.0', '40.0'):
         z = zc_conv[s]
         print(f"    SDS={s}: f(150)={z['f_150']:.4f} f(220)={z['f_220']:.4f}  "
-              f"delta={z['delta']:+.4f} +/- {z['delta_se']:.4f} (SE)  "
-              f"{'WITHIN' if z['within_ci'] else 'OUTSIDE'} 95% (1.96 SE)")
+              f"paired delta_b={z['delta_paired']:+.5f} +/- {z['delta_paired_se']:.5f} (SE of d_b)  "
+              f"{'WITHIN' if z['within_ci'] else 'OUTSIDE'} 95%")
     for wl in (760, 850):
         print(f"\n=== two-layer {wl} nm (f_cortex +/- SE [95% t-CI], batchSD, N_eff, DPF) ===")
         for s in SDS:

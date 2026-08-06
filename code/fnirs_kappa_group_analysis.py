@@ -92,8 +92,9 @@ def analyze_subject(subject: str):
         kappa_ssr_by_wl[wl] = float(np.mean(rh.compute_kappa_ssr(r2)))
 
     # V_SSR is a DIAGNOSTIC, NOT applied.  1/(1-R^2_SS) is an inverse
-    # residual-VARIANCE ratio, not an amplitude-restoration factor (the amplitude
-    # ratio would be sqrt(1-R^2)), and R^2_SS cannot identify cortical loss.
+    # residual-VARIANCE ratio, not an amplitude-restoration factor: the
+    # residual-to-original standard-deviation (RMS-fluctuation) ratio would be
+    # sqrt(1-R^2), but neither quantity identifies cortical task-signal loss.
     # kappa_PV = 1/f_cortex corrects only the optical dilution of the cortical
     # component that survives SSR; it does not reconstruct signal SSR removed.
     od_ssr_corrected = od_ssr.copy()

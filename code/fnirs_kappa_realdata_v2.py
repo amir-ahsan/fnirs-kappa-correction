@@ -10,7 +10,7 @@ Improvements over fnirs_kappa_realdata_analysis.py:
   * NEAREST short-separation channel as the SSR regressor for each long channel
     (not the global short-channel mean);
   * quality control: motion correction (TDDR) + scalp-coupling-index (SCI) rejection;
-  * a fixed pre-registered response-window MEAN amplitude estimator (not a max-|.|,
+  * a fixed, pre-specified response-window MEAN amplitude estimator (not a max-|.|,
     which is positively biased after large amplification).
 
 Only kappa_PV = 1/f_cortex(per-channel SDS, CSF-augmented) is applied; V_SSR is
@@ -33,7 +33,7 @@ import fnirs_kappa_realdata_analysis as rd  # constants + get_f_cortex
 
 mne.set_log_level("ERROR")
 
-# Pre-registered response windows (s after onset) for the window-mean estimator.
+# Fixed, pre-specified response windows (s after onset) for the window-mean estimator.
 HBO_WINDOW = (4.0, 10.0)   # canonical HbO peak band for a 5 s block
 HBR_WINDOW = (7.0, 13.0)   # HbR reaches its (negative) extremum later
 SCI_THRESHOLD = 0.5        # scalp-coupling-index QC threshold
@@ -132,15 +132,23 @@ def analyze_subject(root: Path, sub: str) -> dict:
         # uncorrected concentrations
         ODu = np.vstack([od_un[760] / Lu[0], od_un[850] / Lu[1]])
         Cu = E_inv @ ODu                      # (2, T): HbO, HbR
+        # SSR-only: short-channel regression applied, NO partial-volume scaling
+        ODs = np.vstack([od_ss[760] / Lu[0], od_ss[850] / Lu[1]])
+        Cs = E_inv @ ODs                      # SSR-only HbO, HbR
         # corrected: SSR + per-channel PV then MBLL
         ODc = np.vstack([(od_ss[760] / fcx[760]) / Lu[0],
                          (od_ss[850] / fcx[850]) / Lu[1]])
         Cc = E_inv @ ODc
+        # "mean applied factor" = arithmetic mean of the two APPLIED per-wavelength
+        # factors 1/f760 and 1/f850 (a descriptive scalar; the applied factors are
+        # per-wavelength, exported below).
+        kpv_mean_applied = 0.5 * (1.0 / fcx[760] + 1.0 / fcx[850])
         chan_out.append(dict(base=b, x=by_base[b][760]["x"], sds=sds,
-                             kpv=1.0 / np.mean([fcx[760], fcx[850]]),
+                             kpv=kpv_mean_applied,
                              f760=fcx[760], f850=fcx[850],
                              kpv760=1.0 / fcx[760], kpv850=1.0 / fcx[850],
-                             hbo_u=Cu[0], hbr_u=Cu[1], hbo_c=Cc[0], hbr_c=Cc[1]))
+                             hbo_u=Cu[0], hbr_u=Cu[1], hbo_s=Cs[0], hbr_s=Cs[1],
+                             hbo_c=Cc[0], hbr_c=Cc[1]))
 
     # --- events ---
     ev, eid = mne.events_from_annotations(raw, verbose="ERROR")
@@ -172,7 +180,8 @@ def analyze_subject(root: Path, sub: str) -> dict:
     for cond in ("left", "right"):
         for c in [c for c in chan_out if ipsi[cond](c)]:
             ipsi_hbo_u.append(win_amp(block_mean(c["hbo_u"], onsets[cond]), HBO_WINDOW))
-    res = {"hbo_u": [], "hbo_c": [], "hbr_u": [], "hbr_c": [], "kpv": [], "sds": []}
+    res = {"hbo_u": [], "hbo_s": [], "hbo_c": [], "hbr_u": [], "hbr_s": [], "hbr_c": [],
+           "kpv": [], "sds": []}
     tr = {"hbo_u": [], "hbo_c": [], "hbr_u": [], "hbr_c": []}   # block-average traces
     for cond in ("left", "right"):
         sel = [c for c in chan_out if contra[cond](c)]
@@ -180,12 +189,16 @@ def analyze_subject(root: Path, sub: str) -> dict:
             continue
         for c in sel:
             m_hbo_u = block_mean(c["hbo_u"], onsets[cond])
+            m_hbo_s = block_mean(c["hbo_s"], onsets[cond])   # SSR-only
             m_hbo_c = block_mean(c["hbo_c"], onsets[cond])
             m_hbr_u = block_mean(c["hbr_u"], onsets[cond])
+            m_hbr_s = block_mean(c["hbr_s"], onsets[cond])   # SSR-only
             m_hbr_c = block_mean(c["hbr_c"], onsets[cond])
             res["hbo_u"].append(win_amp(m_hbo_u, HBO_WINDOW))
+            res["hbo_s"].append(win_amp(m_hbo_s, HBO_WINDOW))
             res["hbo_c"].append(win_amp(m_hbo_c, HBO_WINDOW))
             res["hbr_u"].append(win_amp(m_hbr_u, HBR_WINDOW))
+            res["hbr_s"].append(win_amp(m_hbr_s, HBR_WINDOW))
             res["hbr_c"].append(win_amp(m_hbr_c, HBR_WINDOW))
             res["kpv"].append(c["kpv"]); res["sds"].append(c["sds"])
             tr["hbo_u"].append(m_hbo_u); tr["hbo_c"].append(m_hbo_c)
@@ -196,14 +209,17 @@ def analyze_subject(root: Path, sub: str) -> dict:
     # Concentrations from the inversion are already in micromolar (E carries the
     # mM^-1 cm^-1 -> mm^-1 uM^-1 conversion), so no further scaling is applied.
     hbo_u = float(np.mean(res["hbo_u"])); hbo_c = float(np.mean(res["hbo_c"]))
+    hbo_s = float(np.mean(res["hbo_s"]))
     hbr_u = float(np.mean(res["hbr_u"])); hbr_c = float(np.mean(res["hbr_c"]))
+    hbr_s = float(np.mean(res["hbr_s"]))
     hbo_u_ipsi = float(np.mean(ipsi_hbo_u)) if ipsi_hbo_u else float("nan")
     return dict(subject=sub, n_long=len(chan_out),
                 n_contra=len(res["hbo_u"]), n_ipsi=len(ipsi_hbo_u),
                 sds_mean=float(np.mean(res["sds"])),
                 kpv_mean=float(np.mean(res["kpv"])),
                 kssr760=float(np.mean(kssr[760])), kssr850=float(np.mean(kssr[850])),
-                hbo_uncorr_uM=hbo_u, hbo_corr_uM=hbo_c,
+                hbo_uncorr_uM=hbo_u, hbo_ssr_only_uM=hbo_s, hbo_corr_uM=hbo_c,
+                hbr_ssr_only_uM=hbr_s,
                 hbo_uncorr_ipsi_uM=hbo_u_ipsi,
                 lateralization_contra_gt_ipsi=bool(hbo_u > hbo_u_ipsi),
                 hbr_uncorr_uM=hbr_u, hbr_corr_uM=hbr_c,
@@ -295,14 +311,17 @@ def main():
         rows.append(r)
         print(f"sub-{sub}: n_contra={r['n_contra']:2d} SDS={r['sds_mean']:.1f}mm "
               f"kPV={r['kpv_mean']:.2f} V_SSR(760/850)={r['kssr760']:.2f}/{r['kssr850']:.2f}  "
-              f"HbO {r['hbo_uncorr_uM']:+.3f}->{r['hbo_corr_uM']:+.3f}uM ({r['hbo_scale']:.2f}x)  "
+              f"HbO uncorr {r['hbo_uncorr_uM']:+.3f} -> SSR-only {r['hbo_ssr_only_uM']:+.3f} "
+              f"-> SSR+PV {r['hbo_corr_uM']:+.3f} uM  "
               f"HbR {r['hbr_uncorr_uM']:+.3f}->{r['hbr_corr_uM']:+.3f}uM")
     arr = lambda k: np.array([r[k] for r in rows])
-    print("\nGROUP (contralateral, window-mean, N=5):")
-    for k, lab in [("hbo_uncorr_uM", "HbO uncorr"), ("hbo_corr_uM", "HbO corr"),
-                   ("hbr_uncorr_uM", "HbR uncorr"), ("hbr_corr_uM", "HbR corr"),
+    print("\nGROUP (contralateral, window-mean, N=5) -- uncorrected / SSR-only / SSR+PV:")
+    for k, lab in [("hbo_uncorr_uM", "HbO uncorr"), ("hbo_ssr_only_uM", "HbO SSR-only"),
+                   ("hbo_corr_uM", "HbO SSR+PV"),
+                   ("hbr_uncorr_uM", "HbR uncorr"), ("hbr_ssr_only_uM", "HbR SSR-only"),
+                   ("hbr_corr_uM", "HbR SSR+PV"),
                    ("kpv_mean", "kPV"), ("kssr760", "V_SSR760"), ("kssr850", "V_SSR850")]:
-        print(f"  {lab:11s}: {arr(k).mean():+.3f} +/- {arr(k).std(ddof=1):.3f}")
+        print(f"  {lab:13s}: {arr(k).mean():+.3f} +/- {arr(k).std(ddof=1):.3f}")
     # Lateralization check: uncorrected contralateral vs ipsilateral HbO (convention test)
     contra_u = arr("hbo_uncorr_uM"); ipsi_u = arr("hbo_uncorr_ipsi_uM")
     n_lateralized = int(np.sum(contra_u > ipsi_u))
@@ -312,9 +331,12 @@ def main():
     out = dict(per_subject=rows,
                group=dict(hbo_uncorr=float(arr("hbo_uncorr_uM").mean()),
                           hbo_uncorr_sd=float(arr("hbo_uncorr_uM").std(ddof=1)),
+                          hbo_ssr_only=float(arr("hbo_ssr_only_uM").mean()),
+                          hbo_ssr_only_sd=float(arr("hbo_ssr_only_uM").std(ddof=1)),
                           hbo_corr=float(arr("hbo_corr_uM").mean()),
                           hbo_corr_sd=float(arr("hbo_corr_uM").std(ddof=1)),
                           hbr_uncorr=float(arr("hbr_uncorr_uM").mean()),
+                          hbr_ssr_only=float(arr("hbr_ssr_only_uM").mean()),
                           hbr_corr=float(arr("hbr_corr_uM").mean()),
                           kpv=float(arr("kpv_mean").mean()),
                           kssr760=float(arr("kssr760").mean()), kssr760_sd=float(arr("kssr760").std(ddof=1)),
