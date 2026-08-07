@@ -54,7 +54,8 @@ def main():
          "name is stored separately as `release_label`). Each artifact records the commit it was "
          "generated from in its own `_meta`. The production forward model and the secondary MC "
          "artifacts are frozen at `round9`/`32687ed`; `results/realdata_v2_summary.json` was "
-         "regenerated later (`round12`) to record the dataset content (tree) hash, using the "
+         "regenerated later (`round13`) to record the truthful per-run dataset acquisition "
+         "provenance and content (tree) hash, using the "
          "unchanged `round9` production (its `input_hashes.fcortex_production_sha256` still points "
          "to the same production payload). The numerical results are unchanged.\n",
          "## SHA-256 of tracked files\n",

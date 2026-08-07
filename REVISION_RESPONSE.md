@@ -1108,3 +1108,59 @@ the in-vivo summary was regenerated (`round12`) per item 3, with identical numbe
 checks pass; the release manifest self-verifies 44/44. The manuscript recompiles with no errors,
 undefined references, overfull boxes, or PDF-bookmark warnings (49 pp), and the pedagogical guide
 likewise (52 pp).
+
+---
+
+# Round 13 — Response to the *Review of the Updated Study and arXiv Package* (final editorial/provenance pass)
+
+The review deemed the science final and listed six editorial/provenance items. No production
+Monte Carlo was repeated; per item 1 the in-vivo pipeline was re-run once more so the frozen
+summary carries truthful per-run provenance.
+
+**#1 — Truthful dataset-verification provenance.** The dataset provenance is now \emph{dynamic}.
+`download_dataset()` records how the data was actually obtained and what was verified in a module
+field `ACQUISITION_PROVENANCE`, and `fnirs_kappa_realdata_v2.py` writes it into the summary:
+`acquisition_method`, `zenodo_md5_verified`, `archive_sha256_verified`, `content_tree_sha256`, and
+`tree_hash_verified_against_pin`. `main()` now always calls `download_dataset()` (it returns early
+when the data is already present) so this is populated. The frozen `realdata_v2_summary.json` (re-run
+at `round13` / `095c5e3`, numbers unchanged, same `round9` production hash) now states truthfully
+that this particular run used a **pre-extracted directory**, that **Zenodo MD5 was not verified this
+run**, and that the analyzed tree was fingerprinted (`content_tree_sha256`) but not checked against a
+canonical pin. The manuscript Data-Availability paragraph was updated to describe this dynamic
+recording rather than assuming the best-case download path, and to note that the tree hash is an
+authenticity check only when compared with a pinned digest.
+
+**#2 — Diffusion-approximation limitation rewritten.** The Limitations "we employed the diffusion
+approximation via Kienle…" is replaced: the analytical Kienle calculation is used only for
+methodological comparison and is not the source of the production sensitivities (obtained from white
+Monte Carlo precisely because diffusion is unreliable in low-scattering CSF); diffusion-specific
+limitations apply to the comparison, while the production Monte Carlo is subject to slab-geometry,
+optical-property, and internal refractive-index assumptions. The "Light transport computation"
+subsection now opens by distinguishing the two forward models (Monte Carlo = production;
+Kienle/diffusion = analytical comparison).
+
+**#3 — Dominant-uncertainty statement corrected.** Future Directions now says broadband/frequency-
+domain fNIRS would reduce subject-specific \emph{optical-property} uncertainty (a secondary
+contributor), while subject-specific MRI/ultrasound/atlas addresses the \emph{dominant} geometric
+uncertainty in superficial-layer depth.
+
+**#4 — Pedagogical-guide statements synchronized.** The "8 mm vs 12 mm → 30% error" pitfall is now
+the correct ≈73% $\kappa_{\mathrm{PV}}$ under-scaling ($\kappa_{\mathrm{PV}}\approx4.56$ at 8 mm vs
+16.74 at 12 mm). The "data sit at 38 mm, inside the long-separation regime" statement now describes
+the actual 33.4–40.9 mm span (centered near 38 mm; ten channels below 35 mm near the lower,
+noise-dependent transition), matching the manuscript.
+
+**#5 — DPF uncertainty caveat added.** The real-data uncertainty discussion now states that the
+reported amplitude also conditions on the wavelength-specific Scholkmann DPF values (6.15 at 760 nm,
+5.09 at 850 nm) and that subject-specific DPF uncertainty was not propagated.
+
+**#6 — Minor guide corrections.** "OD = 1 means 90% of light is absorbed" → "OD = 1 means the
+detected intensity is 10% of the reference value" (with a note that tissue attenuation includes
+scattering). The guide's introduction now distinguishes the pedagogical analytical (diffusion/Kienle)
+derivation from the converged Monte Carlo used for the quantitative $f_{\mathrm{cortex}}$.
+
+**Verification.** Production/secondary MC unchanged (`round9` / `32687ed`); only the in-vivo summary
+was regenerated (`round13`), with identical numbers (0.913 ± 0.334 µM) and the same production input
+hash. Both documents recompile with no errors, undefined references, overfull boxes, or bookmark
+warnings (manuscript 49 pp, guide 52 pp). The release manifest was regenerated (self-verifies 44/44),
+and the arXiv zip was rebuilt from the corrected source.

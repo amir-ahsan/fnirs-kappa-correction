@@ -1327,14 +1327,14 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_realdata_v2.py",
-  "git_commit": "e9cb929",
-  "git_commit_full": "e9cb9297beef5d590fee34da76ff7508bc36266a",
+  "git_commit": "095c5e3",
+  "git_commit_full": "095c5e3c206f9b7a33c2fa5dc267cc9483426c81",
   "git_dirty": false,
-  "analysis_round": "round12",
-  "generated_utc": "2026-08-07T18:30:25Z",
+  "analysis_round": "round13",
+  "generated_utc": "2026-08-07T22:20:24Z",
   "command": "python fnirs_kappa_realdata_v2.py",
   "python_version": "3.11.15",
-  "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
+  "platform": "Linux-6.18.5-fc-v20-x86_64-with-glibc2.39",
   "machine": "x86_64",
   "packages": {
    "numpy": "2.4.4",
@@ -1359,10 +1359,14 @@
    "name": "BIDS-NIRS-Tapping",
    "doi": "10.5281/zenodo.5529797",
    "zenodo_record": "5529797",
-   "archive_sha256_pin": null,
-   "content_tree_sha256": "55e4fe3b9a585a265dbcfe327b132132eade57e8b2e703be65d0fc599c03daa9",
    "citation": "Luke et al., 2021",
-   "verification": "pinned Zenodo record; each downloaded file verified against the Zenodo-published md5. A deterministic content (tree) SHA-256 of the extracted dataset is recorded here (content_tree_sha256) and enforced on re-run if DATASET_TREE_SHA256 is pinned; an archive-zip SHA-256 is enforced if DATASET_SHA256 is pinned."
+   "acquisition_method": "pre-extracted directory (no Zenodo download this run)",
+   "zenodo_md5_verified": false,
+   "archive_sha256_pin": null,
+   "archive_sha256_verified": false,
+   "content_tree_sha256": "55e4fe3b9a585a265dbcfe327b132132eade57e8b2e703be65d0fc599c03daa9",
+   "tree_hash_verified_against_pin": false,
+   "verification": "this run did NOT perform Zenodo md5 verification (acquisition_method='pre-extracted directory (no Zenodo download this run)'); the analyzed dataset tree was fingerprinted with a deterministic content (tree) SHA-256 (content_tree_sha256), which pins exactly what was analyzed but is an authenticity check against Zenodo only when compared with a canonical pinned digest (DATASET_TREE_SHA256)"
   },
   "seeds": {
    "note": "deterministic pipeline; no stochastic step in the real-data analysis"
