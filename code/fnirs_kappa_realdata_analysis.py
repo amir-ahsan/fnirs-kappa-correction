@@ -199,6 +199,12 @@ DATASET_ZENODO_RECORD = "5529797"
 DATASET_SHA256 = None                            # optional archive-zip SHA-256 pin (enforced if set)
 DATASET_TREE_SHA256 = None                       # optional extracted-tree content hash pin (enforced if set)
 
+# Dynamic, per-run acquisition provenance, populated by download_dataset() to
+# record exactly HOW the dataset used by this run was obtained and what was (and
+# was not) verified. Consumed by fnirs_kappa_realdata_v2.py so the frozen summary
+# tells the truth about the specific run rather than the best-case download path.
+ACQUISITION_PROVENANCE = None
+
 
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -271,17 +277,31 @@ def download_dataset(dest: Path) -> Path:
     Path
         Path to the dataset root (containing ``sub-*`` directories).
     """
+    global ACQUISITION_PROVENANCE
     if dest.exists() and any(dest.glob("sub-*")):
         # An already-extracted tree carries no archive-zip checksum, so verify a
         # deterministic CONTENT hash instead of accepting it blindly. Enforce the
         # pin if one is set; otherwise record/print it so it can be frozen once.
+        # NOTE: this path does NOT contact Zenodo, so no Zenodo MD5 check is
+        # performed here; the tree hash fingerprints exactly what was analyzed but
+        # is an authenticity check only when compared against a pinned digest.
         tree = dataset_tree_sha256(dest)
-        if DATASET_TREE_SHA256 is not None and tree != DATASET_TREE_SHA256:
-            raise ValueError(
-                f"extracted-dataset content hash mismatch (expected "
-                f"{DATASET_TREE_SHA256[:12]}..., got {tree[:12]}...). Refusing to "
-                f"proceed with an unverified pre-extracted dataset.")
-        print(f"  Dataset already present at {dest}")
+        pin_verified = False
+        if DATASET_TREE_SHA256 is not None:
+            if tree != DATASET_TREE_SHA256:
+                raise ValueError(
+                    f"extracted-dataset content hash mismatch (expected "
+                    f"{DATASET_TREE_SHA256[:12]}..., got {tree[:12]}...). Refusing to "
+                    f"proceed with an unverified pre-extracted dataset.")
+            pin_verified = True
+        ACQUISITION_PROVENANCE = dict(
+            acquisition_method="pre-extracted directory (no Zenodo download this run)",
+            zenodo_record=DATASET_ZENODO_RECORD, zenodo_doi=DATASET_DOI,
+            zenodo_md5_verified=False,
+            archive_sha256_verified=False,
+            content_tree_sha256=tree,
+            tree_hash_verified_against_pin=pin_verified)
+        print(f"  Dataset already present at {dest} (no Zenodo download this run)")
         print(f"  dataset content (tree) SHA-256 = {tree}"
               + ("" if DATASET_TREE_SHA256 is None else " (verified against pin)"))
         return dest
@@ -299,6 +319,7 @@ def download_dataset(dest: Path) -> Path:
     print(f"  Downloading pinned dataset (Zenodo {DATASET_DOI}) from {url} ...")
     urllib.request.urlretrieve(url, zip_path)
 
+    md5_verified = False
     if md5:
         got = _md5_file(zip_path)
         if got != md5:
@@ -306,13 +327,16 @@ def download_dataset(dest: Path) -> Path:
             raise ValueError(
                 f"BIDS-NIRS-Tapping archive md5 mismatch: Zenodo lists {md5[:12]}..., "
                 f"got {got[:12]}.... Refusing to proceed with an unverified input.")
+        md5_verified = True
         print(f"  Zenodo md5 verified: {md5[:12]}...")
+    archive_sha_verified = False
     if DATASET_SHA256 is not None:
         sha = _sha256_file(zip_path)
         if sha != DATASET_SHA256:
             zip_path.unlink(missing_ok=True)
             raise ValueError(f"archive SHA-256 mismatch (expected {DATASET_SHA256[:12]}..., "
                              f"got {sha[:12]}...).")
+        archive_sha_verified = True
     else:
         print(f"  archive SHA-256 = {_sha256_file(zip_path)} (optionally pin via DATASET_SHA256)")
 
@@ -325,6 +349,18 @@ def download_dataset(dest: Path) -> Path:
     if cands:
         cands[0].rename(dest)
     zip_path.unlink(missing_ok=True)
+    tree = dataset_tree_sha256(dest)
+    pin_verified = bool(DATASET_TREE_SHA256 is not None and tree == DATASET_TREE_SHA256)
+    if DATASET_TREE_SHA256 is not None and not pin_verified:
+        raise ValueError(f"extracted-tree hash mismatch after download (expected "
+                         f"{DATASET_TREE_SHA256[:12]}..., got {tree[:12]}...).")
+    ACQUISITION_PROVENANCE = dict(
+        acquisition_method="downloaded pinned Zenodo archive",
+        zenodo_record=DATASET_ZENODO_RECORD, zenodo_doi=DATASET_DOI,
+        zenodo_md5_verified=md5_verified,
+        archive_sha256_verified=archive_sha_verified,
+        content_tree_sha256=tree,
+        tree_hash_verified_against_pin=pin_verified)
     print(f"  Dataset ready at {dest} (pinned Zenodo {DATASET_DOI})")
     return dest
 

@@ -52,7 +52,7 @@
 \maketitle
 
 \begin{abstract}
-This pedagogical guide introduces undergraduate physics students to functional near-infrared spectroscopy (fNIRS) and the $\kappa$-correction framework for recovering quantitative hemoglobin concentration measurements. The guide provides complete derivations, physical intuition, worked examples, and step-by-step implementations. We explain why the Modified Beer-Lambert Law (MBLL) systematically underestimates cortical hemoglobin changes by up to $10\times$ in layered tissues, and how two multiplicative correction factors applied at the optical-density level ($\kappa_{\mathrm{DPF}}$ and the dominant $\kappa_{\mathrm{PV}}$) compensate for differential pathlength error and partial volume dilution, while a short-separation-regression variance-removal diagnostic ($V_{\mathrm{SSR}}$) is reported per wavelength but never applied as an amplitude factor. The framework is grounded in the diffusion approximation to light transport and the Kienle et al.~(1998) semi-analytical solution for two-layer tissue geometry.
+This pedagogical guide introduces undergraduate physics students to functional near-infrared spectroscopy (fNIRS) and the $\kappa$-correction framework for recovering quantitative hemoglobin concentration measurements. The guide provides complete derivations, physical intuition, worked examples, and step-by-step implementations. We explain why the Modified Beer-Lambert Law (MBLL) systematically underestimates cortical hemoglobin changes by up to $10\times$ in layered tissues, and how two multiplicative correction factors applied at the optical-density level ($\kappa_{\mathrm{DPF}}$ and the dominant $\kappa_{\mathrm{PV}}$) compensate for differential pathlength error and partial volume dilution, while a short-separation-regression variance-removal diagnostic ($V_{\mathrm{SSR}}$) is reported per wavelength but never applied as an amplitude factor. The pedagogical derivations here are grounded in the diffusion approximation to light transport and the Kienle et al.~(1998) semi-analytical two-layer solution, which build physical intuition; the \emph{quantitative} cortical-sensitivity fractions $f_{\mathrm{cortex}}$ used throughout, however, come from a converged white Monte Carlo, because the diffusion/Kienle calculation is not sufficiently converged for this ratio (and is invalid in the low-scattering CSF layer)---a central lesson of the study, developed in detail below.
 \end{abstract}
 
 \newpage
@@ -213,7 +213,7 @@ The left-hand side is the \textbf{optical density} (OD), also called absorbance:
 \text{OD} = \varepsilon \cdot c \cdot L
 \end{equation}
 
-\paragraph{Physical intuition.} OD = 1 means 90\% of light is absorbed (only 10\% transmitted). OD = 2 means 99\% absorbed. Each unit of OD reduces transmitted light by a factor of 10.
+\paragraph{Physical intuition.} OD~$=1$ means the detected intensity is 10\% of the reference value (a tenfold attenuation of the detected light); OD~$=2$ means 1\%. Each unit of OD reduces the detected intensity by a factor of 10. (In turbid tissue this attenuation reflects both absorption and scattering---including photons scattered out of the detected path---not absorption alone.)
 
 The derivation is straightforward. Starting with Beer's Law:
 \begin{equation}
@@ -1494,7 +1494,7 @@ Some groups use SSR alone, thinking it solves the partial volume problem. SSR re
 \begin{caution}
 \textbf{Pitfall 4: Using incorrect layer thickness.}
 
-Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm causes 30\% error in corrections.
+Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm would \emph{under}-scale $\kappa_{\text{PV}}$ by about 73\% ($\kappa_{\text{PV}}\approx4.56$ at 8~mm versus $\approx16.74$ at 12~mm; see the thickness-sensitivity table above)---a large error, underscoring how sensitive the correction is to the assumed superficial-layer depth.
 
 \textbf{Fix}: If possible, measure thickness from MRI or ultrasound for each subject. If not, perform sensitivity analysis showing how results change with $\pm$ 4~mm variations in thickness.
 \end{caution}
@@ -1524,7 +1524,7 @@ $V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph
 
 \subsection{Real-Data Demonstration (Proof of Concept)}
 
-Application of the pipeline to the publicly available BIDS-NIRS-Tapping finger-tapping dataset (Luke et al., 2021; SDS $\approx$ 38~mm) demonstrates the framework on real data as a proof of concept. There is no concurrent ground truth here, so this tests whether the recovered amplitudes are physiologically plausible, not whether they are quantitatively accurate. Importantly, the data sit at 38~mm, inside the long-separation regime where the correction is reliable. The pipeline proceeds in ordered stages at the OD level:
+Application of the pipeline to the publicly available BIDS-NIRS-Tapping finger-tapping dataset (Luke et al., 2021) demonstrates the framework on real data as a proof of concept. There is no concurrent ground truth here, so this tests whether the recovered amplitudes are physiologically plausible, not whether they are quantitatively accurate. The retained contralateral channels span source--detector separations of 33.4--40.9~mm (centered near 38~mm, median 37.2~mm): most lie within or above the beneficial $\sim$35~mm long-separation regime, with a minority (ten channels below 35~mm) near its lower, noise-dependent transition, which the main manuscript examines separately. The pipeline proceeds in ordered stages at the OD level:
 
 \begin{enumerate}
 \item \textbf{Short-separation regression (SSR):} Per-wavelength OD-level regression against the short-channel reference removes systemic (extracerebral) signal components.

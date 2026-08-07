@@ -309,8 +309,11 @@ def make_figures(rows, script_dir):
 def main():
     script_dir = Path(__file__).resolve().parent
     root = script_dir / "BIDS-NIRS-Tapping-data"
-    if not (root.exists() and any(root.glob("sub-*"))):
-        root = rd.download_dataset(root)
+    # Always call download_dataset(): it returns early if the dataset is already
+    # present (recording the pre-extracted acquisition provenance + content hash) or
+    # downloads and MD5-verifies from Zenodo otherwise. Either way it populates
+    # rd.ACQUISITION_PROVENANCE so the frozen summary records the TRUE per-run history.
+    root = rd.download_dataset(root)
     rows = []
     for sub in ["01", "02", "03", "04", "05"]:
         r = analyze_subject(root, sub)
@@ -449,12 +452,36 @@ def _provenance(dataset_root=None):
     summary preserves a reproducible dataset fingerprint (previously only a per-file MD5
     check ran on download and no digest was preserved)."""
     import provenance as _prov
-    tree_sha = None
-    if dataset_root is not None:
-        try:
-            tree_sha = rd.dataset_tree_sha256(dataset_root)
-        except Exception:
-            tree_sha = None
+    # DYNAMIC acquisition provenance: record exactly how THIS run obtained the data
+    # and what was actually verified, from rd.ACQUISITION_PROVENANCE (set by
+    # download_dataset). Fall back to a content-hash-only record if that is absent.
+    acq = getattr(rd, "ACQUISITION_PROVENANCE", None)
+    if acq is None:
+        tree_sha = None
+        if dataset_root is not None:
+            try:
+                tree_sha = rd.dataset_tree_sha256(dataset_root)
+            except Exception:
+                tree_sha = None
+        acq = dict(acquisition_method="unknown (download_dataset not invoked this run)",
+                   zenodo_record=getattr(rd, "DATASET_ZENODO_RECORD", None),
+                   zenodo_doi=getattr(rd, "DATASET_DOI", None),
+                   zenodo_md5_verified=False, archive_sha256_verified=False,
+                   content_tree_sha256=tree_sha, tree_hash_verified_against_pin=False)
+    # Build a truthful, run-specific verification note.
+    if acq.get("zenodo_md5_verified"):
+        note = ("dataset downloaded from the pinned Zenodo record and every file verified "
+                "against the Zenodo-published md5 during THIS run; a deterministic content "
+                "(tree) SHA-256 of the extracted tree was also recorded")
+    else:
+        note = ("this run did NOT perform Zenodo md5 verification (acquisition_method="
+                f"{acq.get('acquisition_method')!r}); the analyzed dataset tree was "
+                "fingerprinted with a deterministic content (tree) SHA-256 "
+                "(content_tree_sha256), which pins exactly what was analyzed but is an "
+                "authenticity check against Zenodo only when compared with a canonical "
+                "pinned digest (DATASET_TREE_SHA256)")
+    if acq.get("tree_hash_verified_against_pin"):
+        note += "; the tree hash was verified against the pinned DATASET_TREE_SHA256"
     return _prov.provenance(
         "fnirs_kappa_realdata_v2.py",
         input_hashes=_prov.fcortex_production_input(),
@@ -462,15 +489,14 @@ def _provenance(dataset_root=None):
             forward_model=_prov.fcortex_production_input(),
             dataset=dict(name="BIDS-NIRS-Tapping", doi=getattr(rd, "DATASET_DOI", None),
                          zenodo_record=getattr(rd, "DATASET_ZENODO_RECORD", None),
-                         archive_sha256_pin=getattr(rd, "DATASET_SHA256", None),
-                         content_tree_sha256=tree_sha,
                          citation="Luke et al., 2021",
-                         verification="pinned Zenodo record; each downloaded file verified "
-                                      "against the Zenodo-published md5. A deterministic "
-                                      "content (tree) SHA-256 of the extracted dataset is "
-                                      "recorded here (content_tree_sha256) and enforced on "
-                                      "re-run if DATASET_TREE_SHA256 is pinned; an archive-zip "
-                                      "SHA-256 is enforced if DATASET_SHA256 is pinned."),
+                         acquisition_method=acq.get("acquisition_method"),
+                         zenodo_md5_verified=bool(acq.get("zenodo_md5_verified")),
+                         archive_sha256_pin=getattr(rd, "DATASET_SHA256", None),
+                         archive_sha256_verified=bool(acq.get("archive_sha256_verified")),
+                         content_tree_sha256=acq.get("content_tree_sha256"),
+                         tree_hash_verified_against_pin=bool(acq.get("tree_hash_verified_against_pin")),
+                         verification=note),
             seeds=dict(note="deterministic pipeline; no stochastic step in the real-data analysis")))
 
 
