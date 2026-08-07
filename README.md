@@ -173,7 +173,7 @@ categories: **physics.med-ph** (primary), cross-list **physics.optics** and
 
 ### Prerequisites
 
-- Python ≥ 3.9 (developed on 3.10; NumPy ≥ 1.22, works with NumPy 2.x)
+- Python ≥ 3.9 (the frozen release artifacts were generated with CPython 3.11.15; NumPy ≥ 1.22, works with NumPy 2.x)
 - For the in-vivo pipeline: `mne`, `mne-bids`, `scipy`
 - A LaTeX distribution (TeX Live) to build the PDF
 

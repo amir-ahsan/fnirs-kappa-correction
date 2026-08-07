@@ -436,15 +436,25 @@ def main():
     make_figures(rows, script_dir)
     for r in out["per_subject"]:
         r.pop("traces", None)
-    out["_meta"] = _provenance()
+    out["_meta"] = _provenance(root)
     json.dump(out, open(script_dir / "realdata_v2_summary.json", "w"), indent=1)
     print("wrote realdata_v2_summary.json")
 
 
-def _provenance():
+def _provenance(dataset_root=None):
     """Provenance block for the real-data summary, from the shared provenance helper
-    (uniform schema), plus the consumed forward-model hash and the pinned input dataset."""
+    (uniform schema), plus the consumed forward-model hash and the pinned input dataset.
+
+    Records a deterministic CONTENT (tree) hash of the extracted dataset so the frozen
+    summary preserves a reproducible dataset fingerprint (previously only a per-file MD5
+    check ran on download and no digest was preserved)."""
     import provenance as _prov
+    tree_sha = None
+    if dataset_root is not None:
+        try:
+            tree_sha = rd.dataset_tree_sha256(dataset_root)
+        except Exception:
+            tree_sha = None
     return _prov.provenance(
         "fnirs_kappa_realdata_v2.py",
         input_hashes=_prov.fcortex_production_input(),
@@ -452,10 +462,15 @@ def _provenance():
             forward_model=_prov.fcortex_production_input(),
             dataset=dict(name="BIDS-NIRS-Tapping", doi=getattr(rd, "DATASET_DOI", None),
                          zenodo_record=getattr(rd, "DATASET_ZENODO_RECORD", None),
-                         sha256=getattr(rd, "DATASET_SHA256", None),
+                         archive_sha256_pin=getattr(rd, "DATASET_SHA256", None),
+                         content_tree_sha256=tree_sha,
                          citation="Luke et al., 2021",
-                         verification="pinned Zenodo record; each file verified against the "
-                                      "Zenodo-published md5; local SHA-256 also recorded"),
+                         verification="pinned Zenodo record; each downloaded file verified "
+                                      "against the Zenodo-published md5. A deterministic "
+                                      "content (tree) SHA-256 of the extracted dataset is "
+                                      "recorded here (content_tree_sha256) and enforced on "
+                                      "re-run if DATASET_TREE_SHA256 is pinned; an archive-zip "
+                                      "SHA-256 is enforced if DATASET_SHA256 is pinned."),
             seeds=dict(note="deterministic pipeline; no stochastic step in the real-data analysis")))
 
 

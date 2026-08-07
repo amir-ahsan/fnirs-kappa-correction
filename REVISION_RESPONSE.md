@@ -976,3 +976,72 @@ unmodified, so the manifest header and all data-provenance stamps remain `round9
 overfull boxes, and zero PDF-bookmark warnings (manuscript 48 pp, guide 52 pp). The release
 manifest was regenerated so the updated source/PDF hashes are current; the frozen result files keep
 their Round-9 hashes.
+
+---
+
+# Round 11 — Response to the *Detailed Review of the Updated fNIRS κ-Correction Study* (Aug 7, 2026)
+
+The review found the study "very mature and substantially submission-ready," recommended no
+further Monte-Carlo redesign or new analysis, and verified the frozen artifacts (44/44 manifest
+files, provenance consistent at `32687ed` / `git_dirty=false` / `round9`). This is a final
+interpretive and reproducibility consistency pass: **no Monte-Carlo run was repeated**, so
+`results/*.json` remain the accepted Round-9 artifacts, unchanged, and the coherent
+`round9` / `32687ed` provenance is preserved across every frozen artifact.
+
+**#3 (Priority 1) — Surviving CSF-within-±30% sentence.** Fixed. The one remaining Discussion
+sentence (in the model-mismatch subsection) that said the CSF mismatch is "within this band at
+long SDS" now reads: the generic sensitivity analysis shows the correction stays beneficial for
+moderate $f_{\mathrm{cortex}}$ errors up to ±30%, but the CSF-induced change **exceeds** that
+range at long SDS ($\gamma_{760}\approx1.50$, ≈+50% at 38 mm), which is why it was evaluated
+separately in the dedicated matched-versus-mismatched experiment. This matches the corrected text
+elsewhere.
+
+**#4 (Priority 2) — ±30% test vs ±2 mm thickness uncertainty.** Corrected. The manuscript no
+longer presents the ±30% $f_{\mathrm{cortex}}$-error experiment as covering realistic ±2 mm
+thickness uncertainty. It is now described as a *moderate forward-model-error test*; the
+unknown-anatomy guidance instructs the reader to base uncertainty bounds on the
+**thickness-sensitivity curves** (a ±2 mm depth error moves $f_{\mathrm{cortex}}$ by ≈−47% to
++105%, well outside the ±30% envelope) rather than on the generic ±30% envelope.
+
+**#5 — Real-data model bounds.** The ≈0.9–1.4 µM interval is now labelled explicitly as a
+**CSF-model bracket** (2 mm vs 1 mm vs no CSF), *not* a comprehensive forward-model interval. The
+text now states that it does not include scalp/skull-to-cortex (superficial-layer) depth
+uncertainty—the dominant modeled uncertainty, which could produce a larger shift—and that this
+depth uncertainty was **not propagated** through the experimental dataset because subject-specific
+anatomy was unavailable, directly reinforcing the motivation for subject-specific MRI/ultrasound/
+atlas anatomy. The incorrect "anatomical assumptions contribute less" clause was removed.
+
+**#6 (Reproducibility) — Dataset checksum provenance.** Addressed in code and wording. The
+real-data pipeline now (a) computes a **deterministic content (tree) SHA-256** of the extracted
+dataset—a per-file-SHA-256-over-sorted-relative-paths digest—via a new `dataset_tree_sha256()`
+and records it in the summary provenance (`content_tree_sha256`); (b) **enforces** a pinned
+extracted-tree hash (`DATASET_TREE_SHA256`) or archive-zip SHA-256 (`DATASET_SHA256`) when set, so
+a pre-extracted directory is no longer accepted without content verification; and (c) the
+manuscript Data-Availability wording now describes the actual behaviour accurately—per-file MD5
+verification against the pinned Zenodo record as the primary integrity check, plus the recorded
+content hash and the optional enforced pins—rather than claiming a stored archive SHA-256 the
+frozen summary did not contain. (The frozen Round-9 `realdata_v2_summary.json` is left unchanged to
+preserve the coherent provenance; the corrected code + wording resolve the discrepancy for the
+release and all future runs.)
+
+**#7 — "Safer CSF default" wording.** Softened per the recommendation: the two-layer-vs-three-layer
+mismatch experiment tests only one direction, so the text now states that a CSF-containing model is
+physiologically more realistic than a bare two-layer slab and is a reasonable default when
+subject-specific anatomy is unavailable, but that its result should be reported with explicit
+geometry sensitivity.
+
+**#8 — Smaller corrections.** (a) The Practical Guidance "2 mm error changes $f_{\mathrm{cortex}}$
+by ~50% and $\kappa_{\mathrm{PV}}$ by ~90%" is replaced with the asymmetric ranges (≈−47% to +105%
+in $f_{\mathrm{cortex}}$, ≈−51% to +90% in $\kappa_{\mathrm{PV}}$). (b) "degrade rather than improve
+the estimate" → "degrades the correction benefit." (c) `mc_robustness_sweeps.py` docstring example
+and default are now the canonical frozen N = 500{,}000. (d) README prerequisites now state the
+frozen release was generated with CPython 3.11.15 (not "developed on 3.10"). (e) `CITATION.cff`
+now makes the dual licence explicit (MIT for code, CC BY 4.0 for the manuscript).
+
+**Verification.** No numbers changed: `results/*.json` are the accepted Round-9 artifacts,
+unmodified, so the manifest header and all data-provenance stamps remain `round9` / `32687ed` /
+`git_dirty=false`. The 14 Python files compile; the new dataset content-hash path was exercised
+against the extracted dataset. The manuscript recompiles with no errors, no undefined references,
+zero overfull boxes, and zero PDF-bookmark warnings (48 pp); the pedagogical guide is unchanged
+(52 pp). The release manifest was regenerated so the updated source/PDF hashes are current; the
+frozen result files keep their Round-9 hashes.

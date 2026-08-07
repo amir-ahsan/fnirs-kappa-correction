@@ -10,5 +10,9 @@ authors:
     email: aahsan@ivc.edu
     affiliation: "Department of Physics, Irvine Valley College"
 year: 2026
-license: MIT
+# Dual-licensed: MIT for the source code, CC BY 4.0 for the manuscript text and
+# figures. See LICENSE (code) and LICENSE-manuscript.md (manuscript).
+license:
+  - MIT
+  - CC-BY-4.0
 # A preprint DOI / arXiv identifier will be added once the preprint is posted.

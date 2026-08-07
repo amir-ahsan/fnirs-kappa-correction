@@ -196,7 +196,8 @@ def get_f_cortex(sds_mm: float) -> dict[int, float]:
 # enforces a SHA-256 on the downloaded archive.
 DATASET_DOI = "10.5281/zenodo.5529797"          # rob-luke/BIDS-NIRS-Tapping (Luke et al., 2021)
 DATASET_ZENODO_RECORD = "5529797"
-DATASET_SHA256 = None                            # optional extra SHA-256 pin (record once to freeze)
+DATASET_SHA256 = None                            # optional archive-zip SHA-256 pin (enforced if set)
+DATASET_TREE_SHA256 = None                       # optional extracted-tree content hash pin (enforced if set)
 
 
 def _sha256_file(path: Path) -> str:
@@ -205,6 +206,26 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def dataset_tree_sha256(root: Path) -> str:
+    """Deterministic content hash of an EXTRACTED dataset directory.
+
+    Hashes the sorted list of (POSIX relative path, per-file SHA-256) over every
+    regular file under ``root``, so the digest is independent of filesystem order,
+    mtimes, and the absolute location. This gives a reproducible fingerprint of the
+    dataset content even when it is supplied as an already-extracted directory
+    (where no archive-zip checksum is available), addressing the case where a
+    pre-extracted tree would otherwise be accepted without any content verification.
+    """
+    root = Path(root)
+    entries = []
+    for p in sorted(root.rglob("*")):
+        if p.is_file():
+            rel = p.relative_to(root).as_posix()
+            entries.append(f"{rel}:{_sha256_file(p)}")
+    blob = "\n".join(entries).encode()
+    return hashlib.sha256(blob).hexdigest()
 
 
 def _md5_file(path: Path) -> str:
@@ -251,7 +272,18 @@ def download_dataset(dest: Path) -> Path:
         Path to the dataset root (containing ``sub-*`` directories).
     """
     if dest.exists() and any(dest.glob("sub-*")):
+        # An already-extracted tree carries no archive-zip checksum, so verify a
+        # deterministic CONTENT hash instead of accepting it blindly. Enforce the
+        # pin if one is set; otherwise record/print it so it can be frozen once.
+        tree = dataset_tree_sha256(dest)
+        if DATASET_TREE_SHA256 is not None and tree != DATASET_TREE_SHA256:
+            raise ValueError(
+                f"extracted-dataset content hash mismatch (expected "
+                f"{DATASET_TREE_SHA256[:12]}..., got {tree[:12]}...). Refusing to "
+                f"proceed with an unverified pre-extracted dataset.")
         print(f"  Dataset already present at {dest}")
+        print(f"  dataset content (tree) SHA-256 = {tree}"
+              + ("" if DATASET_TREE_SHA256 is None else " (verified against pin)"))
         return dest
 
     resolved = _resolve_zenodo_archive()

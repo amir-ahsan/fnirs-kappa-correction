@@ -19,22 +19,22 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | SHA-256 | Size (bytes) | File |
 |---------|-------------:|------|
 | `0bcc9c77d89fcdbf3b849ad8832b283a4519c4c5c6bfaf08c48c97723d3abc5f` | 484 | `.gitignore` |
-| `293a1cd07a5479736b446494793ab37545a2028048f353835b9b4a3d88ecc55f` | 595 | `CITATION.cff` |
+| `abc8b0889acb2c38bb3bd60175af13a758642e31e561665ab4df473e2306d2a2` | 763 | `CITATION.cff` |
 | `9d020d65a2756c2fc42cbbfdd7d88151cefcc1407cd1dad6814e73f5807f7d05` | 1083 | `LICENSE` |
 | `0050fc32fc270930da596b499b58e5bda4da0f3a2ce2827e95938a7e52d99672` | 953 | `LICENSE-manuscript.md` |
-| `a05576bd756016952127a7b884d311183cf08a12cd368399252d95e249c15f9a` | 16488 | `README.md` |
-| `1a1dfa823f4912152b3dc60fbf35ae0f10b8d83db9fd032abfc0c34e3f79da6f` | 67018 | `REVISION_RESPONSE.md` |
+| `8d199c5c4c021d03da47e8765514ea2d22f6eb03b30039ac7c6cd1ed92858b3b` | 16535 | `README.md` |
+| `ba39d677bc1a4cb1b11e67c3c41ec0020a474fedf7e0d6448840a88aa75e49d9` | 72260 | `REVISION_RESPONSE.md` |
 | `1f9705d3eba85093b106f62b46e08bc7e10c9bf44c95bbc396bf85a1f39fa75b` | 6985 | `code/fcortex_source.py` |
 | `19dfa80eb2eb154cff49449e7a047d7e26e73614986b7145c205c4840b260015` | 20804 | `code/fnirs_invivo_demo.py` |
 | `546eb0b81f3dc9a652063a31da30f06450e0c9f58c6cddaf3b6255cb39c8b4a6` | 14625 | `code/fnirs_kappa_group_analysis.py` |
-| `ce4b8403c56a42da561224448a2a74da5c610ea0429e52fb4885fdfec0dccfab` | 42803 | `code/fnirs_kappa_realdata_analysis.py` |
-| `ca9c5572a9433b6a3d41f748b88e72af1ee513f9cc48a8c9037aa6021656e5f7` | 25660 | `code/fnirs_kappa_realdata_v2.py` |
+| `ffe434eb909b69b98c8a141db260b903c8868ee6e065184ea1f4d51baece1729` | 44573 | `code/fnirs_kappa_realdata_analysis.py` |
+| `a24fed977a8b744a8864374ed2ade436b2373853e8eee9490722844073fbef82` | 26532 | `code/fnirs_kappa_realdata_v2.py` |
 | `7af70b673d614843ceb423729737a3549c484bf5121ae6fcb4ca43bab1b96800` | 107279 | `code/fnirs_kappa_synthetic_validation.py` |
 | `92fdac1f395c20219b04e5f0ac23f5d05ee535b0d0a143ebbf374ebcee204a9f` | 4447 | `code/make_release_manifest.py` |
 | `35e1fe777e0dc3657b5ba313579674cd6eb99d418b00614b5f1f583f16c919be` | 9364 | `code/mc_2layer.py` |
 | `4544749aabea9c2834e72610cdeaba2195b5c11594a76ba959407b203b484dfe` | 9408 | `code/mc_csf.py` |
 | `642d3c94926c01558c769bc26ec7ae715d4a822f3fc61fe4b1fd5db5844a5baf` | 23040 | `code/mc_production.py` |
-| `55ec336ad7ff21e23194e445dbd7ab55a2b33c19f8e40d8db5844dc7a0a7c09c` | 9843 | `code/mc_robustness_sweeps.py` |
+| `e2607c7c4efb882c968843c57373d5b32b1f8c3c5179ff3c5056b7a2a9568868` | 9855 | `code/mc_robustness_sweeps.py` |
 | `4be23d4f324bab85fbe7ec831930bfd8bfdc3926cb683d2143531eff8bd90d04` | 7603 | `code/mc_uncertainty.py` |
 | `8b18f5868f82318fc12e5be67ceb470b6b55710d213dffcf5aac3d3a45b67f9b` | 5363 | `code/provenance.py` |
 | `f5c75ecf36755d119c93ddf523555c372c4cce46548013c219935a3f6d98ae7c` | 8290 | `code/validate_homogeneous_fluence.py` |
@@ -45,8 +45,8 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `1830309e44230290c6c25ebacb6ee6ee36f3b1447c3600317b4686337b9852a5` | 96158 | `manuscript/figures/figure5_realdata_hrf.png` |
 | `8eee074082111c72b5f38b02b3668209c37a488afbdebe51276387c7c6fcfc22` | 35028 | `manuscript/figures/figure6_realdata_summary.png` |
 | `e86640dc8f9999189a8c9570c21f7d1acd8b94c4c6ff6bdce3767351e0f3f73e` | 178654 | `manuscript/figures/figure7_group_block_average.png` |
-| `e3bb35963986ede9ac6e0ce7e924b91cf59458340467c6f42daee21e0af4eb53` | 1984449 | `manuscript/main.pdf` |
-| `9473ea619755f606c7db32656b12dc7140a90a53a525093cf1455d67e73af7ce` | 180598 | `manuscript/main.tex` |
+| `8d7e1241b82a953f0812e3752ec0945f6955d110ea099bbfe5fcab7608b2456f` | 1988320 | `manuscript/main.pdf` |
+| `dfe0c747da04a24d1face26d25e2aff25f3fb1888eda7cd7018a4b634c62d959` | 182686 | `manuscript/main.tex` |
 | `d54ea94f517cd77f12f595125365a2e83206a2e666dd7c1c20ffba0f9329f436` | 5290 | `reproduce_all.sh` |
 | `f50e014ad9afaa7cd8a0d1c79b91d516570ac87e72ce4c8d052f862ba7d793a1` | 2687 | `requirements-lock.txt` |
 | `90a1b0c629cceb68fb0900439a672b99a931e6f3ecba9ae2c8da9938a02eb9b0` | 1962 | `requirements.txt` |

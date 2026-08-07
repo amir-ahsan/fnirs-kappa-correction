@@ -30,7 +30,7 @@ percent level expected between independent MC runs.
           so it carries the usual few-percent MC noise.
 
 Run (fast; single SDS, moderate N):
-    python mc_robustness_sweeps.py -N 1000000 --seed 1 --out ../results/robustness_secondary.json
+    python mc_robustness_sweeps.py -N 500000 --seed 1 --out ../results/robustness_secondary.json
 """
 import argparse, json, os, sys, platform, subprocess, hashlib
 from datetime import datetime, timezone
@@ -154,8 +154,8 @@ def run_sweeps(N, seed):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('-N', type=lambda v: int(float(v)), default=1000000,
-                    help="photons per configuration (default 1000000)")
+    ap.add_argument('-N', type=lambda v: int(float(v)), default=500000,
+                    help="photons per configuration (canonical frozen value 500000)")
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--out', default='../results/robustness_secondary.json')
     ap.add_argument('--git_commit', default=None,
