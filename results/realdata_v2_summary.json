@@ -1327,11 +1327,11 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_realdata_v2.py",
-  "git_commit": "32687ed",
-  "git_commit_full": "32687ede2ff6786b0be069a84e80266e8ee5f321",
+  "git_commit": "e9cb929",
+  "git_commit_full": "e9cb9297beef5d590fee34da76ff7508bc36266a",
   "git_dirty": false,
-  "analysis_round": "round9",
-  "generated_utc": "2026-08-07T10:02:22Z",
+  "analysis_round": "round12",
+  "generated_utc": "2026-08-07T18:30:25Z",
   "command": "python fnirs_kappa_realdata_v2.py",
   "python_version": "3.11.15",
   "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
@@ -1359,9 +1359,10 @@
    "name": "BIDS-NIRS-Tapping",
    "doi": "10.5281/zenodo.5529797",
    "zenodo_record": "5529797",
-   "sha256": null,
+   "archive_sha256_pin": null,
+   "content_tree_sha256": "55e4fe3b9a585a265dbcfe327b132132eade57e8b2e703be65d0fc599c03daa9",
    "citation": "Luke et al., 2021",
-   "verification": "pinned Zenodo record; each file verified against the Zenodo-published md5; local SHA-256 also recorded"
+   "verification": "pinned Zenodo record; each downloaded file verified against the Zenodo-published md5. A deterministic content (tree) SHA-256 of the extracted dataset is recorded here (content_tree_sha256) and enforced on re-run if DATASET_TREE_SHA256 is pinned; an archive-zip SHA-256 is enforced if DATASET_SHA256 is pinned."
   },
   "seeds": {
    "note": "deterministic pipeline; no stochastic step in the real-data analysis"

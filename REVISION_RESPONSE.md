@@ -1045,3 +1045,66 @@ against the extracted dataset. The manuscript recompiles with no errors, no unde
 zero overfull boxes, and zero PDF-bookmark warnings (48 pp); the pedagogical guide is unchanged
 (52 pp). The release manifest was regenerated so the updated source/PDF hashes are current; the
 frozen result files keep their Round-9 hashes.
+
+---
+
+# Round 12 — Response to the *Review of the Updated Study and arXiv Package* (Aug 7, 2026)
+
+The review found the study "highly mature… the strongest version to date," with no numerical or
+methodological problem overturning the conclusions, and listed six focused consistency items. No
+production Monte-Carlo run was repeated; item 3 was addressed by re-running **only** the in-vivo
+pipeline, exactly as the review recommended.
+
+**#1 — ±30% vs ±2 mm thickness contradiction.** Fixed. The $f_{\mathrm{cortex}}$-error section no
+longer says the ±30% tolerance is "reassuring given the ±2 mm superficial-thickness uncertainty"
+or that the correction is "forgiving of realistic $f_{\mathrm{cortex}}$ uncertainty." It now states
+the ±30% study is a **moderate forward-model-error test** and that realistic superficial-depth
+uncertainty can exceed this range substantially (±2 mm → ≈−47% to +105%), to be evaluated with the
+dedicated thickness-sensitivity analysis. The "confidence bounds" sentence now points to the
+thickness-sensitivity curves and uses **"sensitivity bounds."** The Results "±2 mm … ~90%" is now
+the asymmetric −51% to +90%. The pedagogical guide's "±30% (substantial anatomical uncertainty)"
+became "±30% (a moderate generic modeling perturbation…)".
+
+**#2 — CSF-thickness vs total-superficial-depth workflow.** Separated. The population-atlas
+recommendation now propagates two distinct uncertainties: (i) CSF-thickness sensitivity from the
+1 mm-vs-2 mm γ calibration (noting a 3 mm CSF layer lies **outside** the calibrated 1–2 mm range and
+would need an added MC calibration), and (ii) total scalp/skull-to-cortex depth from the 8–16 mm
+superficial-thickness curves (which vary total depth, not the CSF sub-layer). It reports **sensitivity
+bounds**, with the depth term typically dominant.
+
+**#3 — Dataset tree hash in the frozen artifact.** Completed by re-running **only**
+`fnirs_kappa_realdata_v2.py` (no production MC). The frozen `results/realdata_v2_summary.json` now
+records `dataset.content_tree_sha256` (a deterministic per-file-SHA-256-over-sorted-paths digest of
+the extracted dataset) and the accurate verification string, and is provenance-clean
+(`round12` / `e9cb929` / `git_dirty=false`) with its `input_hashes.fcortex_production_sha256` still
+pointing to the unchanged `round9` production payload (`91cfa828…`); the group result is unchanged at
+0.913 ± 0.334 µM. `DATASET_TREE_SHA256`/`DATASET_SHA256` are intentionally left `None` (record-only):
+this sandbox reconstructed the dataset from the pinned repository (Zenodo's archive endpoint was not
+reachable here), so hard-coding that reconstruction's digest as the canonical pin could spuriously
+reject a genuine, fuller Zenodo re-download; the recorded content hash fingerprints the exact dataset
+used, and the loader will *enforce* a pin once a user sets it from their verified extraction. The
+manifest header notes this per-artifact provenance explicitly.
+
+**#4 — Licensing metadata.** `CITATION.cff` now sets a single top-level `license: MIT` (software) and
+describes the manuscript's CC BY 4.0 licence in the `message` (pointing to `LICENSE-manuscript.md`),
+avoiding the CFF "OR" interpretation of a multi-licence array. The old "academic and research
+purposes" licence paragraph in `fnirs_kappa_realdata_analysis.py` was replaced with a reference to
+the root MIT `LICENSE`.
+
+**#5 — Release script scope.** `reproduce_all.sh` now rebuilds the pedagogical-guide PDF from its
+`.tex` source (via a shared `build_latex` helper) in addition to the manuscript, before regenerating
+the manifest, so "every tracked artifact" is genuinely turnkey.
+
+**#6 — Robustness loader hash hardening.** In `FNIRS_RELEASE=1`, the synthetic script's robustness
+loader now **raises** when `robustness_secondary.json` lacks `provenance.data_sha256` (previously it
+silently skipped verification), matching the production loader's always-required payload hash.
+
+**Guide.** The experimental-data discussion now labels the ≈0.9–1.4 µM interval explicitly as a
+CSF-model bracket and reminds readers that superficial-depth uncertainty could be larger and was not
+propagated (no subject-specific anatomy).
+
+**Verification.** Production and secondary MC artifacts are unchanged (`round9` / `32687ed`); only
+the in-vivo summary was regenerated (`round12`) per item 3, with identical numbers. 16/16 automated
+checks pass; the release manifest self-verifies 44/44. The manuscript recompiles with no errors,
+undefined references, overfull boxes, or PDF-bookmark warnings (49 pp), and the pedagogical guide
+likewise (52 pp).
