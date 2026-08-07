@@ -74,19 +74,25 @@ else
   echo "== 5/6  In-vivo pipeline SKIPPED (SKIP_INVIVO=1) =="
 fi
 
-echo "== 6/6  Build manuscript + verify manifest =="
+echo "== 6/6  Build manuscript + pedagogical guide + verify manifest =="
 # Use latexmk if available (it iterates pdflatex until labels/refs converge);
 # otherwise fall back to THREE explicit pdflatex passes -- cross-references and
 # the supplementary \theHtable anchors only stabilise on the third pass, so two
 # passes can leave stale labels.
-( cd manuscript && \
-  if command -v latexmk >/dev/null 2>&1; then \
-    latexmk -pdf -interaction=nonstopmode main.tex >/dev/null; \
-  else \
-    pdflatex -interaction=nonstopmode main.tex >/dev/null && \
-    pdflatex -interaction=nonstopmode main.tex >/dev/null && \
-    pdflatex -interaction=nonstopmode main.tex >/dev/null; \
-  fi )
+build_latex () {  # $1 = directory, $2 = .tex file
+  ( cd "$1" && \
+    if command -v latexmk >/dev/null 2>&1; then \
+      latexmk -pdf -interaction=nonstopmode "$2" >/dev/null; \
+    else \
+      pdflatex -interaction=nonstopmode "$2" >/dev/null && \
+      pdflatex -interaction=nonstopmode "$2" >/dev/null && \
+      pdflatex -interaction=nonstopmode "$2" >/dev/null; \
+    fi )
+}
+build_latex manuscript main.tex
+# Rebuild the pedagogical guide PDF from its source too, so EVERY tracked PDF is
+# regenerated (not just the manuscript) and the release is genuinely turnkey.
+build_latex supplementary fNIRS_Kappa_Pedagogical_Guide.tex
 python - <<'PY'
 import hashlib, re, os
 root = os.path.dirname(os.path.abspath("reproduce_all.sh"))

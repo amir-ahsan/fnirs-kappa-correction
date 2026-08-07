@@ -63,9 +63,9 @@ Three publication-quality figures are saved to the script directory:
 
 License
 -------
-This code is provided as supplementary material to the above manuscript.
-It may be freely used, modified, and redistributed for academic and
-research purposes, provided the original publication is cited.
+Released under the MIT License; see the root LICENSE file for the full terms.
+(The manuscript text and figures are separately licensed under CC BY 4.0; see
+LICENSE-manuscript.md.)
 
 Authors
 -------

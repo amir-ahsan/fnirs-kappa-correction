@@ -85,9 +85,17 @@ def _robustness_from_json(require=None):
     try:
         with open(found) as fh:
             d = json.load(fh)
-        # re-verify the payload hash (same recipe as mc_robustness_sweeps.py)
+        # re-verify the payload hash (same recipe as mc_robustness_sweeps.py). In
+        # RELEASE mode the hash is MANDATORY: a file with provenance.data_sha256
+        # removed is rejected rather than silently skipped (matching the production
+        # loader, which always requires its payload hash).
         recorded = (d.get("provenance") or {}).get("data_sha256")
-        if recorded:
+        if not recorded:
+            if require:
+                raise ValueError("RELEASE mode: robustness_secondary.json is missing "
+                                 "provenance.data_sha256; refusing to use an unverifiable "
+                                 "robustness artifact.")
+        else:
             payload = {k: d[k] for k in d if k != "provenance"}
             blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
             got = _hashlib.sha256(blob).hexdigest()

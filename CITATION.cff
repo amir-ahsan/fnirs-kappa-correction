@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this software or manuscript, please cite it as below."
+message: "If you use this software or manuscript, please cite it as below. Licensing is split by component: the source code is released under the MIT License (see LICENSE), and the manuscript text and figures are released under CC BY 4.0 (see LICENSE-manuscript.md). The top-level `license` field below refers to the software."
 title: "Partial-volume correction in continuous-wave fNIRS: operating regime, a Monte-Carlo convergence caveat, and a reproducible pipeline"
 authors:
   - family-names: Sagara
@@ -10,9 +10,8 @@ authors:
     email: aahsan@ivc.edu
     affiliation: "Department of Physics, Irvine Valley College"
 year: 2026
-# Dual-licensed: MIT for the source code, CC BY 4.0 for the manuscript text and
-# figures. See LICENSE (code) and LICENSE-manuscript.md (manuscript).
-license:
-  - MIT
-  - CC-BY-4.0
+# Software license (this field, per the CFF spec, applies to the code). The
+# manuscript text and figures are licensed separately under CC BY 4.0
+# (LICENSE-manuscript.md); see the `message` above.
+license: MIT
 # A preprint DOI / arXiv identifier will be added once the preprint is posted.
