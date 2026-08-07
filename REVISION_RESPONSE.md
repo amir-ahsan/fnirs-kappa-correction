@@ -896,3 +896,83 @@ with uniform `round9` provenance and `git_dirty = false`. Group corrected HbO₂
 0.913 ± 0.334 µM (unchanged; the full-precision fix moved values below display precision). Both
 LaTeX documents recompile with no errors, no undefined references, and zero overfull boxes
 (manuscript 48 pp, guide 52 pp). The release manifest was regenerated from the final committed tree.
+
+---
+
+# Round 10 — Response to the *Review of the Updated fNIRS κ-Correction Study* (Aug 7, 2026)
+
+This review confirmed the two prior high-priority items were resolved and asked for a focused
+consistency/transparency pass with **no recomputation** (the frozen Round-9 artifacts were
+verified and accepted: 44/44 manifest files pass, provenance consistent at commit `32687ed`,
+`git_dirty=false`, group HbO₂ 0.913 ± 0.334 µM). Accordingly, **no Monte-Carlo run was
+repeated**: `results/*.json` are byte-for-byte the accepted Round-9 artifacts and retain their
+`round9` / `32687ed` provenance. The Round-10 changes are documentation, disclosure, code
+comments, and release-mode guards that do **not** alter any numerical output.
+
+**#3 (Priority 1) — Analytical-Hankel claims exceeded the evidence.** Corrected. The Methods
+sentence that a singularity-subtracted/very-high-$n_s$ Hankel "may be used interchangeably" with
+the Monte Carlo is replaced: the high-$n_s$ trend ($\approx0.085$ at $n_s{=}4000$ vs MC
+$\approx0.064$ at 30 mm) is described as *suggestive but not demonstrated equivalent*, and any
+analytical route "should be validated against the converged Monte Carlo before quantitative
+use." The Conclusions no longer list a singularity-subtracted/high-$n_s$ Hankel as an established
+alternative. The Computational Efficiency subsection now states the quoted timing is the cost of
+the **demonstration** fixed-point implementation and explicitly that it does **not** retain full
+accuracy for $f_{\mathrm{cortex}}$.
+
+**#4 (Priority 2) — Pedagogical-guide robustness tables.** Synchronized to the frozen
+`robustness_secondary.json`: the superficial-thickness table is now
+$f_{\mathrm{cortex}}=0.2192/0.1226/0.05973/0.03136/0.01676$ with $\kappa_{\mathrm{PV}}=
+4.56/8.15/16.74/31.89/59.66$ (κ_PV changes $-72.8/-51.3/0/+90.4/+256.3\%$ vs 12 mm), and the
+optical-property table is $\mu_a\ \pm30\%\to-34.6\%/+40.1\%$, $\mu_s'\to-17.2\%/+12.5\%$. The
+unsimulated "Combined" column was removed, and both tables are annotated as coming from the
+versioned artifact.
+
+**#5 — Full-grid CSF range and guide CSF statements.** The manuscript now states the CSF effect
+as $\approx37$–$84\%$ at 760 nm across the full 25–42 mm grid ($\approx42$–$74\%$ at 850 nm),
+replacing "44–84%"/"45–85%" throughout (Results, Discussion, Conclusions). In the guide: the CSF
+table gains the 42 mm row (γ = 1.37, $f^{3L}=0.168$, +37%); the 1 mm CSF factor is updated to
+$\approx1.25$–$1.44$ across the full grid; the "$f_{\mathrm{cortex}}<0.15$ with CSF" statement is
+corrected to "$\lesssim0.17$ (reaches ≈0.168 at 42 mm)"; and the outdated claim that γ comes from
+an isotropic-scattering CSF Monte Carlo is replaced with the correct statement that the production
+γ uses the same anisotropic $g=0.9$ transport in both the two- and three-layer runs, with the
+isotropic calculation retained only as a legacy cross-check.
+
+**#6 — CSF ±30%-band argument.** Corrected. The manuscript no longer claims the CSF-induced change
+falls within the generic ±30% $f_{\mathrm{cortex}}$ sensitivity band. It now states the CSF effect
+**exceeds** that band at these separations ($\gamma_{760}\approx1.50$, i.e. ≈+50% at 38 mm, and
+still ≈+37–42% at 42 mm) and was therefore evaluated **explicitly** in the dedicated
+matched-versus-mismatched experiment (+69.1% matched vs +34.0% mismatched at 38 mm).
+
+**#7 — Conclusions robustness wording.** Sharpened to the asymmetric, per-direction figures:
+"Superficial-layer thickness is the dominant modeled uncertainty: a ±2 mm perturbation about the
+12 mm baseline changes $f_{\mathrm{cortex}}$ by ≈−47% to +105% and $\kappa_{\mathrm{PV}}$ by
+≈−51% to +90%. Optical properties are less influential but not negligible; a ±30%
+cortical-absorption perturbation changes $\kappa_{\mathrm{PV}}$ by ≈−35% to +40%." The
+"only mildly sensitive" phrasing was removed.
+
+**#8 — Internal refractive-index assumption disclosed.** The manuscript CSF section, the guide's
+CSF modelling note, the guide's anatomy table, and a code comment in `mc_2layer.py` now state that
+the Monte Carlo applies Fresnel reflection/refraction **only** at the external tissue–air surface
+and treats internal scalp/CSF/cortex interfaces as refractive-index matched ($n=1.4$); the
+$n_{\mathrm{CSF}}\approx1.33$ physical value is quoted for the anatomy but not applied as an
+internal Fresnel step, and adding it is flagged as a future sensitivity analysis.
+
+**#9 — Reproducibility cleanups.** (a) `provenance.git_info` now derives `git_dirty` from
+`git status --porcelain`, so **untracked** (non-ignored) files also count toward the clean-release
+check. (b) The "genuinely paired (common random numbers)" comments in `mc_2layer.py` and
+`mc_production.py` were changed to the manuscript's careful language (launch-index-matched batches,
+not strict per-photon common random numbers). (c) The synthetic script now re-verifies
+`robustness_secondary.json`'s payload SHA-256 and, in release mode (`FNIRS_RELEASE=1`), makes the
+file **mandatory**; the archived hard-coded arrays are usable only under an explicit development
+flag (`FNIRS_ALLOW_FALLBACK=1`). (d) The guide's "single source of truth" text now says the
+*principal* baseline and CSF sensitivities come from the production artifact and names the separate
+versioned robustness artifact for the secondary sweeps. (e) The remaining cosmetic hyperref
+PDF-bookmark warnings in the manuscript were cleared with `\texorpdfstring` on the math section
+headings (manuscript now compiles with zero bookmark warnings).
+
+**Verification.** No numbers changed: `results/*.json` are the accepted Round-9 artifacts,
+unmodified, so the manifest header and all data-provenance stamps remain `round9` / `32687ed` /
+`git_dirty=false`. Both LaTeX documents recompile with no errors, no undefined references, zero
+overfull boxes, and zero PDF-bookmark warnings (manuscript 48 pp, guide 52 pp). The release
+manifest was regenerated so the updated source/PDF hashes are current; the frozen result files keep
+their Round-9 hashes.

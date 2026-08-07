@@ -55,40 +55,65 @@ warnings.filterwarnings('ignore', category=RuntimeWarning)
 _np_trapz = getattr(np, 'trapezoid', None) or np.trapz
 
 
-def _robustness_from_json():
+def _robustness_from_json(require=None):
     """Load the secondary robustness sweeps from results/robustness_secondary.json
     (produced by mc_robustness_sweeps.py) so Figure 3 and the robustness numbers are
     read DIRECTLY from that versioned artifact rather than from embedded constants.
-    Returns dict(thickness_T, thickness_F, opt) or None if the file is absent."""
-    import os as _os
+
+    The file's payload SHA-256 (provenance.data_sha256) is re-verified on load. In
+    RELEASE mode (env FNIRS_RELEASE=1, or require=True) the file is MANDATORY and any
+    absence/parse-error/hash-mismatch RAISES, so a release build can never silently
+    fall back to the archived constant arrays. Otherwise (development) a failure
+    returns None and the caller may use the clearly-labelled archived fallback only if
+    the explicit dev flag FNIRS_ALLOW_FALLBACK=1 is set.
+
+    Returns dict(thickness_T, thickness_F, opt, source) or None."""
+    import os as _os, hashlib as _hashlib
+    if require is None:
+        require = _os.environ.get("FNIRS_RELEASE") == "1"
     here = _os.path.dirname(_os.path.abspath(__file__))
-    for cand in (_os.path.join(here, "..", "results", "robustness_secondary.json"),
-                 _os.path.join(_os.getcwd(), "results", "robustness_secondary.json"),
-                 _os.path.join(here, "robustness_secondary.json")):
-        if _os.path.exists(cand):
-            try:
-                with open(cand) as fh:
-                    d = json.load(fh)
-                rows = sorted(d["thickness_sweep"]["rows"], key=lambda r: r["sup_thickness_mm"])
-                T = [float(r["sup_thickness_mm"]) for r in rows]
-                F = [float(r["f_cortex"]) for r in rows]
-                osw = d["optical_property_sweep"]
-                def _col(key, sub):
-                    return [float(r[sub]) for r in sorted(osw[key], key=lambda r: r["pct"])]
-                pct = [float(r["pct"]) for r in sorted(osw["mua"], key=lambda r: r["pct"])]
-                mua_f = _col("mua", "f_cortex"); mua_k = _col("mua", "kappa_pv")
-                musp_f = _col("musp", "f_cortex"); musp_k = _col("musp", "kappa_pv")
-                i0 = pct.index(0.0)
-                opt = {'variations_pct': pct,
-                       'mua': {'f': mua_f, 'k': mua_k},
-                       'musp': {'f': musp_f, 'k': musp_k},
-                       'baseline': {'f': mua_f[i0], 'k': mua_k[i0]}}
-                return dict(thickness_T=T, thickness_F=F, opt=opt, source=cand)
-            except Exception as e:
-                print(f"  [warning] could not parse robustness_secondary.json ({e}); "
-                      f"falling back to archived arrays")
-                return None
-    return None
+    cands = [_os.path.join(here, "..", "results", "robustness_secondary.json"),
+             _os.path.join(_os.getcwd(), "results", "robustness_secondary.json"),
+             _os.path.join(here, "robustness_secondary.json")]
+    found = next((c for c in cands if _os.path.exists(c)), None)
+    if found is None:
+        if require:
+            raise FileNotFoundError(
+                "RELEASE mode: results/robustness_secondary.json is required (run "
+                "mc_robustness_sweeps.py) and must not be replaced by archived arrays.")
+        return None
+    try:
+        with open(found) as fh:
+            d = json.load(fh)
+        # re-verify the payload hash (same recipe as mc_robustness_sweeps.py)
+        recorded = (d.get("provenance") or {}).get("data_sha256")
+        if recorded:
+            payload = {k: d[k] for k in d if k != "provenance"}
+            blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+            got = _hashlib.sha256(blob).hexdigest()
+            if got != recorded:
+                raise ValueError(f"robustness_secondary.json payload hash mismatch "
+                                 f"({got[:12]} != {recorded[:12]})")
+        rows = sorted(d["thickness_sweep"]["rows"], key=lambda r: r["sup_thickness_mm"])
+        T = [float(r["sup_thickness_mm"]) for r in rows]
+        F = [float(r["f_cortex"]) for r in rows]
+        osw = d["optical_property_sweep"]
+        def _col(key, sub):
+            return [float(r[sub]) for r in sorted(osw[key], key=lambda r: r["pct"])]
+        pct = [float(r["pct"]) for r in sorted(osw["mua"], key=lambda r: r["pct"])]
+        mua_f = _col("mua", "f_cortex"); mua_k = _col("mua", "kappa_pv")
+        musp_f = _col("musp", "f_cortex"); musp_k = _col("musp", "kappa_pv")
+        i0 = pct.index(0.0)
+        opt = {'variations_pct': pct,
+               'mua': {'f': mua_f, 'k': mua_k},
+               'musp': {'f': musp_f, 'k': musp_k},
+               'baseline': {'f': mua_f[i0], 'k': mua_k[i0]}}
+        return dict(thickness_T=T, thickness_F=F, opt=opt, source=found)
+    except Exception as e:
+        if require:
+            raise
+        print(f"  [warning] could not load/verify robustness_secondary.json ({e})")
+        return None
 
 
 def _synth_provenance(produced_by):
@@ -1710,14 +1735,20 @@ def analyze_thickness_robustness(sds_mm: float = 30.0, wavelength_nm: int = 760)
     # versioned robustness_secondary.json produced by mc_robustness_sweeps.py, read
     # directly so the figure/table are an exact function of that artifact. If the
     # file is absent we fall back to the archived MC arrays (clearly labelled).
-    _rob = _robustness_from_json()
+    _rob = _robustness_from_json()   # raises in RELEASE mode if missing/unverified
     if _rob is not None:
         _MC_T, _MC_F = _rob['thickness_T'], _rob['thickness_F']
         print(f"  (thickness sweep read from {_rob['source']})")
     else:
+        import os as _os
+        if _os.environ.get("FNIRS_ALLOW_FALLBACK") != "1":
+            raise FileNotFoundError(
+                "robustness_secondary.json missing/unverified. Run mc_robustness_sweeps.py, "
+                "or set FNIRS_ALLOW_FALLBACK=1 to use the archived development arrays.")
         _MC_T = [8.0, 10.0, 12.0, 14.0, 16.0]
-        _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]   # archived MC results (fallback)
-        print("  (robustness_secondary.json not found; using archived MC arrays)")
+        _MC_F = [0.2392, 0.1217, 0.0626, 0.0301, 0.0151]   # archived DEV fallback only
+        print("  [DEV] robustness_secondary.json not found; using archived MC arrays "
+              "(FNIRS_ALLOW_FALLBACK=1)")
     def _f_mc(T):
         return float(np.exp(np.interp(float(T), _MC_T, np.log(_MC_F))))
 
@@ -1783,9 +1814,17 @@ def analyze_optical_property_robustness(sds_mm: float = 30.0, wavelength_nm: int
     print("ANALYSIS D: ROBUSTNESS TO OPTICAL PROPERTY VARIATION (Monte Carlo)")
     print("="*70)
 
-    # PREFERRED SOURCE: robustness_secondary.json (mc_robustness_sweeps.py); fall
-    # back to the archived arrays only if that versioned artifact is absent.
-    _rob = _robustness_from_json()
+    # PREFERRED SOURCE: robustness_secondary.json (mc_robustness_sweeps.py), hash-
+    # verified; RELEASE mode requires it. The archived arrays are a DEV-only fallback
+    # (FNIRS_ALLOW_FALLBACK=1).
+    _rob = _robustness_from_json()   # raises in RELEASE mode if missing/unverified
+    if _rob is None:
+        import os as _os
+        if _os.environ.get("FNIRS_ALLOW_FALLBACK") != "1":
+            raise FileNotFoundError(
+                "robustness_secondary.json missing/unverified. Run mc_robustness_sweeps.py, "
+                "or set FNIRS_ALLOW_FALLBACK=1 to use the archived development arrays.")
+        print("  [DEV] using archived optical-sensitivity arrays (FNIRS_ALLOW_FALLBACK=1)")
     tbl = _rob['opt'] if _rob is not None else _OPT_SENS_MC
     if _rob is not None:
         print(f"  (optical sweep read from {_rob['source']})")

@@ -1287,34 +1287,36 @@ The cortical sensitivity fraction $f_{\text{cortex}}$ is very sensitive to the a
 \hline
 \textbf{Thickness (mm)} & $f_{\text{cortex}}$ (30 mm SDS) & $\kappa_{\text{PV}}$ & \% Change \\
 \hline
-8 & 0.239 & 4.2 & $-$74\% \\
-10 & 0.122 & 8.2 & $-$48\% \\
-12 & 0.063 & 15.9 & 0.0\% (baseline) \\
-14 & 0.030 & 33.3 & +109\% \\
-16 & 0.015 & 66.2 & +316\% \\
+8 & 0.2192 & 4.56 & $-$72.8\% \\
+10 & 0.1226 & 8.15 & $-$51.3\% \\
+12 & 0.05973 & 16.74 & 0.0\% (baseline) \\
+14 & 0.03136 & 31.89 & $+$90.4\% \\
+16 & 0.01676 & 59.66 & $+$256.3\% \\
 \hline
 \end{tabular}
 \end{center}
 
-These (converged Monte-Carlo) values show the dependence is even \emph{stronger} than an analytical estimate suggested: a 2~mm error (12$\rightarrow$14~mm) more than doubles $\kappa_{\text{PV}}$ ($+$109\%). Superficial-layer thickness is the single most important input to the correction, strongly motivating subject-specific anatomy (MRI, ultrasound, or an age-matched atlas).
+These are the current converged Monte-Carlo values read directly from \texttt{results/\allowbreak robustness\_\allowbreak secondary.json} (the ``\% Change'' column is the change in $\kappa_{\text{PV}}$ relative to the 12~mm baseline). The dependence is strong and \emph{asymmetric}: a $+$2~mm error (12$\rightarrow$14~mm) raises $\kappa_{\text{PV}}$ by $\approx+$90\% (and lowers $f_{\text{cortex}}$ by $\approx-$47\%), while a $-$2~mm error (12$\rightarrow$10~mm) lowers $\kappa_{\text{PV}}$ by $\approx-$51\% (and raises $f_{\text{cortex}}$ by $\approx+$105\%). Superficial-layer thickness is the single most important input to the correction, strongly motivating subject-specific anatomy (MRI, ultrasound, or an age-matched atlas).
 
 \subsection{Optical Property Sensitivity}
 
 Varying the cortical optical properties by $\pm 30\%$ (converged two-layer Monte Carlo, \texttt{mc\_2layer.py}; the $\mu_a$ column uses correlated reweighting of a single photon ensemble, so it is low-variance):
 
 \begin{center}
-\begin{tabular}{cccc}
+\begin{tabular}{ccc}
 \hline
-\textbf{Property Change} & $\mu_a$ effect on $\kappa_{\text{PV}}$ & $\mu_s'$ effect & Combined \\
+\textbf{Property Change} & $\mu_a$ effect on $\kappa_{\text{PV}}$ & $\mu_s'$ effect on $\kappa_{\text{PV}}$ \\
 \hline
-$-30\%$ & $-32\%$ & $-12\%$ & $-32\%$ \\
-Nominal & 0\% & 0\% & 0\% \\
-$+30\%$ & $+39\%$ & $+20\%$ & $+39\%$ \\
+$-30\%$ & $-34.6\%$ & $-17.2\%$ \\
+Nominal & 0\% & 0\% \\
+$+30\%$ & $+40.1\%$ & $+12.5\%$ \\
 \hline
 \end{tabular}
 \end{center}
 
-Absorption is the dominant optical input (because $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ tracks the survival-weighted cortical pathlength). Optical-property uncertainty is therefore not negligible, but it is still smaller than the effect of superficial-layer thickness (more than $+100\%$ for a $+2$~mm error above), which remains the single most important input. Note that an earlier, naively evaluated analytical kernel understated this optical sensitivity (it suggested only $\pm 13$--$15\%$); the converged Monte Carlo is the reliable estimate.
+\noindent (Values from \texttt{results/robustness\_secondary.json}; $\mu_a$ and $\mu_s'$ are perturbed \emph{separately}, so no combined-perturbation column is shown.)
+
+Absorption is the dominant optical input (because $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ tracks the survival-weighted cortical pathlength). Optical-property uncertainty is therefore not negligible ($\mu_a$ dominates, at $\approx-$35\% to $+$40\% in $\kappa_{\text{PV}}$ for $\pm$30\%), but it is still smaller than the effect of superficial-layer thickness ($\approx+$90\% in $\kappa_{\text{PV}}$ for a $+2$~mm error, and $\approx-$51\% for a $-2$~mm error, above), which remains the single most important input. Note that an earlier, naively evaluated analytical kernel understated this optical sensitivity (it suggested only $\pm 13$--$15\%$); the converged Monte Carlo is the reliable estimate.
 
 \subsection{Grid Convergence}
 
@@ -1364,7 +1366,7 @@ A more realistic three-layer model inserts a thin cerebrospinal fluid (CSF) laye
 \item Layer 2 (CSF): 2 mm, $\mu_a = 0.004$~mm$^{-1}$, $\mu_s' = 0.25$~mm$^{-1}$ (very low scattering; 0.24 at 850~nm)
 \item Layer 3 (cortex): semi-infinite, wavelength-specific (760~nm: $\mu_a = 0.0192$, $\mu_s' = 0.82$~mm$^{-1}$; 850~nm: $\mu_a = 0.0212$, $\mu_s' = 0.76$~mm$^{-1}$)
 \end{itemize}
-(The total superficial depth is held at 12~mm so the cortical boundary is unchanged; a 1~mm CSF thickness check is also emitted, giving a smaller $\gamma\approx1.3$--$1.4$.)
+(The total superficial depth is held at 12~mm so the cortical boundary is unchanged; a 1~mm CSF thickness check is also emitted, giving a smaller $\gamma\approx1.25$--$1.44$ across the full 25--42~mm two-wavelength grid.)
 
 Because CSF scatters very weakly ($\mu_s' \approx 0.25$~mm$^{-1}$, versus $1.0$~mm$^{-1}$ for skull), it behaves as a low-scattering channel that lets light traverse it with little attenuation and reach cortex that would otherwise be absorbed superficially, the classic CSF ``light-piping'' effect. A white Monte Carlo of the three-layer geometry (the diffusion approximation is invalid in the near-transparent CSF layer) shows that inserting the CSF layer \emph{increases} the cortical sensitivity fraction:
 
@@ -1377,11 +1379,12 @@ Because CSF scatters very weakly ($\mu_s' \approx 0.25$~mm$^{-1}$, versus $1.0$~
 30 & 0.064 & 1.66 & 0.107 & $+$66\% \\
 35 & 0.088 & 1.57 & 0.138 & $+$57\% \\
 40 & 0.110 & 1.44 & 0.158 & $+$44\% \\
+42 & 0.123 & 1.37 & 0.168 & $+$37\% \\
 \hline
 \end{tabular}
 \end{center}
 
-The Monte Carlo finds that the explicit CSF layer \emph{increases} $f_{\text{cortex}}$ by 44--84\% relative to the two-layer approximation ($\gamma = f^{\text{3L}}/f^{\text{2L}} \approx 1.44$--$1.84$, decreasing with SDS), in agreement with the light-piping literature.
+The Monte Carlo finds that the explicit CSF layer \emph{increases} $f_{\text{cortex}}$ by $\approx$37--84\% at 760~nm across the full 25--42~mm grid relative to the two-layer approximation ($\gamma = f^{\text{3L}}/f^{\text{2L}} \approx 1.37$--$1.84$, decreasing with SDS), in agreement with the light-piping literature.
 
 \begin{caution}
 \textbf{Warning: ignoring the CSF layer degrades (but at long SDS does not reverse) the correction.}
@@ -1390,7 +1393,7 @@ If the true tissue contains a CSF layer but corrections are computed with a two-
 \end{caution}
 
 \begin{caution}
-\textbf{Modelling note.} The cortical-sensitivity \emph{ratio} $\gamma$ above is robust to the CSF Monte Carlo's isotropic-scattering approximation, so we use only the ratio and apply it to the converged Henyey--Greenstein two-layer fractions ($f^{\text{3L}}=\gamma f^{\text{2L}}$). Even with light-piping the cortical fraction stays small ($<$0.15), so $\kappa_{\text{PV}}$ remains large. For reference, an earlier diffusion finite-difference estimate gave a spurious $\sim$99\% \emph{reduction}; that was a numerical artifact, because diffusion theory fails in the near-transparent CSF layer, which is exactly why Monte Carlo is needed here.
+\textbf{Modelling note.} In the current production study the ratio $\gamma$ is computed with the \emph{same} anisotropic Henyey--Greenstein ($g=0.9$) transport in both the two- and three-layer runs (\texttt{mc\_production.py}); an earlier \emph{isotropic}-scattering CSF Monte Carlo is retained only as a legacy cross-check, and the two agree within Monte-Carlo uncertainty, confirming the ratio is robust to the scattering-anisotropy assumption. We apply $\gamma$ to the converged two-layer fractions ($f^{\text{3L}}=\gamma f^{\text{2L}}$). Even with light-piping the cortical fraction stays small ($\lesssim$0.17; it reaches $\approx$0.168 at 42~mm), so $\kappa_{\text{PV}}$ remains large. A further modelling boundary condition: the Monte Carlo applies Fresnel reflection/refraction \emph{only} at the external tissue--air surface; the internal scalp/CSF/cortex interfaces are treated as refractive-index matched (all layers $n=1.4$). The $n\approx1.33$ (CSF) / $n\approx1.40$ (surrounding tissue) values quoted for the anatomy are the physical indices; the present Monte Carlo does \emph{not} apply an internal $n_{\text{CSF}}\approx1.33$ Fresnel mismatch, and $\gamma$ isolates the CSF scattering/absorption (light-piping) contrast. Adding the internal index step is a possible future sensitivity analysis. For reference, an earlier diffusion finite-difference estimate gave a spurious $\sim$99\% \emph{reduction}; that was a numerical artifact, because diffusion theory fails in the near-transparent CSF layer, which is exactly why Monte Carlo is needed here.
 \end{caution}
 
 \newpage
@@ -1618,14 +1621,16 @@ Cortex (grey matter) & 2--4 & 1.40 & Neuronal tissue \\
 \end{tabular}
 \end{center}
 
+\noindent The refractive indices above are the \emph{physical} layer values. The production Monte Carlo applies Fresnel reflection/refraction only at the external tissue--air surface and treats all internal boundaries as refractive-index matched ($n=1.4$); it does \emph{not} model the internal $n_{\text{CSF}}\approx1.33$ step (see the CSF ``Modelling note''). Including that internal mismatch is left as a future sensitivity analysis.
+
 \subsection{Monte-Carlo settings and the single source of truth}
 
-All cortical sensitivity fractions used anywhere in this study come from \emph{one} converged production Monte Carlo, written to a single versioned file that both the synthetic and the real-data pipelines read:
+All \emph{principal} baseline and CSF cortical-sensitivity values used in this study --- the two-layer $f_{\text{cortex}}$, the CSF light-piping ratios $\gamma(\lambda,\text{SDS})$, and the derived $\kappa_{\text{PV}}$ --- come from \emph{one} converged production Monte Carlo, written to a single versioned file that both the synthetic and the real-data pipelines read:
 \begin{center}\small
 \texttt{mc\_production.py} $\rightarrow$ \texttt{fcortex\_production.json} $\rightarrow$
 \texttt{fcortex\_source.py} $\rightarrow$ both pipelines.
 \end{center}
-No analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent, \emph{launch-defined} photon batches (batch id $=$ launch index mod 16, not a seed-level bootstrap); keying the batches by launch index makes batch $b$ draw on the same launched-photon cohort across geometries, so the CSF ratio $\gamma_b=f^{3L}_b/f^{2L}_b$ can be formed batchwise as a \emph{launch-index-matched} cross-check (a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ). The \emph{primary} reported $\gamma$ uncertainty is the conservative independent-propagation standard error; the launch-index-matched batchwise SE agrees with it and is reported as a cross-check; the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
+The only cortical-sensitivity values \emph{not} taken from this file are the two \emph{secondary} robustness sweeps (superficial-thickness and cortical-$\mu_a$/$\mu_s'$ perturbations), which by construction move the geometry/optics away from the production configuration and are produced by a separate versioned artifact (\texttt{mc\_robustness\_sweeps.py} $\rightarrow$ \texttt{results/robustness\_secondary.json}, payload-hash verified; in release mode it is mandatory, and the archived constant arrays are a development-only fallback). No principal analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent, \emph{launch-defined} photon batches (batch id $=$ launch index mod 16, not a seed-level bootstrap); keying the batches by launch index makes batch $b$ draw on the same launched-photon cohort across geometries, so the CSF ratio $\gamma_b=f^{3L}_b/f^{2L}_b$ can be formed batchwise as a \emph{launch-index-matched} cross-check (a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ). The \emph{primary} reported $\gamma$ uncertainty is the conservative independent-propagation standard error; the launch-index-matched batchwise SE agrees with it and is reported as a cross-check; the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
 
 \section{Appendix B: Glossary of Symbols}
 

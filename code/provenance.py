@@ -23,19 +23,21 @@ def git_info():
     The short SHA is the plain `git rev-parse --short HEAD`; the working-tree
     clean/dirty state is returned SEPARATELY as `is_dirty` (a bool), not encoded
     into the short string, so provenance records the two facts independently and
-    a caller can never conflate a label with the real commit. `is_dirty` accounts
-    for both unstaged and staged-but-uncommitted changes."""
+    a caller can never conflate a label with the real commit. `is_dirty` uses
+    `git status --porcelain`, so it accounts for staged, unstaged AND untracked
+    (non-ignored) changes -- a stricter clean-release check than a bare `git diff`
+    (git-ignored files such as the downloaded dataset do not count as dirty)."""
     try:
         root = os.path.dirname(os.path.abspath(__file__))
         full = subprocess.check_output(["git", "-C", root, "rev-parse", "HEAD"],
                                        stderr=subprocess.DEVNULL).decode().strip()
         short = subprocess.check_output(["git", "-C", root, "rev-parse", "--short", "HEAD"],
                                         stderr=subprocess.DEVNULL).decode().strip()
-        # dirty = any unstaged OR staged difference vs HEAD (untracked files ignored)
-        dirty = (subprocess.call(["git", "-C", root, "diff", "--quiet"],
-                                 stderr=subprocess.DEVNULL) != 0 or
-                 subprocess.call(["git", "-C", root, "diff", "--cached", "--quiet"],
-                                 stderr=subprocess.DEVNULL) != 0)
+        # dirty = any staged, unstaged OR untracked (non-ignored) change in the tree.
+        # `git status --porcelain` lists all three; an empty output means clean.
+        porcelain = subprocess.check_output(["git", "-C", root, "status", "--porcelain"],
+                                            stderr=subprocess.DEVNULL).decode()
+        dirty = bool(porcelain.strip())
         return (short, full, dirty)
     except Exception:
         return ("unknown", None, None)

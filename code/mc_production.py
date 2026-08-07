@@ -16,8 +16,11 @@ derives BOTH:
       error (SD/sqrt(K)) and t-based 95% confidence interval of the combined
       estimate reflect the variance of the RATIO across independent batches (not a
       3-seed bootstrap).  Because the batches are keyed by launch index, batch b
-      is the same launched-photon cohort across geometries, which makes the CSF
-      ratio gamma_b = f3L,b/f2L,b and the z_max difference d_b genuinely PAIRED.
+      draws on the same launched-photon cohort across geometries, which makes the CSF
+      ratio gamma_b = f3L,b/f2L,b and the z_max difference d_b LAUNCH-INDEX-MATCHED
+      (not a strict per-photon common-random-number stream: the vectorized transport
+      diverges once the geometries' active sets differ); these are reported only as
+      cross-checks of the primary independent-propagation SE.
 
 Wavelength-specific two-layer fractions (760 and 850 nm) and wavelength-specific
 CSF light-piping ratios gamma(lambda, SDS) = f_cortex^3L / f_cortex^2L are written
@@ -129,10 +132,11 @@ def score(raw, sds, hw, K):
     Batches are LAUNCH-DEFINED: each detected photon is assigned to batch
     (launch_idx mod K) using its original launch index, not its position in the
     compacted detected-photon array.  Because photons are launched in index order
-    with a fixed seed, batch b contains the SAME launched-photon cohort in every
+    with a fixed seed, batch b draws on the SAME launched-photon cohort in every
     geometry -- so the per-batch two-/three-layer ratios gamma_b = f3L,b/f2L,b are
-    genuinely paired (common random numbers) rather than matched by an arbitrary
-    detected-array position.  The batches remain disjoint subsets of the detected
+    LAUNCH-INDEX-MATCHED (not a strict per-photon common-random-number stream, since
+    the vectorized transport diverges once the geometries' active sets differ) rather
+    than matched by an arbitrary detected-array position.  The batches remain disjoint subsets of the detected
     photons, so they are still valid independent batches for the single-geometry
     SE/CI as well.  (Falls back to a fixed random partition if launch_idx is
     absent, e.g. for a legacy raw dict.)"""
@@ -245,7 +249,8 @@ def main():
         # count, launch-index-matched batch uncertainty).
         tasks.append((('3Lthin', wl), geom3L(wl, 1.0), args.thin_csf_N, args.seed, PROD_ZMAX))
     # z_max convergence check at the SAME photon count and seed as the production
-    # 2L 760 run (common random numbers), so the 150-vs-220 mm difference isolates
+    # 2L 760 run (same geometry, so the photons are identical until the depth cap;
+    # a launch-index-matched design), so the 150-vs-220 mm difference isolates
     # domain depth rather than sample size.
     tasks.append((('zc', 760), geom2L(760), args.N, args.seed, args.zmax_check))
     print(f"[launch] {len(tasks)} independent runs across {NPROC} workers "

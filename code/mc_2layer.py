@@ -54,6 +54,12 @@ def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
                 uz[su[refl]]=-uz[su[refl]]
                 ex=su[~refl]; detected[ex]=True; active[ex]=False
                 exit_r[ex]=np.sqrt(x[ex]**2+y[ex]**2)
+            # Internal layer crossings (superficial<->CSF<->cortex): the photon simply
+            # changes layer with NO internal Snell/Fresnel calculation, i.e. all internal
+            # boundaries are treated as REFRACTIVE-INDEX MATCHED. Fresnel reflection/
+            # refraction (above) is applied ONLY at the external tissue-air surface
+            # (layer 0, z=0; n_tissue=1.4). Adding an internal n_CSF~1.33 mismatch is a
+            # possible future sensitivity analysis; it is not modelled here.
             other=hb[~at_surf]
             if other.size:
                 lo=layer[other]; upo=uz[other]<0
@@ -99,9 +105,12 @@ def run(geom, N, seed, sds_centers, g=0.9, half_width=2.5,
         # Photons are launched in index order, so launch_idx is a stable launch
         # identifier shared across geometries run with the same seed; grouping
         # detected photons by (launch_idx mod B) yields LAUNCH-DEFINED batches, so
-        # batch b of the two-layer run and batch b of the three-layer run are the
-        # same launched-photon cohort (common random numbers) -- this is what makes
-        # the per-batch ratio gamma_b = f3L,b/f2L,b a genuinely paired estimator.
+        # batch b of the two-layer run and batch b of the three-layer run draw on the
+        # same launched-photon cohort. This is a LAUNCH-INDEX-MATCHED pairing, NOT a
+        # strict per-photon common-random-number stream: once the two geometries'
+        # active-photon sets diverge the vectorized transport consumes the shared RNG
+        # in a different order, so the per-batch ratio gamma_b = f3L,b/f2L,b is a
+        # launch-index-matched batchwise estimator (used only as a cross-check).
         return dict(exit_r=exit_r[det].astype('float32'),
                     Lcortex=Lcortex[det].astype('float32'),
                     Ltot=Ltot[det].astype('float32'),
