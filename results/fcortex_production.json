@@ -2,12 +2,12 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "mc_production.py",
-  "git_commit": "bd007a1",
-  "git_commit_full": "bd007a1d39dfb7461a02fce95b8bd5c4567f25b2",
+  "git_commit": "0782d6e",
+  "git_commit_full": "0ae4c87b86d2a14b9f8e79a684175dafea194313",
   "git_dirty": true,
-  "analysis_round": "round7",
-  "generated_utc": "2026-08-06T22:21:43Z",
-  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit bd007a1 --analysis_round round7",
+  "analysis_round": "round8",
+  "generated_utc": "2026-08-07T05:16:54Z",
+  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit 0782d6e --analysis_round round8",
   "python_version": "3.11.15",
   "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
   "machine": "x86_64",
@@ -73,8 +73,8 @@
   "N_eff_note": "N_eff_absw = (sum w)^2/sum(w^2) is an absorption-weight effective count only; it does not capture pathlength or numerator-denominator covariance in the ratio (see se/ci95)",
   "csf_note": "csf gamma at nominal 2 mm. gamma_se_indep is the PRIMARY reported uncertainty: the independent-propagation SE (quadrature of the 2L and 3L standard errors), which assumes no correlation. gamma_se is a launch-index-matched batch cross-check: SD(gamma_b)/sqrt(B) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b draws on the same launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed). This is a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ; the two SEs agree within a 16-batch estimate. csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully characterised (own photon count N_thin_csf, detected count, f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
   "convergence_note": "L_max/annulus sweeps re-scored from the same run; the z_max=220 check uses the SAME N, seed and launch-defined batches as the z_max=150 run (same geometry, so the photons are identical until the cap), so zmax_check reports the mean and SE of the per-batch difference d_b=f_150,b-f_220,b.",
-  "data_sha256": "d2f2f2d6ac0e21453c2932c9109101d7af099f9325c5db1fed6dca98d1a25ad6",
-  "secs": 5081.5
+  "data_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
+  "secs": 4442.6
  },
  "two_layer": {
   "760": {
@@ -976,6 +976,12 @@
      "500.0": 0.1059206743796998,
      "800.0": 0.10976065946786054,
      "1200.0": 0.10980265866207521
+    },
+    "42.0": {
+     "400.0": 0.10665563729185583,
+     "500.0": 0.11819806387969618,
+     "800.0": 0.12258829818502971,
+     "1200.0": 0.12264844337861307
     }
    },
    "annulus": {
@@ -1029,6 +1035,12 @@
      "500.0": 0.10582403740364404,
      "800.0": 0.10705836944995661,
      "1200.0": 0.10706288230513183
+    },
+    "42.0": {
+     "400.0": 0.10957292804096046,
+     "500.0": 0.11540795830077263,
+     "800.0": 0.11694651654640308,
+     "1200.0": 0.11695251604723944
     }
    },
    "annulus": {
@@ -1097,6 +1109,22 @@
    "f_150_ci95": [
     0.10325579333985617,
     0.11634952425714155
+   ],
+   "delta_paired": 0.0,
+   "delta_paired_se": 0.0,
+   "n_paired_batches": 16,
+   "within_ci": true
+  },
+  "42.0": {
+   "f_150": 0.12264844352308608,
+   "f_220": 0.12264844352308608,
+   "f_220_ci95": [
+    0.11478646603468748,
+    0.1305104210114847
+   ],
+   "f_150_ci95": [
+    0.11478646603468748,
+    0.1305104210114847
    ],
    "delta_paired": 0.0,
    "delta_paired_se": 0.0,

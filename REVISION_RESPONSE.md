@@ -749,3 +749,85 @@ manuscript number, including the new 33/42 mm supplementary-table rows and the S
 disclosure, was cross-checked against the artifacts (27/27 automated checks pass); the
 duplicate-hyperlink warnings are eliminated; both LaTeX documents recompile without errors
 (manuscript 47 pp, guide 50 pp).
+
+---
+
+# Round 8 — Response to the *Updated Package Review: Comments and Recommendations* (Aug 7, 2026)
+
+This review judged the package "very close to submission-ready" with one high-priority
+release-integrity item (#4) and several refinements. All are addressed below. The
+production Monte Carlo was re-run at the full N (2×10⁶ photons/config, 16 launch-defined
+batches, 25–42 mm grid; clean commit `0782d6e`, `analysis_round=round8`), and **every
+downstream artifact was regenerated against it** so all provenance hashes are mutually
+consistent.
+
+**#4 (HIGH) — Frozen real-data outputs not regenerated with the extended 25–42 mm grid.**
+Fixed. The in-vivo pipeline (`fnirs_kappa_realdata_v2.py`) was re-run against the current
+`results/fcortex_production.json`, regenerating `realdata_v2_summary.json`, Figures 4–7, and
+every real-data table and numerical statement in the manuscript. The summary now records the
+current production payload hash (`91cfa828…`). The synthetic-validation outputs
+(`multiseed_operating_regime.json`, Figures 1–3) were **also** re-run, because they had
+likewise recorded the earlier production hash; they now cite `91cfa828…` too. The numerical
+effect of the grid extension is small, exactly as the review anticipated: the group-mean
+corrected contralateral HbO₂ is **0.913 ± 0.334 µM** (was 0.918; the 21 channels above 40 mm
+are no longer clipped to the 40 mm fraction, so their mean κ_PV falls from 6.28 to 6.18, a
+−0.4 % group change). The regenerated summary includes the per-channel `contra_amp` block and
+the nested SDS-band results (both equal-subject and channel-pooled; see #5).
+
+**#5 (RECOMMENDED) — Equal-subject SDS-band comparison.** Implemented. The
+`sds_range_sensitivity` block now reports each band on an **equal-subject** basis (each
+subject's in-band channels averaged first, then the group mean ± SD across the five subjects,
+with the number of subjects contributing ≥1 channel per band recorded); the channel-pooled
+means are retained as a secondary view. All five subjects contribute to every band. Corrected
+HbO₂ (equal-subject): 0.91 ± 0.33 µM over all channels, 0.74 ± 0.25 µM (35–40 mm), 1.39 ± 0.79 µM
+(<35 mm) and 1.12 ± 0.50 µM (>40 mm). The manuscript §Real-data text was rewritten to report
+these values honestly (the band means overlap within the large between-subject scatter and are
+each physiologically plausible) and no longer over-claims that the corrected *amplitude* is
+"within a few percent" across bands — only the applied correction *factor* κ_PV is band-independent.
+
+**#6 (WORDING) — "every experimental channel lies in the reliable long-SDS regime."** Replaced.
+The text now states that the 79 contralateral channels span 33.4–40.9 mm, that most lie within or
+above the recommended ~35 mm threshold (48 in 35–40 mm, 21 above 40 mm), and that ten channels fall
+below 35 mm near the noise-dependent transition and are examined separately.
+
+**#7 (CSF calibration range) — 25–40 → 25–42 mm and report the 42 mm γ.** Done. The stated γ
+calibrated range is now **SDS 25–42 mm** in both recommendation passages. The 42 mm CSF result is
+reported: γ(42 mm) = **1.37 ± 0.05** at 760 nm and **1.42 ± 0.03** at 850 nm (2 mm CSF), added to
+Table 3 (three-layer) with f_cortex^3L ≈ 0.168 (+37 %), and to the γ(SDS) prose lists.
+
+**#8 — L_max and z_max convergence checks at 42 mm.** Added. `mc_production.py` now evaluates the
+L_max sweep and the matched-N z_max check at 38, 40 **and 42 mm**. The convergence table (Supp.
+Table 5) gains the 42 mm row (L400/500/800/1200 = 0.1067/0.1182/0.1226/0.1226; plateau by 800 mm),
+and the z_max paired difference is identically 0.000 ± 0.000 at 42 mm as well; the caption was updated.
+
+**#9.1 — Outdated 38.3 mm / "one probe geometry" descriptions.** Replaced throughout (Results,
+Discussion, Limitations, Conclusions) with "channels centred near 38 mm" and the range 33.4–40.9 mm
+(median 37.2 mm, mean 37.9 mm).
+
+**#9.2 — Python version.** The manuscript now states the frozen release artifacts were generated with
+**CPython 3.11.15** (Python 3.10 removed), with exact versions pinned in `requirements-lock.txt`.
+
+**#9.3 — README production-file location.** Corrected: the frozen production JSON/CSV are bundled
+under `results/` only (not both `results/` and `code/`); when regenerated, `code/` copies are written
+but git-ignored.
+
+**#10.1 — Project-specific environment lock.** `requirements-lock.txt` was replaced with a portable,
+project-specific lock containing only the declared dependencies and their transitive closure (38
+packages resolved from the frozen build environment) rather than a broad system-wide `pip freeze`;
+the header documents equivalent regeneration with pip-tools or uv.
+
+**#10.2 — LaTeX passes.** `reproduce_all.sh` now uses `latexmk` when available, else three explicit
+`pdflatex` passes, so cross-references and the supplementary `\theHtable` anchors stabilise.
+
+**#10.3 — Pedagogical guide warnings.** Cleaned. The fancyhdr `\headheight` is set to 14.5 pt; math
+in section titles is wrapped in `\texorpdfstring` (with `\pdfstringdefDisableCommands` fallbacks) to
+eliminate the PDF-bookmark "token not allowed" warnings; and the overfull boxes were resolved
+(wrapping glossary/anatomy tables, splitting one long aligned equation, `\emergencystretch`). The
+guide now recompiles with **zero** overfull boxes, headheight warnings, and bookmark warnings (52 pp).
+
+**Verification.** Production MC re-run at full N (clean commit `0782d6e`); all analysis artifacts
+regenerated against it with uniform `round8` provenance and the matching payload hash. The
+forward-model tables were confirmed bit-identical to the prior production (same seed/grid); only the
+new 42 mm convergence/γ rows and the −0.4 % real-data shift changed. Both LaTeX documents recompile
+with no errors, no undefined references, and zero overfull boxes (manuscript 47 pp, guide 52 pp). The
+release manifest was regenerated from the final files.
