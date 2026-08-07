@@ -9,12 +9,32 @@
 \usepackage{fancyhdr}
 \usepackage{tcolorbox}
 \usepackage{booktabs}
+\usepackage{array}   % >{...} column modifiers (raggedright p-columns in the glossary)
 
 \geometry{margin=1in}
+% Allow a little extra interword stretch on lines that would otherwise be
+% overfull, so long prose paragraphs (URLs, long compound terms) break cleanly.
+\setlength{\emergencystretch}{3em}
+% fancyhdr needs a taller head box than the 12pt article default; set it
+% explicitly (and trim topmargin to compensate) so no head-height warning is
+% emitted and the header rule is not clipped.
+\setlength{\headheight}{14.5pt}
+\addtolength{\topmargin}{-2.5pt}
 \pagestyle{fancy}
 \fancyhf{}
 \rhead{\thepage}
-\lhead{fNIRS $\kappa$-Correction Guide}
+\lhead{fNIRS \texorpdfstring{$\kappa$}{kappa}-Correction Guide}
+% Provide plain-text expansions for the math macros that appear in section
+% titles, so hyperref can build valid PDF bookmark strings without "Token not
+% allowed in a PDF string" warnings.
+\pdfstringdefDisableCommands{%
+  \def\kappa{kappa}%
+  \def\rho{rho}%
+  \def\lambda{lambda}%
+  \def\mathrm#1{#1}%
+  \def\text#1{#1}%
+  \def\,{ }%
+}
 
 \tcbuselibrary{theorems}
 
@@ -217,7 +237,7 @@ Multiply by $-1$ and rearrange:
 
 This is Beer's Law in logarithmic form, expressing optical density as the product of extinction coefficient, concentration, and path length.
 
-\subsection{Step 2: Two Absorbers (HbO$_2$ and HbR)}
+\subsection{Step 2: Two Absorbers (\texorpdfstring{HbO$_2$}{HbO2} and HbR)}
 
 In fNIRS, two chromophores absorb simultaneously. At wavelength $\lambda$:
 
@@ -282,7 +302,7 @@ So the expected $\Delta$OD values are about 0.0042 and 0.032, small numbers! Not
 \end{workexample}
 
 \newpage
-\part{The $\kappa$ Correction Framework}
+\part{The \texorpdfstring{$\kappa$}{kappa} Correction Framework}
 
 \section{Why MBLL Fails in Layered Media: A Detailed Derivation}
 
@@ -431,9 +451,9 @@ Then MBLL inversion is applied to the corrected $\Delta\text{OD}_{\text{correcte
 
 Because Beer-Lambert law is linear in concentration, the corrections can be applied as multiplicative factors at the OD level. If the true cortical OD is $\Delta\text{OD}_{\text{true}}$ and MBLL returns an attenuated estimate $\Delta\text{OD}_{\text{MBLL}} = A \cdot \Delta\text{OD}_{\text{true}}$ (where $A < 1$ is an attenuation factor), then multiplying $\Delta\text{OD}_{\text{MBLL}}$ by $1/A$ recovers the true value.
 
-\section{Derivation of Each $\kappa$ Factor}
+\section{Derivation of Each \texorpdfstring{$\kappa$}{kappa} Factor}
 
-\subsection{Factor 1: $\kappa_{\text{DPF}}$, Wavelength-Dependent Path Length}
+\subsection{Factor 1: \texorpdfstring{$\kappa_{\text{DPF}}$}{kappa\_DPF}, Wavelength-Dependent Path Length}
 
 The DPF is wavelength-dependent. Scholkmann and Wolf (2013) give a general equation for the frontal-head DPF as a function of wavelength $\lambda$ (nm) and age $A$ (years):
 
@@ -459,7 +479,7 @@ If a practitioner uses a scalar DPF = 6.0 for both wavelengths, the MBLL inversi
 
 The spectroscopic inversion mixes these wavelengths; the net error cannot be corrected by a single scalar $\kappa_{\text{DPF}}$ but requires wavelength-specific normalization. However, for simplicity and when using empirical DPF formulas (Scholkmann equation) consistently for both forward modeling and inversion, $\kappa_{\text{DPF}} = 1$.
 
-\subsection{Factor 2: $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$, Partial Volume Correction}
+\subsection{Factor 2: \texorpdfstring{$\kappa_{\text{PV}} = 1/f_{\text{cortex}}$}{kappa\_PV = 1/f\_cortex}, Partial Volume Correction}
 
 This is the dominant correction. From our analysis:
 
@@ -511,7 +531,7 @@ In this analogy:
 
 Now consider the real fNIRS case at 30~mm SDS, where $f_{\text{cortex}} = 0.063$. This is like a group of \emph{sixteen} students where only one studied: just $\sim$6\% of the answers come from the diligent student, and the rest are random guesses. The observed group score might be only $6/100$, and the correction factor $\kappa_{\text{PV}} = 1/0.063 = 16$ would recover the true individual score: $6 \times 16 \approx 100$. But notice the catch: if the diligent student's $6$ points are barely distinguishable from the lucky guesses of the others (the ``noise''), multiplying by 16 also multiplies that ambiguity. This is exactly why, at short separations where the cortical contribution is so small, the correction can amplify noise instead of signal, and why we apply it only at long separations where the cortical share is larger ($\sim$11\% at 40~mm, $\kappa_{\text{PV}}\approx9$).
 
-\subsection{Factor 3: $V_{\text{SSR}}(\lambda)$, the SSR Variance-Removal Diagnostic (reported, not applied)}
+\subsection{Factor 3: \texorpdfstring{$V_{\text{SSR}}(\lambda)$}{V\_SSR(lambda)}, the SSR Variance-Removal Diagnostic (reported, not applied)}
 \label{sec:vssr}
 
 Short-separation regression removes superficial contamination by subtracting a scaled short-channel signal from the long-channel signal:
@@ -550,7 +570,7 @@ The interpretation is a \emph{report}: ``at 760~nm the short channel removed abo
 \textbf{Why we report $V_{\mathrm{SSR}}$ but never apply it.} $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ corrects the optical dilution of the cortical component that \emph{survives} SSR; it does not, and cannot, reconstruct any cortical signal SSR already subtracted. $V_{\mathrm{SSR}}$ flags channels where SSR removed a large share of the long-channel variance (so the surviving cortical estimate should be read with caution), but converting it into an amplitude multiplier would require assuming the entire removed variance was cortical --- which is false, since SSR is designed to remove the \emph{superficial} systemic signal. Earlier drafts of this study labelled the quantity $\kappa_{\mathrm{SSR}}$ and speculated that applying it would roughly double the recovered amplitude; that counterfactual has been removed as unjustified. The applied correction is $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ only.
 \end{keyinsight}
 
-\subsection{Two correlations that look identical: $R$ vs.\ $\rho$}
+\subsection{Two correlations that look identical: \texorpdfstring{$R$ vs.\ $\rho$}{R vs. rho}}
 
 A point that trips up almost everyone the first time: the regression statistic $R$ in $V_{\mathrm{SSR}}=1/(1-R^2)$ is \emph{not} the same as the cortical--systemic correlation, even though both are computed with the identical Pearson formula. The formula is the same; the two signals you feed into it are different.
 
@@ -762,7 +782,8 @@ Compute the fluence at a point 30~mm from the source on the tissue surface. Use:
 \textbf{Compute distances:}
 \begin{align}
 r_1 &= \sqrt{30^2 + (0 - 1)^2} = \sqrt{900 + 1} = \sqrt{901} = 30.017~\text{mm} \\
-r_2 &= \sqrt{30^2 + (0 + 1 + 2 \times 1.94)^2} = \sqrt{900 + (4.88)^2} = \sqrt{900 + 23.81} = \sqrt{923.81} = 30.394~\text{mm}
+r_2 &= \sqrt{30^2 + (0 + 1 + 2 \times 1.94)^2} = \sqrt{900 + (4.88)^2} \\
+    &= \sqrt{900 + 23.81} = \sqrt{923.81} = 30.394~\text{mm}
 \end{align}
 
 \textbf{Compute exponentials:}
@@ -845,7 +866,7 @@ The final solution is inverted via:
 \Phi(\rho, z) = \int_0^{\infty} \tilde{\Phi}(q, z) \, J_0(q\rho) \, q \, dq
 \end{equation}
 
-This integral is evaluated numerically using Gaussian quadrature (e.g., scipy.integrate.quad in Python).
+This integral is evaluated numerically using Gaussian quadrature (e.g., SciPy's \texttt{quad} routine in Python).
 
 \subsection{Numerical Implementation}
 
@@ -1224,7 +1245,7 @@ This ordering is crucial for achieving the reported low RMSE.
 
 With the converged sensitivity fractions, the overall HbR RMSE improves from 0.657 to 0.226~$\mu$M (65.6\%), and unlike HbO$_2$ the HbR correction stays positive across the full separation range, rising from 42.0\% at 25~mm to 83.8\% at 38~mm and holding at 82--84\% at 38--40~mm. The apparent HbR advantage at short separations is a secondary noise-propagation artifact of the $2\times2$ MBLL inverse (the extinction matrix maps the two-wavelength OD noise onto HbO$_2$ and HbR with different gains, and here the propagated noise is smaller in the HbR estimate), \emph{not} a reason to use short separations. Because the framework is scoped to long SDS by the HbO$_2$ noise-floor limit, we report the long-SDS HbR improvement (82--84\%), where both chromophores genuinely benefit.
 
-\section{Wavelength Dependence of $V_{\mathrm{SSR}}$}
+\section{Wavelength Dependence of \texorpdfstring{$V_{\mathrm{SSR}}$}{V\_SSR}}
 
 A critical finding: the $V_{\mathrm{SSR}}$ diagnostic differs significantly between wavelengths (synthetic validation, means across subjects):
 
@@ -1314,7 +1335,7 @@ Very fine & 0.25 mm & 0.2849 & $<0.01\%$ \\
 
 A medium resolution ($1$ mm) provides sufficient accuracy \emph{in the spatial grid}. Note carefully, however, that this table varies only the $(\rho,z)$ \emph{spatial} mesh; it holds the Hankel-transform quadrature fixed. As the cautionary box earlier explained, it is that quadrature (not the spatial grid) that dominates the error in $f_{\text{cortex}}$. Spatial-grid convergence to $\sim$0.285 therefore does \emph{not} mean the value is correct; the converged answer (Monte Carlo) is $\sim$0.06 at 30~mm. This is the trap the present study originally fell into.
 
-\subsection{Robustness to $f_{\text{cortex}}$ Errors}
+\subsection{Robustness to \texorpdfstring{$f_{\text{cortex}}$}{f\_cortex} Errors}
 
 A natural concern is: what happens if $f_{\text{cortex}}$ is not known precisely? In practice, anatomical uncertainty guarantees some error in the computed correction factors. Our study systematically evaluated the framework's tolerance to such errors by introducing deliberate $f_{\text{cortex}}$ perturbations and measuring the resulting recovery accuracy.
 
@@ -1375,7 +1396,7 @@ If the true tissue contains a CSF layer but corrections are computed with a two-
 \newpage
 \part{Practical Guide}
 
-\section{Implementing $\kappa$-Correction in Your Lab}
+\section{Implementing \texorpdfstring{$\kappa$}{kappa}-Correction in Your Lab}
 
 \subsection{Step 1: Obtain Anatomical Information}
 
@@ -1582,7 +1603,8 @@ $\mu_s'$ (CSF) & 0.01 & 0.01 & mm$^{-1}$ & Simpson 1998 \\
 Standard adult head geometry for frontal measurement:
 
 \begin{center}
-\begin{tabular}{lccc}
+\small
+\begin{tabular}{l c c >{\raggedright\arraybackslash}p{4.2cm}}
 \hline
 \textbf{Layer} & \textbf{Thickness (mm)} & \textbf{Refractive Index} & \textbf{Composition} \\
 \hline
@@ -1591,7 +1613,7 @@ Skull & 5--8 & 1.40 & Bone (compact and trabecular) \\
 CSF (dura/arachnoid) & 1--3 & 1.33 & Cerebrospinal fluid \\
 Cortex (grey matter) & 2--4 & 1.40 & Neuronal tissue \\
 \hline
-\textbf{Total superficial} & 10--14 &, & Typically 12 mm for adults \\
+\textbf{Total superficial} & 10--14 & & Typically 12 mm for adults \\
 \hline
 \end{tabular}
 \end{center}
@@ -1599,15 +1621,17 @@ Cortex (grey matter) & 2--4 & 1.40 & Neuronal tissue \\
 \subsection{Monte-Carlo settings and the single source of truth}
 
 All cortical sensitivity fractions used anywhere in this study come from \emph{one} converged production Monte Carlo, written to a single versioned file that both the synthetic and the real-data pipelines read:
-\[
-\texttt{mc\_production.py}\;\rightarrow\;\texttt{fcortex\_production.json}\;\rightarrow\;\texttt{fcortex\_source.py}\;\rightarrow\;\text{both pipelines.}
-\]
+\begin{center}\small
+\texttt{mc\_production.py} $\rightarrow$ \texttt{fcortex\_production.json} $\rightarrow$
+\texttt{fcortex\_source.py} $\rightarrow$ both pipelines.
+\end{center}
 No analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent, \emph{launch-defined} photon batches (batch id $=$ launch index mod 16, not a seed-level bootstrap); keying the batches by launch index makes batch $b$ draw on the same launched-photon cohort across geometries, so the CSF ratio $\gamma_b=f^{3L}_b/f^{2L}_b$ can be formed batchwise as a \emph{launch-index-matched} cross-check (a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ). The \emph{primary} reported $\gamma$ uncertainty is the conservative independent-propagation standard error; the launch-index-matched batchwise SE agrees with it and is reported as a cross-check; the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
 
 \section{Appendix B: Glossary of Symbols}
 
 \begin{center}
-\begin{tabular}{lll}
+\small
+\begin{tabular}{@{}l >{\raggedright\arraybackslash}p{5.0cm} >{\raggedright\arraybackslash}p{6.0cm}@{}}
 \hline
 \textbf{Symbol} & \textbf{Name} & \textbf{Typical Value / Units} \\
 \hline

@@ -198,9 +198,12 @@ with its own photon count `N_thin_csf`, detected count, and uncertainty, and is
 exported to the CSV as `CSF1mm` rows); and an L_max / z_max (matched-N) / annulus
 convergence sweep. The file carries a schema version, a full provenance block (real
 Git SHA in `git_commit`, plus a human-readable `analysis_round` label) and a SHA-256
-payload hash that `fcortex_source.py` re-verifies on load. **A copy is bundled in
-`results/` and `code/`, so steps 1–3 run without re-running this.** **Runtime:**
-~60–100 min on 2 cores at the paper's N (2×10⁶ photons/config).
+payload hash that `fcortex_source.py` re-verifies on load. **The frozen copy is
+bundled under `results/` (`fcortex_source.py` resolves that copy automatically), so
+steps 1–3 run without re-running this.** When regenerated with the command above the
+files are written into `code/` (git-ignored there); the tracked, released copies live
+under `results/`. **Runtime:** ~60–100 min on 2 cores at the paper's N (2×10⁶
+photons/config).
 
 To regenerate the secondary robustness sweeps (Figure 3 source) and the
 homogeneous-limit fluence check:
