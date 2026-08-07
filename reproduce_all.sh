@@ -53,12 +53,23 @@ cp code/multiseed_operating_regime.json results/
 
 if [ "${SKIP_INVIVO:-0}" != "1" ]; then
   echo "== 5/6  In-vivo pipeline (figures 4-7, real-data summary) =="
-  ( cd code && python fnirs_kappa_realdata_v2.py ) || \
-    echo "[warn] in-vivo pipeline failed (needs MNE + the pinned Zenodo dataset); skipping."
+  if [ "${RELEASE:-0}" = "1" ]; then
+    # RELEASE mode: the in-vivo step MUST succeed. A failure here (missing MNE or
+    # dataset) would otherwise leave the previous, now-stale real-data outputs in
+    # place and let them survive into a release build -- exactly the release-
+    # integrity hazard we are guarding against. Fail hard instead.
+    ( cd code && python fnirs_kappa_realdata_v2.py )
+  else
+    ( cd code && python fnirs_kappa_realdata_v2.py ) || \
+      echo "[warn] in-vivo pipeline failed (needs MNE + the pinned Zenodo dataset); skipping."
+  fi
   for f in figure4_realdata_timeseries figure5_realdata_hrf figure6_realdata_summary figure7_group_block_average; do
     [ -f "code/$f.png" ] && cp "code/$f.png" manuscript/figures/ || true
   done
   [ -f code/realdata_v2_summary.json ] && cp code/realdata_v2_summary.json results/ || true
+elif [ "${RELEASE:-0}" = "1" ]; then
+  echo "[fatal] SKIP_INVIVO=1 is not allowed in RELEASE mode (would ship stale real-data outputs)." >&2
+  exit 1
 else
   echo "== 5/6  In-vivo pipeline SKIPPED (SKIP_INVIVO=1) =="
 fi
@@ -96,4 +107,9 @@ for line in open(man):
 print(f"[manifest] {ok} files match; {bad} changed/missing "
       f"(changes are expected after regenerating with a different seed/round).")
 PY
+
+if [ "${RELEASE:-0}" = "1" ]; then
+  echo "== RELEASE: regenerate manifest from the freshly built tree =="
+  python code/make_release_manifest.py
+fi
 echo "== DONE =="

@@ -1424,16 +1424,16 @@ Place a detector at SDS $\approx 10$~mm for every measurement location. This is 
 
 \subsection{Step 4: Compute Correction Factors Offline}
 
-For each SDS and anatomical configuration:
+For each SDS and anatomical configuration, obtain a \emph{converged} cortical sensitivity fraction:
 
 \begin{enumerate}
-\item Solve the two-layer Kienle equation via Hankel transform
-\item Compute fluence fields for source and detector
-\item Integrate Jacobian over cortical and total volumes
+\item Run a converged Monte-Carlo photon-transport simulation of the layered slab (as in \texttt{mc\_2layer.py}/\texttt{mc\_production.py}), scoring partial pathlengths
+\item Form the depth-weighted cortical sensitivity ratio directly from the scored photons
 \item Derive $f_{\text{cortex}}(\lambda)$ and $\kappa_{\text{PV}}(\lambda) = 1/f_{\text{cortex}}(\lambda)$
+\item Store the result in a precomputed lookup table over SDS, wavelength, and layer geometry
 \end{enumerate}
 
-This computation takes $\sim$0.1 s per channel on a modern laptop and can be done once, offline, before data acquisition.
+Do \emph{not} take $f_{\text{cortex}}$ from a fast fixed-point (fixed-grid) two-layer Hankel evaluation: as the cautionary box above shows, that quadrature is not converged for the sensitivity ratio and can overstate $f_{\text{cortex}}$ by an order of magnitude. An analytical Hankel route is acceptable \emph{only} if its sensitivity integral has been independently demonstrated to be quadrature-converged and benchmarked against Monte Carlo. The Monte-Carlo table can be built once, offline, before data acquisition and reused for every subject sharing the probe geometry.
 
 \subsection{Step 5: Process Data Online or Offline}
 
@@ -1536,7 +1536,7 @@ Applying the per-channel $\kappa_{\text{PV}}$ to the SSR-denoised data recovers 
 
 \begin{enumerate}
 \item \textbf{CSF-aware forward model} with an explicit CSF layer for full anatomical accuracy. Note that because the thin ($1$--$2$~mm) CSF layer violates the diffusion approximation, this should be a \emph{Monte-Carlo} (or radiative-transport) model rather than a three-layer \emph{diffusion} (Kienle) solution, which is not quantitatively reliable inside low-scattering CSF.
-\item \textbf{Hybrid CSF correction (recommended practical default)}: compute $f_{\text{cortex}}$ rapidly using the two-layer Hankel transform ($\sim$0.1~s per channel) and then multiply by an SDS-dependent, \emph{Monte-Carlo-calibrated} correction factor $\gamma(d_{\text{SDS}}, d_{\text{CSF}})$ from a precomputed lookup table. The adjusted sensitivity $f_{\text{cortex}}^{\text{adj}} = \gamma \times f_{\text{cortex}}^{\text{2L}}$ retains the speed of the analytical two-layer solution while supplying the CSF light-guiding effect from Monte Carlo (not diffusion), used within the calibrated range (SDS 25--40~mm, CSF 1--2~mm, 760/850~nm, adult slab). Our three-layer analysis shows that $\gamma$ varies systematically: approximately 1.84 at 25~mm, 1.66 at 30~mm, 1.57 at 35~mm, and 1.44 at 40~mm SDS (760~nm).
+\item \textbf{Converged Monte-Carlo table with a CSF correction (recommended practical default)}: obtain $f_{\text{cortex}}$ from a precomputed, \emph{converged} Monte-Carlo lookup table (as in this study), and---when CSF is not modelled explicitly in that base table---multiply by an SDS-dependent, \emph{Monte-Carlo-calibrated} correction factor $\gamma(d_{\text{SDS}}, d_{\text{CSF}})$. The adjusted sensitivity $f_{\text{cortex}}^{\text{adj}} = \gamma \times f_{\text{cortex}}$ supplies the CSF light-guiding effect from Monte Carlo (not diffusion), used within the calibrated range (SDS 25--42~mm, CSF 1--2~mm, 760/850~nm, adult slab). Our three-layer analysis shows that $\gamma$ varies systematically: approximately 1.84 at 25~mm, 1.66 at 30~mm, 1.57 at 35~mm, 1.44 at 40~mm and 1.37 at 42~mm SDS (760~nm). Do \emph{not} substitute the fast fixed-point two-layer Hankel transform for the base $f_{\text{cortex}}$: it is not quadrature-converged for the sensitivity ratio (see the cautionary box) and overstates $f_{\text{cortex}}$; a rapid analytical route is acceptable only after its convergence has been demonstrated and benchmarked against Monte Carlo.
 \item \textbf{Adaptive thickness estimation} from temporal statistics of SSR.
 \item \textbf{Bayesian inference} combining MBLL data with prior distributions on tissue properties.
 \item \textbf{Machine learning models} trained on Monte Carlo forward models to predict $f_{\text{cortex}}$ given measurement geometry and partial optical property measurements.

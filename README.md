@@ -94,7 +94,7 @@ draw Figure 3 and the robustness numbers, giving one exact path
 ├── README.md                     This file
 ├── reproduce_all.sh              One-command end-to-end regeneration + manuscript build
 ├── requirements.txt              Python dependencies (loose)
-├── requirements-lock.txt         Exact pinned environment (pip freeze) for the frozen release
+├── requirements-lock.txt         Project-specific dependency closure (declared deps + transitive), exact-pinned
 ├── RELEASE_MANIFEST.md           SHA-256 of every tracked file + production provenance
 ├── REVISION_RESPONSE.md          Point-by-point response to the reviews
 ├── CITATION.cff                  Citation metadata
@@ -156,8 +156,10 @@ The bibliography is inline (`thebibliography`), so **no `.bib`/BibTeX step is ne
 
 ```bash
 cd manuscript
-pdflatex main.tex
-pdflatex main.tex        # second pass resolves cross-references
+latexmk -pdf main.tex    # iterates pdflatex until refs/labels converge
+# or, without latexmk, THREE passes (labels + supplementary \theHtable anchors
+# stabilise on the third pass):
+#   pdflatex main.tex && pdflatex main.tex && pdflatex main.tex
 ```
 
 This produces `main.pdf`. To submit, upload the contents of `manuscript/`

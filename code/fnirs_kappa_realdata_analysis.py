@@ -168,12 +168,17 @@ def get_f_cortex(sds_mm: float) -> dict[int, float]:
     Monte-Carlo source and applies the corresponding wavelength-specific CSF
     light-piping ratio gamma(lambda, SDS) for real heads.  No 760->850 ratio
     shortcut and no single gamma multiplier are used.
+
+    Returns the FULL floating-point interpolated fraction (no rounding): callers
+    that apply the quantitative kappa_PV correction must use full precision, and
+    any rounding is done only at display/export time. Rounding here would quantise
+    every corrected amplitude to the 4th-decimal grid of f_cortex.
     """
     out = {}
     for wl in (760, 850):
         f = (_fcs.f_cortex_invivo(sds_mm, wl) if APPLY_CSF_LIGHTPIPING
              else _fcs.f_cortex_2L(sds_mm, wl))
-        out[wl] = round(float(f), 4)
+        out[wl] = float(f)
     return out
 
 
