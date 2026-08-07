@@ -64,8 +64,18 @@ else
 fi
 
 echo "== 6/6  Build manuscript + verify manifest =="
-( cd manuscript && pdflatex -interaction=nonstopmode main.tex >/dev/null && \
-                   pdflatex -interaction=nonstopmode main.tex >/dev/null )
+# Use latexmk if available (it iterates pdflatex until labels/refs converge);
+# otherwise fall back to THREE explicit pdflatex passes -- cross-references and
+# the supplementary \theHtable anchors only stabilise on the third pass, so two
+# passes can leave stale labels.
+( cd manuscript && \
+  if command -v latexmk >/dev/null 2>&1; then \
+    latexmk -pdf -interaction=nonstopmode main.tex >/dev/null; \
+  else \
+    pdflatex -interaction=nonstopmode main.tex >/dev/null && \
+    pdflatex -interaction=nonstopmode main.tex >/dev/null && \
+    pdflatex -interaction=nonstopmode main.tex >/dev/null; \
+  fi )
 python - <<'PY'
 import hashlib, re, os
 root = os.path.dirname(os.path.abspath("reproduce_all.sh"))

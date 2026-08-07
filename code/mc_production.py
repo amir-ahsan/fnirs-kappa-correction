@@ -208,7 +208,7 @@ def gamma_stats(f2s, f3s):
 def convergence(raw):
     er, Lcx, Lt, w = raw['exit_r'], raw['Lcortex'], raw['Ltot'], raw['w']
     out = {'Lmax': {}, 'annulus': {}}
-    for s in (38.0, 40.0):
+    for s in (38.0, 40.0, 42.0):
         a = np.abs(er - s) <= PROD_HW
         out['Lmax'][str(s)] = {str(L): ratio(w, Lcx, Lt, a & (Lt <= L)) for L in LMAX_SWEEP}
     for s in SDS:
@@ -270,9 +270,9 @@ def main():
     # partition) as the z_max=150 mm production run, so the batches are truly
     # PAIRED.  Report the mean and SE of the per-batch paired difference
     # d_b = f_150,b - f_220,b (not a quadrature of two separate SEs).
-    zc_score = {str(s): score(zc, s, PROD_HW, args.batches) for s in (38.0, 40.0)}
+    zc_score = {str(s): score(zc, s, PROD_HW, args.batches) for s in (38.0, 40.0, 42.0)}
     zc_conv = {}
-    for s in ('38.0', '40.0'):
+    for s in ('38.0', '40.0', '42.0'):
         z2 = zc_score[s]
         f150 = two_layer[760][s]
         b150 = np.array(f150['batch_estimates']); b220 = np.array(z2['batch_estimates'])
@@ -381,11 +381,11 @@ def main():
                         f"{t['gamma_1mm']:.4f},{gsb:.4f},{gsi:.4f}\n")
     # console summary
     print(f"\n=== convergence (2L 760nm, f_cortex vs L_max) ===")
-    for s in ('38.0', '40.0'):
+    for s in ('38.0', '40.0', '42.0'):
         row = conv[760]['Lmax'][s]
         print(f"  SDS={s}: " + "  ".join(f"L{int(float(L))}={row[L]:.4f}" for L in map(str, LMAX_SWEEP)))
     print(f"  z_max {PROD_ZMAX}->{args.zmax_check} (matched N={args.N}, seed={args.seed}, paired batches):")
-    for s in ('38.0', '40.0'):
+    for s in ('38.0', '40.0', '42.0'):
         z = zc_conv[s]
         print(f"    SDS={s}: f(150)={z['f_150']:.4f} f(220)={z['f_220']:.4f}  "
               f"paired delta_b={z['delta_paired']:+.5f} +/- {z['delta_paired_se']:.5f} (SE of d_b)  "
