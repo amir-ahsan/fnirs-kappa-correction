@@ -2,12 +2,12 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "mc_production.py",
-  "git_commit": "0782d6e",
-  "git_commit_full": "0ae4c87b86d2a14b9f8e79a684175dafea194313",
-  "git_dirty": true,
-  "analysis_round": "round8",
-  "generated_utc": "2026-08-07T05:16:54Z",
-  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --git_commit 0782d6e --analysis_round round8",
+  "git_commit": "32687ed",
+  "git_commit_full": "32687ede2ff6786b0be069a84e80266e8ee5f321",
+  "git_dirty": false,
+  "analysis_round": "round9",
+  "generated_utc": "2026-08-07T10:01:24Z",
+  "command": "python mc_production.py -N 2000000 --batches 16 --thin_csf_N 2000000 --out fcortex_production --analysis_round round9",
   "python_version": "3.11.15",
   "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
   "machine": "x86_64",
@@ -74,7 +74,7 @@
   "csf_note": "csf gamma at nominal 2 mm. gamma_se_indep is the PRIMARY reported uncertainty: the independent-propagation SE (quadrature of the 2L and 3L standard errors), which assumes no correlation. gamma_se is a launch-index-matched batch cross-check: SD(gamma_b)/sqrt(B) over the per-batch ratios gamma_b=f3L,b/f2L,b, where batch b draws on the same launched-photon cohort in the 2L and 3L runs (launch_idx mod B, shared seed). This is a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ; the two SEs agree within a 16-batch estimate. csf_thickness_1mm holds the thinner 1 mm CSF layer, now fully characterised (own photon count N_thin_csf, detected count, f3L_1mm batch SD/SE/CI and DPF, and gamma_1mm with a propagated SE gamma_1mm_se plus a launch-index-matched batch SE gamma_1mm_se_batch); the 1 mm rows are also exported to the CSV as geometry 'CSF1mm'.",
   "convergence_note": "L_max/annulus sweeps re-scored from the same run; the z_max=220 check uses the SAME N, seed and launch-defined batches as the z_max=150 run (same geometry, so the photons are identical until the cap), so zmax_check reports the mean and SE of the per-batch difference d_b=f_150,b-f_220,b.",
   "data_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
-  "secs": 4442.6
+  "secs": 5475.9
  },
  "two_layer": {
   "760": {

@@ -6,18 +6,18 @@
    "n_contra": 20,
    "n_ipsi": 20,
    "sds_mean": 38.22585838986682,
-   "kpv_mean": 6.677292281333344,
+   "kpv_mean": 6.677173236988078,
    "kssr760": 1.9679132600545093,
    "kssr850": 2.781952448646125,
    "hbo_uncorr_uM": 0.14393557651663277,
    "hbo_ssr_only_uM": 0.09738592405633631,
-   "hbo_corr_uM": 0.6455649795615603,
+   "hbo_corr_uM": 0.645568579186673,
    "hbr_ssr_only_uM": -0.02742183591162837,
    "hbo_uncorr_ipsi_uM": 0.09568257897848778,
    "lateralization_contra_gt_ipsi": true,
    "hbr_uncorr_uM": -0.030152285872665517,
-   "hbr_corr_uM": -0.1792559660260989,
-   "hbo_scale": 4.485096702183013,
+   "hbr_corr_uM": -0.17925813623407158,
+   "hbo_scale": 4.485121710768102,
    "channels": [
     {
      "base": "S1_D1",
@@ -25,8 +25,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1559,
      "f_cortex_850": 0.1557,
-     "kappa_pv_760": 6.414,
-     "kappa_pv_850": 6.423
+     "kappa_pv_760": 6.413,
+     "kappa_pv_850": 6.421
     },
     {
      "base": "S1_D2",
@@ -34,8 +34,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1545,
      "f_cortex_850": 0.1535,
-     "kappa_pv_760": 6.472,
-     "kappa_pv_850": 6.515
+     "kappa_pv_760": 6.471,
+     "kappa_pv_850": 6.513
     },
     {
      "base": "S1_D3",
@@ -52,8 +52,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1476,
      "f_cortex_850": 0.1441,
-     "kappa_pv_760": 6.775,
-     "kappa_pv_850": 6.94
+     "kappa_pv_760": 6.774,
+     "kappa_pv_850": 6.942
     },
     {
      "base": "S2_D3",
@@ -62,7 +62,7 @@
      "f_cortex_760": 0.1494,
      "f_cortex_850": 0.1463,
      "kappa_pv_760": 6.693,
-     "kappa_pv_850": 6.835
+     "kappa_pv_850": 6.837
     },
     {
      "base": "S2_D4",
@@ -70,8 +70,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.147,
      "f_cortex_850": 0.1433,
-     "kappa_pv_760": 6.803,
-     "kappa_pv_850": 6.978
+     "kappa_pv_760": 6.801,
+     "kappa_pv_850": 6.977
     },
     {
      "base": "S3_D2",
@@ -79,7 +79,7 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1602,
      "f_cortex_850": 0.1608,
-     "kappa_pv_760": 6.242,
+     "kappa_pv_760": 6.244,
      "kappa_pv_850": 6.219
     },
     {
@@ -88,8 +88,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1454,
      "f_cortex_850": 0.1414,
-     "kappa_pv_760": 6.878,
-     "kappa_pv_850": 7.072
+     "kappa_pv_760": 6.877,
+     "kappa_pv_850": 7.074
     },
     {
      "base": "S4_D3",
@@ -97,8 +97,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1621,
      "f_cortex_850": 0.162,
-     "kappa_pv_760": 6.169,
-     "kappa_pv_850": 6.173
+     "kappa_pv_760": 6.171,
+     "kappa_pv_850": 6.174
     },
     {
      "base": "S4_D4",
@@ -106,8 +106,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1311,
      "f_cortex_850": 0.1282,
-     "kappa_pv_760": 7.628,
-     "kappa_pv_850": 7.8
+     "kappa_pv_760": 7.626,
+     "kappa_pv_850": 7.802
     },
     {
      "base": "S5_D5",
@@ -115,7 +115,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.155,
      "f_cortex_850": 0.1542,
-     "kappa_pv_760": 6.452,
+     "kappa_pv_760": 6.453,
      "kappa_pv_850": 6.485
     },
     {
@@ -124,8 +124,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1557,
      "f_cortex_850": 0.1553,
-     "kappa_pv_760": 6.423,
-     "kappa_pv_850": 6.439
+     "kappa_pv_760": 6.424,
+     "kappa_pv_850": 6.438
     },
     {
      "base": "S5_D7",
@@ -142,8 +142,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S6_D7",
@@ -151,8 +151,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1472,
      "f_cortex_850": 0.1435,
-     "kappa_pv_760": 6.793,
-     "kappa_pv_850": 6.969
+     "kappa_pv_760": 6.794,
+     "kappa_pv_850": 6.968
     },
     {
      "base": "S6_D8",
@@ -160,8 +160,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S7_D6",
@@ -169,8 +169,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1607,
      "f_cortex_850": 0.1611,
-     "kappa_pv_760": 6.223,
-     "kappa_pv_850": 6.207
+     "kappa_pv_760": 6.222,
+     "kappa_pv_850": 6.206
     },
     {
      "base": "S7_D7",
@@ -179,7 +179,7 @@
      "f_cortex_760": 0.1478,
      "f_cortex_850": 0.1442,
      "kappa_pv_760": 6.766,
-     "kappa_pv_850": 6.935
+     "kappa_pv_850": 6.932
     },
     {
      "base": "S8_D7",
@@ -187,7 +187,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1619,
      "f_cortex_850": 0.1619,
-     "kappa_pv_760": 6.177,
+     "kappa_pv_760": 6.175,
      "kappa_pv_850": 6.177
     },
     {
@@ -196,110 +196,110 @@
      "hemisphere": "right",
      "f_cortex_760": 0.127,
      "f_cortex_850": 0.1256,
-     "kappa_pv_760": 7.874,
-     "kappa_pv_850": 7.962
+     "kappa_pv_760": 7.873,
+     "kappa_pv_850": 7.963
     }
    ],
    "contra_amp": [
     {
      "sds_mm": 39.02,
      "hbo_uncorr_uM": 0.20266668243218441,
-     "hbo_corr_uM": 0.7851223109846388
+     "hbo_corr_uM": 0.7851118493970697
     },
     {
      "sds_mm": 39.22,
      "hbo_uncorr_uM": 0.12788074130034785,
-     "hbo_corr_uM": 0.2800192291034627
+     "hbo_corr_uM": 0.27995658985057875
     },
     {
      "sds_mm": 40.9,
      "hbo_uncorr_uM": 0.23439609467689174,
-     "hbo_corr_uM": 0.9586931629401191
+     "hbo_corr_uM": 0.9586672636561551
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.13942384423679235,
-     "hbo_corr_uM": 0.6743803296316371
+     "hbo_corr_uM": 0.6746423734482369
     },
     {
      "sds_mm": 37.07,
      "hbo_uncorr_uM": 0.15771818455309813,
-     "hbo_corr_uM": 0.8190916730760912
+     "hbo_corr_uM": 0.8190402909111629
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.16349509050412964,
-     "hbo_corr_uM": 0.8368853346959193
+     "hbo_corr_uM": 0.8371522409833068
     },
     {
      "sds_mm": 40.43,
      "hbo_uncorr_uM": 0.20306120773695022,
-     "hbo_corr_uM": 0.7101323979579228
+     "hbo_corr_uM": 0.709891514400697
     },
     {
      "sds_mm": 37.22,
      "hbo_uncorr_uM": 0.2572820995850031,
-     "hbo_corr_uM": 1.1886694251497107
+     "hbo_corr_uM": 1.188132829238856
     },
     {
      "sds_mm": 40.67,
      "hbo_uncorr_uM": 0.19047949663149208,
-     "hbo_corr_uM": 0.7506339362881898
+     "hbo_corr_uM": 0.7506505983860892
     },
     {
      "sds_mm": 33.44,
      "hbo_uncorr_uM": 0.15932237984270392,
-     "hbo_corr_uM": 0.7305459855958066
+     "hbo_corr_uM": 0.7306505985930598
     },
     {
      "sds_mm": 39.29,
      "hbo_uncorr_uM": 0.20423947133798084,
-     "hbo_corr_uM": 0.9840280085621996
+     "hbo_corr_uM": 0.9838029933128921
     },
     {
      "sds_mm": 38.91,
      "hbo_uncorr_uM": 0.08705811535382152,
-     "hbo_corr_uM": 0.3052115362931229
+     "hbo_corr_uM": 0.3051341444106095
     },
     {
      "sds_mm": 40.89,
      "hbo_uncorr_uM": 0.1786649649984669,
-     "hbo_corr_uM": 0.849766763072114
+     "hbo_corr_uM": 0.8497629100847636
     },
     {
      "sds_mm": 37.18,
      "hbo_uncorr_uM": 0.06763627481937379,
-     "hbo_corr_uM": 0.25661756952135445
+     "hbo_corr_uM": 0.2567199031269071
     },
     {
      "sds_mm": 37.6,
      "hbo_uncorr_uM": 0.14652981651731015,
-     "hbo_corr_uM": 0.7582249170941044
+     "hbo_corr_uM": 0.7584401411373741
     },
     {
      "sds_mm": 37.04,
      "hbo_uncorr_uM": 0.04387838655139531,
-     "hbo_corr_uM": 0.138662835820275
+     "hbo_corr_uM": 0.1386316896524437
     },
     {
      "sds_mm": 40.32,
      "hbo_uncorr_uM": 0.08683255117692365,
-     "hbo_corr_uM": 0.4110002737635385
+     "hbo_corr_uM": 0.41096733268831454
     },
     {
      "sds_mm": 36.66,
      "hbo_uncorr_uM": 0.11101500458693532,
-     "hbo_corr_uM": 0.6242173767741467
+     "hbo_corr_uM": 0.6244371049499977
     },
     {
      "sds_mm": 40.69,
      "hbo_uncorr_uM": 0.12238373477675103,
-     "hbo_corr_uM": 0.8287885005486202
+     "hbo_corr_uM": 0.8289607101821596
     },
     {
      "sds_mm": 34.03,
      "hbo_uncorr_uM": -0.005252611285896269,
-     "hbo_corr_uM": 0.02060802435823357
+     "hbo_corr_uM": 0.020618505322786848
     }
    ]
   },
@@ -309,18 +309,18 @@
    "n_contra": 14,
    "n_ipsi": 14,
    "sds_mean": 37.622451396282294,
-   "kpv_mean": 6.808507135899559,
+   "kpv_mean": 6.808531803972029,
    "kssr760": 1.8321605614929375,
    "kssr850": 2.0986738962235902,
    "hbo_uncorr_uM": 0.1068851361052743,
    "hbo_ssr_only_uM": 0.1254728191141834,
-   "hbo_corr_uM": 0.8546587914607267,
+   "hbo_corr_uM": 0.8547617865211242,
    "hbr_ssr_only_uM": -0.026037864828312583,
    "hbo_uncorr_ipsi_uM": 0.06895845530705576,
    "lateralization_contra_gt_ipsi": true,
    "hbr_uncorr_uM": -0.023406986393787268,
-   "hbr_corr_uM": -0.17098077167445333,
-   "hbo_scale": 7.996049054182316,
+   "hbr_corr_uM": -0.17100689110034475,
+   "hbo_scale": 7.9970126592648425,
    "channels": [
     {
      "base": "S1_D2",
@@ -328,8 +328,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1545,
      "f_cortex_850": 0.1535,
-     "kappa_pv_760": 6.472,
-     "kappa_pv_850": 6.515
+     "kappa_pv_760": 6.471,
+     "kappa_pv_850": 6.513
     },
     {
      "base": "S2_D1",
@@ -337,8 +337,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1476,
      "f_cortex_850": 0.1441,
-     "kappa_pv_760": 6.775,
-     "kappa_pv_850": 6.94
+     "kappa_pv_760": 6.774,
+     "kappa_pv_850": 6.942
     },
     {
      "base": "S2_D3",
@@ -347,7 +347,7 @@
      "f_cortex_760": 0.1494,
      "f_cortex_850": 0.1463,
      "kappa_pv_760": 6.693,
-     "kappa_pv_850": 6.835
+     "kappa_pv_850": 6.837
     },
     {
      "base": "S2_D4",
@@ -355,8 +355,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.147,
      "f_cortex_850": 0.1433,
-     "kappa_pv_760": 6.803,
-     "kappa_pv_850": 6.978
+     "kappa_pv_760": 6.801,
+     "kappa_pv_850": 6.977
     },
     {
      "base": "S3_D2",
@@ -364,7 +364,7 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1602,
      "f_cortex_850": 0.1608,
-     "kappa_pv_760": 6.242,
+     "kappa_pv_760": 6.244,
      "kappa_pv_850": 6.219
     },
     {
@@ -373,8 +373,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1454,
      "f_cortex_850": 0.1414,
-     "kappa_pv_760": 6.878,
-     "kappa_pv_850": 7.072
+     "kappa_pv_760": 6.877,
+     "kappa_pv_850": 7.074
     },
     {
      "base": "S4_D3",
@@ -382,8 +382,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1621,
      "f_cortex_850": 0.162,
-     "kappa_pv_760": 6.169,
-     "kappa_pv_850": 6.173
+     "kappa_pv_760": 6.171,
+     "kappa_pv_850": 6.174
     },
     {
      "base": "S4_D4",
@@ -391,8 +391,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1311,
      "f_cortex_850": 0.1282,
-     "kappa_pv_760": 7.628,
-     "kappa_pv_850": 7.8
+     "kappa_pv_760": 7.626,
+     "kappa_pv_850": 7.802
     },
     {
      "base": "S5_D5",
@@ -400,7 +400,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.155,
      "f_cortex_850": 0.1542,
-     "kappa_pv_760": 6.452,
+     "kappa_pv_760": 6.453,
      "kappa_pv_850": 6.485
     },
     {
@@ -409,8 +409,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S6_D8",
@@ -418,8 +418,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S7_D7",
@@ -428,7 +428,7 @@
      "f_cortex_760": 0.1478,
      "f_cortex_850": 0.1442,
      "kappa_pv_760": 6.766,
-     "kappa_pv_850": 6.935
+     "kappa_pv_850": 6.932
     },
     {
      "base": "S8_D7",
@@ -436,7 +436,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1619,
      "f_cortex_850": 0.1619,
-     "kappa_pv_760": 6.177,
+     "kappa_pv_760": 6.175,
      "kappa_pv_850": 6.177
     },
     {
@@ -445,80 +445,80 @@
      "hemisphere": "right",
      "f_cortex_760": 0.127,
      "f_cortex_850": 0.1256,
-     "kappa_pv_760": 7.874,
-     "kappa_pv_850": 7.962
+     "kappa_pv_760": 7.873,
+     "kappa_pv_850": 7.963
     }
    ],
    "contra_amp": [
     {
      "sds_mm": 39.02,
      "hbo_uncorr_uM": 0.07783968780340585,
-     "hbo_corr_uM": 0.347592466996184
+     "hbo_corr_uM": 0.3475929954348697
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": -0.02237984895060615,
-     "hbo_corr_uM": 0.04159556373055993
+     "hbo_corr_uM": 0.04157802987661798
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": -0.045548856619611174,
-     "hbo_corr_uM": -0.103840953529201
+     "hbo_corr_uM": -0.10390555612927045
     },
     {
      "sds_mm": 37.22,
      "hbo_uncorr_uM": 0.2424369732766718,
-     "hbo_corr_uM": 1.5868032056588406
+     "hbo_corr_uM": 1.5862296239697822
     },
     {
      "sds_mm": 40.67,
      "hbo_uncorr_uM": 0.18556318642085487,
-     "hbo_corr_uM": 1.1376926845205353
+     "hbo_corr_uM": 1.1376919099433493
     },
     {
      "sds_mm": 33.44,
      "hbo_uncorr_uM": 0.18529444694927757,
-     "hbo_corr_uM": 1.443957137537033
+     "hbo_corr_uM": 1.4441313958160575
     },
     {
      "sds_mm": 38.91,
      "hbo_uncorr_uM": 0.06119342786719113,
-     "hbo_corr_uM": 0.013240194163804592
+     "hbo_corr_uM": 0.013241303375598966
     },
     {
      "sds_mm": 37.18,
      "hbo_uncorr_uM": 0.07087482883277553,
-     "hbo_corr_uM": 0.5711359332302169
+     "hbo_corr_uM": 0.5713473485098791
     },
     {
      "sds_mm": 37.6,
      "hbo_uncorr_uM": 0.05313984576936451,
-     "hbo_corr_uM": 0.4225189577412402
+     "hbo_corr_uM": 0.4225795709511217
     },
     {
      "sds_mm": 37.04,
      "hbo_uncorr_uM": -0.050810833183511685,
-     "hbo_corr_uM": -0.3398231820565382
+     "hbo_corr_uM": -0.3397506502525985
     },
     {
      "sds_mm": 40.32,
      "hbo_uncorr_uM": 0.24260072245780687,
-     "hbo_corr_uM": 1.8821396905472214
+     "hbo_corr_uM": 1.8820377486938435
     },
     {
      "sds_mm": 36.66,
      "hbo_uncorr_uM": 0.33885888177434814,
-     "hbo_corr_uM": 2.7434375507388373
+     "hbo_corr_uM": 2.744331706112238
     },
     {
      "sds_mm": 40.69,
      "hbo_uncorr_uM": 0.13889956815738952,
-     "hbo_corr_uM": 1.3599034821060914
+     "hbo_corr_uM": 1.360188134230867
     },
     {
      "sds_mm": 34.03,
      "hbo_uncorr_uM": 0.018429874918483427,
-     "hbo_corr_uM": 0.8588703490653462
+     "hbo_corr_uM": 0.8593714507633833
     }
    ]
   },
@@ -528,18 +528,18 @@
    "n_contra": 12,
    "n_ipsi": 12,
    "sds_mean": 37.72553089615015,
-   "kpv_mean": 6.799415936586461,
+   "kpv_mean": 6.799484087672366,
    "kssr760": 1.6399849474649753,
    "kssr850": 2.3603140615960148,
    "hbo_uncorr_uM": 0.0394046833573897,
    "hbo_ssr_only_uM": 0.0831346973225965,
-   "hbo_corr_uM": 0.5816764871697004,
+   "hbo_corr_uM": 0.5816814988039662,
    "hbr_ssr_only_uM": -0.02871442517233874,
    "hbo_uncorr_ipsi_uM": 0.038815555253564275,
    "lateralization_contra_gt_ipsi": true,
    "hbr_uncorr_uM": -0.0230337307828116,
-   "hbr_corr_uM": -0.1974722835768977,
-   "hbo_scale": 14.761607951371005,
+   "hbr_corr_uM": -0.19746271483986874,
+   "hbo_scale": 14.761735135092298,
    "channels": [
     {
      "base": "S1_D3",
@@ -556,8 +556,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1476,
      "f_cortex_850": 0.1441,
-     "kappa_pv_760": 6.775,
-     "kappa_pv_850": 6.94
+     "kappa_pv_760": 6.774,
+     "kappa_pv_850": 6.942
     },
     {
      "base": "S2_D3",
@@ -566,7 +566,7 @@
      "f_cortex_760": 0.1494,
      "f_cortex_850": 0.1463,
      "kappa_pv_760": 6.693,
-     "kappa_pv_850": 6.835
+     "kappa_pv_850": 6.837
     },
     {
      "base": "S2_D4",
@@ -574,8 +574,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.147,
      "f_cortex_850": 0.1433,
-     "kappa_pv_760": 6.803,
-     "kappa_pv_850": 6.978
+     "kappa_pv_760": 6.801,
+     "kappa_pv_850": 6.977
     },
     {
      "base": "S3_D2",
@@ -583,7 +583,7 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1602,
      "f_cortex_850": 0.1608,
-     "kappa_pv_760": 6.242,
+     "kappa_pv_760": 6.244,
      "kappa_pv_850": 6.219
     },
     {
@@ -592,8 +592,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1454,
      "f_cortex_850": 0.1414,
-     "kappa_pv_760": 6.878,
-     "kappa_pv_850": 7.072
+     "kappa_pv_760": 6.877,
+     "kappa_pv_850": 7.074
     },
     {
      "base": "S4_D3",
@@ -601,8 +601,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1621,
      "f_cortex_850": 0.162,
-     "kappa_pv_760": 6.169,
-     "kappa_pv_850": 6.173
+     "kappa_pv_760": 6.171,
+     "kappa_pv_850": 6.174
     },
     {
      "base": "S4_D4",
@@ -610,8 +610,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1311,
      "f_cortex_850": 0.1282,
-     "kappa_pv_760": 7.628,
-     "kappa_pv_850": 7.8
+     "kappa_pv_760": 7.626,
+     "kappa_pv_850": 7.802
     },
     {
      "base": "S6_D8",
@@ -619,8 +619,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S7_D7",
@@ -629,7 +629,7 @@
      "f_cortex_760": 0.1478,
      "f_cortex_850": 0.1442,
      "kappa_pv_760": 6.766,
-     "kappa_pv_850": 6.935
+     "kappa_pv_850": 6.932
     },
     {
      "base": "S8_D7",
@@ -637,7 +637,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1619,
      "f_cortex_850": 0.1619,
-     "kappa_pv_760": 6.177,
+     "kappa_pv_760": 6.175,
      "kappa_pv_850": 6.177
     },
     {
@@ -646,70 +646,70 @@
      "hemisphere": "right",
      "f_cortex_760": 0.127,
      "f_cortex_850": 0.1256,
-     "kappa_pv_760": 7.874,
-     "kappa_pv_850": 7.962
+     "kappa_pv_760": 7.873,
+     "kappa_pv_850": 7.963
     }
    ],
    "contra_amp": [
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.04030939681193808,
-     "hbo_corr_uM": 0.4867807574347959
+     "hbo_corr_uM": 0.48687531352645824
     },
     {
      "sds_mm": 37.22,
      "hbo_uncorr_uM": 0.22072919396341995,
-     "hbo_corr_uM": 1.5147824961151346
+     "hbo_corr_uM": 1.5140783963328555
     },
     {
      "sds_mm": 40.67,
      "hbo_uncorr_uM": 0.1357115047945959,
-     "hbo_corr_uM": 0.8276270349899731
+     "hbo_corr_uM": 0.8276657011640534
     },
     {
      "sds_mm": 33.44,
      "hbo_uncorr_uM": 0.12729035189059024,
-     "hbo_corr_uM": 0.9994868826906723
+     "hbo_corr_uM": 0.9995905526081814
     },
     {
      "sds_mm": 40.89,
      "hbo_uncorr_uM": -0.07863852164025631,
-     "hbo_corr_uM": -0.10130625612026153
+     "hbo_corr_uM": -0.1013058023152582
     },
     {
      "sds_mm": 37.18,
      "hbo_uncorr_uM": -0.04433236580240084,
-     "hbo_corr_uM": -0.04716870269381571
+     "hbo_corr_uM": -0.04721617618423115
     },
     {
      "sds_mm": 37.6,
      "hbo_uncorr_uM": -0.015759034536307212,
-     "hbo_corr_uM": 0.47912809477046675
+     "hbo_corr_uM": 0.47926687501871906
     },
     {
      "sds_mm": 37.04,
      "hbo_uncorr_uM": 0.0029084878213211803,
-     "hbo_corr_uM": 0.3101036480519099
+     "hbo_corr_uM": 0.31003599823156364
     },
     {
      "sds_mm": 40.32,
      "hbo_uncorr_uM": 0.016518886858743368,
-     "hbo_corr_uM": 0.48785517117290517
+     "hbo_corr_uM": 0.48783161663857616
     },
     {
      "sds_mm": 36.66,
      "hbo_uncorr_uM": -0.03227859687395882,
-     "hbo_corr_uM": 0.21452423842604024
+     "hbo_corr_uM": 0.21456843501543857
     },
     {
      "sds_mm": 40.69,
      "hbo_uncorr_uM": 0.0003494928714660149,
-     "hbo_corr_uM": 0.5711810132411088
+     "hbo_corr_uM": 0.5713008348961517
     },
     {
      "sds_mm": 34.03,
      "hbo_uncorr_uM": 0.10004740412952473,
-     "hbo_corr_uM": 1.2371234679574754
+     "hbo_corr_uM": 1.237486240715087
     }
    ]
   },
@@ -719,18 +719,18 @@
    "n_contra": 20,
    "n_ipsi": 20,
    "sds_mean": 38.22585838986682,
-   "kpv_mean": 6.677292281333344,
+   "kpv_mean": 6.677173236988078,
    "kssr760": 1.859168862411294,
    "kssr850": 2.6171141812601886,
    "hbo_uncorr_uM": 0.11074546549706259,
    "hbo_ssr_only_uM": 0.16182990469813144,
-   "hbo_corr_uM": 1.0950068637333907,
+   "hbo_corr_uM": 1.0950741278214748,
    "hbr_ssr_only_uM": -0.09201646463955272,
    "hbo_uncorr_ipsi_uM": -0.0032571542684354587,
    "lateralization_contra_gt_ipsi": true,
    "hbr_uncorr_uM": -0.08016412596001327,
-   "hbr_corr_uM": -0.6170581127389465,
-   "hbo_scale": 9.887599991734513,
+   "hbr_corr_uM": -0.6170492189049472,
+   "hbo_scale": 9.888207367285125,
    "channels": [
     {
      "base": "S1_D1",
@@ -738,8 +738,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1559,
      "f_cortex_850": 0.1557,
-     "kappa_pv_760": 6.414,
-     "kappa_pv_850": 6.423
+     "kappa_pv_760": 6.413,
+     "kappa_pv_850": 6.421
     },
     {
      "base": "S1_D2",
@@ -747,8 +747,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1545,
      "f_cortex_850": 0.1535,
-     "kappa_pv_760": 6.472,
-     "kappa_pv_850": 6.515
+     "kappa_pv_760": 6.471,
+     "kappa_pv_850": 6.513
     },
     {
      "base": "S1_D3",
@@ -765,8 +765,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1476,
      "f_cortex_850": 0.1441,
-     "kappa_pv_760": 6.775,
-     "kappa_pv_850": 6.94
+     "kappa_pv_760": 6.774,
+     "kappa_pv_850": 6.942
     },
     {
      "base": "S2_D3",
@@ -775,7 +775,7 @@
      "f_cortex_760": 0.1494,
      "f_cortex_850": 0.1463,
      "kappa_pv_760": 6.693,
-     "kappa_pv_850": 6.835
+     "kappa_pv_850": 6.837
     },
     {
      "base": "S2_D4",
@@ -783,8 +783,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.147,
      "f_cortex_850": 0.1433,
-     "kappa_pv_760": 6.803,
-     "kappa_pv_850": 6.978
+     "kappa_pv_760": 6.801,
+     "kappa_pv_850": 6.977
     },
     {
      "base": "S3_D2",
@@ -792,7 +792,7 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1602,
      "f_cortex_850": 0.1608,
-     "kappa_pv_760": 6.242,
+     "kappa_pv_760": 6.244,
      "kappa_pv_850": 6.219
     },
     {
@@ -801,8 +801,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1454,
      "f_cortex_850": 0.1414,
-     "kappa_pv_760": 6.878,
-     "kappa_pv_850": 7.072
+     "kappa_pv_760": 6.877,
+     "kappa_pv_850": 7.074
     },
     {
      "base": "S4_D3",
@@ -810,8 +810,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1621,
      "f_cortex_850": 0.162,
-     "kappa_pv_760": 6.169,
-     "kappa_pv_850": 6.173
+     "kappa_pv_760": 6.171,
+     "kappa_pv_850": 6.174
     },
     {
      "base": "S4_D4",
@@ -819,8 +819,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1311,
      "f_cortex_850": 0.1282,
-     "kappa_pv_760": 7.628,
-     "kappa_pv_850": 7.8
+     "kappa_pv_760": 7.626,
+     "kappa_pv_850": 7.802
     },
     {
      "base": "S5_D5",
@@ -828,7 +828,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.155,
      "f_cortex_850": 0.1542,
-     "kappa_pv_760": 6.452,
+     "kappa_pv_760": 6.453,
      "kappa_pv_850": 6.485
     },
     {
@@ -837,8 +837,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1557,
      "f_cortex_850": 0.1553,
-     "kappa_pv_760": 6.423,
-     "kappa_pv_850": 6.439
+     "kappa_pv_760": 6.424,
+     "kappa_pv_850": 6.438
     },
     {
      "base": "S5_D7",
@@ -855,8 +855,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S6_D7",
@@ -864,8 +864,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1472,
      "f_cortex_850": 0.1435,
-     "kappa_pv_760": 6.793,
-     "kappa_pv_850": 6.969
+     "kappa_pv_760": 6.794,
+     "kappa_pv_850": 6.968
     },
     {
      "base": "S6_D8",
@@ -873,8 +873,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S7_D6",
@@ -882,8 +882,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1607,
      "f_cortex_850": 0.1611,
-     "kappa_pv_760": 6.223,
-     "kappa_pv_850": 6.207
+     "kappa_pv_760": 6.222,
+     "kappa_pv_850": 6.206
     },
     {
      "base": "S7_D7",
@@ -892,7 +892,7 @@
      "f_cortex_760": 0.1478,
      "f_cortex_850": 0.1442,
      "kappa_pv_760": 6.766,
-     "kappa_pv_850": 6.935
+     "kappa_pv_850": 6.932
     },
     {
      "base": "S8_D7",
@@ -900,7 +900,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1619,
      "f_cortex_850": 0.1619,
-     "kappa_pv_760": 6.177,
+     "kappa_pv_760": 6.175,
      "kappa_pv_850": 6.177
     },
     {
@@ -909,110 +909,110 @@
      "hemisphere": "right",
      "f_cortex_760": 0.127,
      "f_cortex_850": 0.1256,
-     "kappa_pv_760": 7.874,
-     "kappa_pv_850": 7.962
+     "kappa_pv_760": 7.873,
+     "kappa_pv_850": 7.963
     }
    ],
    "contra_amp": [
     {
      "sds_mm": 39.02,
      "hbo_uncorr_uM": 0.10485922417623696,
-     "hbo_corr_uM": 0.7532886395264914
+     "hbo_corr_uM": 0.7533410394592716
     },
     {
      "sds_mm": 39.22,
      "hbo_uncorr_uM": 0.04751339010113709,
-     "hbo_corr_uM": 0.3774806140237026
+     "hbo_corr_uM": 0.3774748503804444
     },
     {
      "sds_mm": 40.9,
      "hbo_uncorr_uM": 0.2598353834530337,
-     "hbo_corr_uM": 1.6654334255769256
+     "hbo_corr_uM": 1.6653838247813721
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.0330003679826962,
-     "hbo_corr_uM": 0.4226159991026908
+     "hbo_corr_uM": 0.4226214392426957
     },
     {
      "sds_mm": 37.07,
      "hbo_uncorr_uM": 0.2144893057324725,
-     "hbo_corr_uM": 1.7882699489804148
+     "hbo_corr_uM": 1.7882191839922477
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.5336419888491543,
-     "hbo_corr_uM": 4.081482212517893
+     "hbo_corr_uM": 4.082342078708434
     },
     {
      "sds_mm": 40.43,
      "hbo_uncorr_uM": 0.07154476243082791,
-     "hbo_corr_uM": 0.7397388658063268
+     "hbo_corr_uM": 0.7395392407033015
     },
     {
      "sds_mm": 37.22,
      "hbo_uncorr_uM": 0.11941531143815338,
-     "hbo_corr_uM": 1.1768108352657125
+     "hbo_corr_uM": 1.1764678564603674
     },
     {
      "sds_mm": 40.67,
      "hbo_uncorr_uM": 0.3902378010131276,
-     "hbo_corr_uM": 2.6857140773295156
+     "hbo_corr_uM": 2.685656235952329
     },
     {
      "sds_mm": 33.44,
      "hbo_uncorr_uM": 0.25924637647315163,
-     "hbo_corr_uM": 2.409231923963467
+     "hbo_corr_uM": 2.409460475542968
     },
     {
      "sds_mm": 39.29,
      "hbo_uncorr_uM": -0.03503157121310707,
-     "hbo_corr_uM": 0.010232635306699564
+     "hbo_corr_uM": 0.010217242350582762
     },
     {
      "sds_mm": 38.91,
      "hbo_uncorr_uM": 0.015454215355439414,
-     "hbo_corr_uM": 0.32367412202952217
+     "hbo_corr_uM": 0.3236035023072159
     },
     {
      "sds_mm": 40.89,
      "hbo_uncorr_uM": 0.05436763047125233,
-     "hbo_corr_uM": 0.5492327227249386
+     "hbo_corr_uM": 0.5492302220218246
     },
     {
      "sds_mm": 37.18,
      "hbo_uncorr_uM": -0.08930557088686532,
-     "hbo_corr_uM": -0.14504164439655107
+     "hbo_corr_uM": -0.1451568132029516
     },
     {
      "sds_mm": 37.6,
      "hbo_uncorr_uM": -0.08873791451522872,
-     "hbo_corr_uM": -0.03334387213397566
+     "hbo_corr_uM": -0.033402502170423065
     },
     {
      "sds_mm": 37.04,
      "hbo_uncorr_uM": -0.1052886030126243,
-     "hbo_corr_uM": -0.24907041200275637
+     "hbo_corr_uM": -0.24902301149107117
     },
     {
      "sds_mm": 40.32,
      "hbo_uncorr_uM": 0.03201639642060049,
-     "hbo_corr_uM": 0.5282178929721197
+     "hbo_corr_uM": 0.5282232916497787
     },
     {
      "sds_mm": 36.66,
      "hbo_uncorr_uM": 0.22575349591895444,
-     "hbo_corr_uM": 2.0959293826627428
+     "hbo_corr_uM": 2.096457283213705
     },
     {
      "sds_mm": 40.69,
      "hbo_uncorr_uM": 0.11403762104530986,
-     "hbo_corr_uM": 1.418888532913867
+     "hbo_corr_uM": 1.4191867152530138
     },
     {
      "sds_mm": 34.03,
      "hbo_uncorr_uM": 0.05785969870752917,
-     "hbo_corr_uM": 1.301351372498068
+     "hbo_corr_uM": 1.3016404012743912
     }
    ]
   },
@@ -1022,18 +1022,18 @@
    "n_contra": 13,
    "n_ipsi": 13,
    "sds_mean": 37.2943982106196,
-   "kpv_mean": 6.878936350739139,
+   "kpv_mean": 6.878840660607541,
    "kssr760": 1.6060160847037381,
    "kssr850": 1.8165307533541701,
    "hbo_uncorr_uM": 0.21879685099791235,
    "hbo_ssr_only_uM": 0.19867557995482,
-   "hbo_corr_uM": 1.389935910206007,
+   "hbo_corr_uM": 1.3900028941500495,
    "hbr_ssr_only_uM": -0.0774232430009907,
    "hbo_uncorr_ipsi_uM": 0.12463451141495284,
    "lateralization_contra_gt_ipsi": true,
    "hbr_uncorr_uM": -0.07595421721770182,
-   "hbr_corr_uM": -0.5416868780554634,
-   "hbo_scale": 6.352632151087353,
+   "hbr_corr_uM": -0.5416860694323327,
+   "hbo_scale": 6.352938297833694,
    "channels": [
     {
      "base": "S1_D1",
@@ -1041,8 +1041,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1559,
      "f_cortex_850": 0.1557,
-     "kappa_pv_760": 6.414,
-     "kappa_pv_850": 6.423
+     "kappa_pv_760": 6.413,
+     "kappa_pv_850": 6.421
     },
     {
      "base": "S2_D1",
@@ -1050,8 +1050,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1476,
      "f_cortex_850": 0.1441,
-     "kappa_pv_760": 6.775,
-     "kappa_pv_850": 6.94
+     "kappa_pv_760": 6.774,
+     "kappa_pv_850": 6.942
     },
     {
      "base": "S2_D3",
@@ -1060,7 +1060,7 @@
      "f_cortex_760": 0.1494,
      "f_cortex_850": 0.1463,
      "kappa_pv_760": 6.693,
-     "kappa_pv_850": 6.835
+     "kappa_pv_850": 6.837
     },
     {
      "base": "S2_D4",
@@ -1068,8 +1068,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.147,
      "f_cortex_850": 0.1433,
-     "kappa_pv_760": 6.803,
-     "kappa_pv_850": 6.978
+     "kappa_pv_760": 6.801,
+     "kappa_pv_850": 6.977
     },
     {
      "base": "S3_D3",
@@ -1077,8 +1077,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1454,
      "f_cortex_850": 0.1414,
-     "kappa_pv_760": 6.878,
-     "kappa_pv_850": 7.072
+     "kappa_pv_760": 6.877,
+     "kappa_pv_850": 7.074
     },
     {
      "base": "S4_D3",
@@ -1086,8 +1086,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1621,
      "f_cortex_850": 0.162,
-     "kappa_pv_760": 6.169,
-     "kappa_pv_850": 6.173
+     "kappa_pv_760": 6.171,
+     "kappa_pv_850": 6.174
     },
     {
      "base": "S4_D4",
@@ -1095,8 +1095,8 @@
      "hemisphere": "left",
      "f_cortex_760": 0.1311,
      "f_cortex_850": 0.1282,
-     "kappa_pv_760": 7.628,
-     "kappa_pv_850": 7.8
+     "kappa_pv_760": 7.626,
+     "kappa_pv_850": 7.802
     },
     {
      "base": "S6_D5",
@@ -1104,8 +1104,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S6_D7",
@@ -1113,8 +1113,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1472,
      "f_cortex_850": 0.1435,
-     "kappa_pv_760": 6.793,
-     "kappa_pv_850": 6.969
+     "kappa_pv_760": 6.794,
+     "kappa_pv_850": 6.968
     },
     {
      "base": "S6_D8",
@@ -1122,8 +1122,8 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1467,
      "f_cortex_850": 0.143,
-     "kappa_pv_760": 6.817,
-     "kappa_pv_850": 6.993
+     "kappa_pv_760": 6.815,
+     "kappa_pv_850": 6.995
     },
     {
      "base": "S7_D7",
@@ -1132,7 +1132,7 @@
      "f_cortex_760": 0.1478,
      "f_cortex_850": 0.1442,
      "kappa_pv_760": 6.766,
-     "kappa_pv_850": 6.935
+     "kappa_pv_850": 6.932
     },
     {
      "base": "S8_D7",
@@ -1140,7 +1140,7 @@
      "hemisphere": "right",
      "f_cortex_760": 0.1619,
      "f_cortex_850": 0.1619,
-     "kappa_pv_760": 6.177,
+     "kappa_pv_760": 6.175,
      "kappa_pv_850": 6.177
     },
     {
@@ -1149,75 +1149,75 @@
      "hemisphere": "right",
      "f_cortex_760": 0.127,
      "f_cortex_850": 0.1256,
-     "kappa_pv_760": 7.874,
-     "kappa_pv_850": 7.962
+     "kappa_pv_760": 7.873,
+     "kappa_pv_850": 7.963
     }
    ],
    "contra_amp": [
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.07631096557506878,
-     "hbo_corr_uM": 0.5293997719807935
+     "hbo_corr_uM": 0.5295424430354138
     },
     {
      "sds_mm": 37.07,
      "hbo_uncorr_uM": 0.41826624279177865,
-     "hbo_corr_uM": 2.9443607155836538
+     "hbo_corr_uM": 2.944224682488627
     },
     {
      "sds_mm": 36.97,
      "hbo_uncorr_uM": 0.1954626104884544,
-     "hbo_corr_uM": 1.3984026588522163
+     "hbo_corr_uM": 1.3987412679568438
     },
     {
      "sds_mm": 37.22,
      "hbo_uncorr_uM": 0.39637451313732214,
-     "hbo_corr_uM": 2.5984820622953797
+     "hbo_corr_uM": 2.597518248604752
     },
     {
      "sds_mm": 40.67,
      "hbo_uncorr_uM": 0.41399836142272095,
-     "hbo_corr_uM": 2.0800819837332614
+     "hbo_corr_uM": 2.0800811403701585
     },
     {
      "sds_mm": 33.44,
      "hbo_uncorr_uM": 0.4304331627630072,
-     "hbo_corr_uM": 2.9052135021297882
+     "hbo_corr_uM": 2.9055089896200554
     },
     {
      "sds_mm": 39.29,
      "hbo_uncorr_uM": 0.16866872890637472,
-     "hbo_corr_uM": 0.8070211313006024
+     "hbo_corr_uM": 0.806834736104771
     },
     {
      "sds_mm": 37.18,
      "hbo_uncorr_uM": 0.02932775695318717,
-     "hbo_corr_uM": 0.12819442075137022
+     "hbo_corr_uM": 0.1283404517364164
     },
     {
      "sds_mm": 37.6,
      "hbo_uncorr_uM": 0.1464547629934895,
-     "hbo_corr_uM": 0.6109996599224382
+     "hbo_corr_uM": 0.6110534767227929
     },
     {
      "sds_mm": 37.04,
      "hbo_uncorr_uM": -0.08801228613838419,
-     "hbo_corr_uM": -0.7671524439098594
+     "hbo_corr_uM": -0.7669839674396571
     },
     {
      "sds_mm": 36.66,
      "hbo_uncorr_uM": 0.22184621803862206,
-     "hbo_corr_uM": 1.6227123593508095
+     "hbo_corr_uM": 1.6231652315235705
     },
     {
      "sds_mm": 40.69,
      "hbo_uncorr_uM": 0.18945814622585427,
-     "hbo_corr_uM": 1.2231712238787427
+     "hbo_corr_uM": 1.2234334743625952
     },
     {
      "sds_mm": 34.03,
      "hbo_uncorr_uM": 0.2457698798153646,
-     "hbo_corr_uM": 1.9882797868088937
+     "hbo_corr_uM": 1.9885774488643049
     }
    ]
   }
@@ -1227,12 +1227,12 @@
   "hbo_uncorr_sd": 0.0652089492086018,
   "hbo_ssr_only": 0.13329978502921352,
   "hbo_ssr_only_sd": 0.047316923823576336,
-  "hbo_corr": 0.913368606426277,
-  "hbo_corr_sd": 0.33365181644251213,
+  "hbo_corr": 0.9134177772966577,
+  "hbo_corr_sd": 0.3336783930457433,
   "hbr_uncorr": -0.04654226924539589,
   "hbr_ssr_only": -0.050322766710564626,
-  "hbr_corr": -0.341290802414372,
-  "kpv": 6.768288797178369,
+  "hbr_corr": -0.34129260610231305,
+  "kpv": 6.7682406052456185,
   "kssr760": 1.781048743225491,
   "kssr760_sd": 0.15343479450690778,
   "kssr850": 2.3349170682160176,
@@ -1257,8 +1257,8 @@
     "n_channels": 79,
     "sds_lo": 33.44,
     "sds_hi": 40.9,
-    "hbo_corr_mean": 0.913368606426277,
-    "hbo_corr_sd": 0.33365181644251213,
+    "hbo_corr_mean": 0.9134177772966577,
+    "hbo_corr_sd": 0.3336783930457433,
     "hbo_uncorr_mean": 0.12395354249485435,
     "hbo_uncorr_sd": 0.0652089492086018
    },
@@ -1267,8 +1267,8 @@
     "n_channels": 48,
     "sds_lo": 36.66,
     "sds_hi": 39.29,
-    "hbo_corr_mean": 0.7396088917033351,
-    "hbo_corr_sd": 0.2464277184403515,
+    "hbo_corr_mean": 0.7396192762276764,
+    "hbo_corr_sd": 0.246450430893673,
     "hbo_uncorr_mean": 0.10135799455934565,
     "hbo_uncorr_sd": 0.05715441398348189
    },
@@ -1277,8 +1277,8 @@
     "n_channels": 10,
     "sds_lo": 33.44,
     "sds_hi": 34.03,
-    "hbo_corr_mean": 1.3894668432604784,
-    "hbo_corr_sd": 0.7894624531449543,
+    "hbo_corr_mean": 1.3897036059120276,
+    "hbo_corr_sd": 0.7895359693158732,
     "hbo_uncorr_mean": 0.15784409642037361,
     "hbo_uncorr_sd": 0.10501047281978221
    },
@@ -1287,8 +1287,8 @@
     "n_channels": 21,
     "sds_lo": 40.32,
     "sds_hi": 40.9,
-    "hbo_corr_mean": 1.1147835778001165,
-    "hbo_corr_sd": 0.5021282857741609,
+    "hbo_corr_mean": 1.1148245938423156,
+    "hbo_corr_sd": 0.5021657626160779,
     "hbo_uncorr_mean": 0.1664422055392093,
     "hbo_uncorr_sd": 0.10108732346572401
    }
@@ -1298,28 +1298,28 @@
     "n_channels": 79,
     "sds_lo": 33.44,
     "sds_hi": 40.9,
-    "hbo_corr_mean": 0.9091891724691605,
+    "hbo_corr_mean": 0.9092371488741386,
     "hbo_uncorr_mean": 0.12540794948113018
    },
    "band_35_40": {
     "n_channels": 48,
     "sds_lo": 36.66,
     "sds_hi": 39.29,
-    "hbo_corr_mean": 0.7576393669269819,
+    "hbo_corr_mean": 0.7576594600873442,
     "hbo_uncorr_mean": 0.10721808442509884
    },
    "below_35": {
     "n_channels": 10,
     "sds_lo": 33.44,
     "sds_hi": 34.03,
-    "hbo_corr_mean": 1.3894668432604784,
+    "hbo_corr_mean": 1.3897036059120276,
     "hbo_uncorr_mean": 0.15784409642037361
    },
    "above_40": {
     "n_channels": 21,
     "sds_lo": 40.32,
     "sds_hi": 40.9,
-    "hbo_corr_mean": 1.0268850752363703,
+    "hbo_corr_mean": 1.0269068865592443,
     "hbo_uncorr_mean": 0.15153899963813347
    }
   }
@@ -1327,11 +1327,11 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_realdata_v2.py",
-  "git_commit": "0ae4c87-dirty",
-  "git_commit_full": "0ae4c87b86d2a14b9f8e79a684175dafea194313",
-  "git_dirty": true,
-  "analysis_round": "round8",
-  "generated_utc": "2026-08-07T06:00:36Z",
+  "git_commit": "32687ed",
+  "git_commit_full": "32687ede2ff6786b0be069a84e80266e8ee5f321",
+  "git_dirty": false,
+  "analysis_round": "round9",
+  "generated_utc": "2026-08-07T10:02:22Z",
   "command": "python fnirs_kappa_realdata_v2.py",
   "python_version": "3.11.15",
   "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
@@ -1347,12 +1347,12 @@
   },
   "input_hashes": {
    "fcortex_production_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
-   "fcortex_production_git": "0782d6e",
+   "fcortex_production_git": "32687ed",
    "fcortex_production_schema": "2.0"
   },
   "forward_model": {
    "fcortex_production_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
-   "fcortex_production_git": "0782d6e",
+   "fcortex_production_git": "32687ed",
    "fcortex_production_schema": "2.0"
   },
   "dataset": {

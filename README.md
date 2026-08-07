@@ -262,11 +262,12 @@ TDDR + SCI quality control, the nearest short-channel regressor, condition-resol
 estimator. It regenerates Figures 4–7 and writes `realdata_v2_summary.json`
 (including machine-readable per-channel f_cortex and kappa_PV at both wavelengths).
 
-Expected group means (N = 5, SDS ≈ 38 mm): corrected contralateral HbO₂
-**0.92 ± 0.34 µM** (~7×), HbR −0.047 → −0.343 µM, per-channel kappa_PV ≈ 6.8
-(CSF-augmented three-layer f_cortex ≈ 0.16), V_SSR(760/850) = 1.78/2.34 (reported as
-a variance diagnostic, not applied). Subject 01: kappa_PV = 6.71, HbO₂ 0.144 → 0.649 µM,
-HbR −0.030 → −0.181 µM. **Runtime:** ~2–4 min (first run downloads/loads BIDS data).
+Expected group means (N = 5, channels 33.4–40.9 mm, median 37.2 mm): corrected
+contralateral HbO₂ **0.913 ± 0.334 µM** (~7×), HbR −0.047 → −0.341 µM, per-channel
+kappa_PV ≈ 6.77 (CSF-augmented three-layer f_cortex ≈ 0.15), V_SSR(760/850) = 1.78/2.34
+(reported as a variance diagnostic, not applied). Subject 01: kappa_PV = 6.68,
+HbO₂ 0.144 → 0.646 µM, HbR −0.030 → −0.179 µM. **Runtime:** ~2–4 min (first run
+downloads/loads BIDS data).
 
 Place a local copy of the dataset at `code/BIDS-NIRS-Tapping-data/`
 (containing `sub-01 … sub-05`) to run offline, or let the script fetch it.

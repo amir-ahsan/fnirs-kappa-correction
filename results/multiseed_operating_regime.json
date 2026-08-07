@@ -42,11 +42,11 @@
  "_meta": {
   "schema_version": "2.0",
   "produced_by": "fnirs_kappa_synthetic_validation.py:multiseed_operating_regime",
-  "git_commit": "0ae4c87-dirty",
-  "git_commit_full": "0ae4c87b86d2a14b9f8e79a684175dafea194313",
-  "git_dirty": true,
-  "analysis_round": "round8",
-  "generated_utc": "2026-08-07T05:57:39Z",
+  "git_commit": "32687ed",
+  "git_commit_full": "32687ede2ff6786b0be069a84e80266e8ee5f321",
+  "git_dirty": false,
+  "analysis_round": "round9",
+  "generated_utc": "2026-08-07T11:22:16Z",
   "command": "python fnirs_kappa_synthetic_validation.py",
   "python_version": "3.11.15",
   "platform": "Linux-6.18.5-fc-v18-x86_64-with-glibc2.39",
@@ -62,12 +62,12 @@
   },
   "input_hashes": {
    "fcortex_production_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
-   "fcortex_production_git": "0782d6e",
+   "fcortex_production_git": "32687ed",
    "fcortex_production_schema": "2.0"
   },
   "forward_model": {
    "fcortex_production_sha256": "91cfa828227df0652fb023a9ec5a005424103bcc5841c162fe9cfc58d2ac0331",
-   "fcortex_production_git": "0782d6e",
+   "fcortex_production_git": "32687ed",
    "fcortex_production_schema": "2.0"
   },
   "seed": 42

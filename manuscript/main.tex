@@ -633,12 +633,12 @@ The upgraded per-channel, contralateral analysis for all five subjects is report
 \label{fig:realdata_timeseries}
 \end{figure}
 
-For Subject~01 (table~\ref{tab:realdata}, figure~\ref{fig:realdata_hrf}) the contralateral block-averaged HbO$_2$ response rises during the task to an uncorrected window-mean of $+0.14\,\mu$M; after nearest-short SSR denoising and the applied per-channel partial-volume correction ($\kappa_{\mathrm{PV}}=6.71$) it reaches $+0.65\,\mu$M (a $4.5\times$ net amplification), while HbR deepens from $-0.030$ to $-0.181\,\mu$M. The corrected HbO$_2$ amplitude lies in the physiological range for motor-cortex finger tapping. The SSR variance diagnostics (760: 1.97, 850: 2.78) are reported but not applied: $R^2_{\mathrm{SS}}$ measures the total long-channel variance the short channel removed and cannot identify the cortical component removed, so it is not converted into an amplitude correction (Section~\ref{sec:kappa_ssr_diag}).
+For Subject~01 (table~\ref{tab:realdata}, figure~\ref{fig:realdata_hrf}) the contralateral block-averaged HbO$_2$ response rises during the task to an uncorrected window-mean of $+0.14\,\mu$M; after nearest-short SSR denoising and the applied per-channel partial-volume correction ($\kappa_{\mathrm{PV}}=6.68$) it reaches $+0.65\,\mu$M (a $4.5\times$ net amplification), while HbR deepens from $-0.030$ to $-0.179\,\mu$M. The corrected HbO$_2$ amplitude lies in the physiological range for motor-cortex finger tapping. The SSR variance diagnostics (760: 1.97, 850: 2.78) are reported but not applied: $R^2_{\mathrm{SS}}$ measures the total long-channel variance the short channel removed and cannot identify the cortical component removed, so it is not converted into an amplitude correction (Section~\ref{sec:kappa_ssr_diag}).
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{figures/figure5_realdata_hrf.png}
-\caption{Contralateral block-averaged hemodynamic response (Subject~01, SDS~$\approx$~38\,mm), condition-resolved and averaged over the contralateral long channels. \textit{Left}: $\Delta[\mathrm{HbO}_2]$. \textit{Right}: $\Delta[\mathrm{HbR}]$. Uncorrected (dashed) versus $\kappa$-corrected (solid, per-channel $\kappa_{\mathrm{PV}}=6.71$ applied; $V_{\mathrm{SSR}}$ diagnostic only). Grey shading indicates the 5\,s task period; amplitudes are estimated as the mean over a fixed response window.}
+\caption{Contralateral block-averaged hemodynamic response (Subject~01, SDS~$\approx$~38\,mm), condition-resolved and averaged over the contralateral long channels. \textit{Left}: $\Delta[\mathrm{HbO}_2]$. \textit{Right}: $\Delta[\mathrm{HbR}]$. Uncorrected (dashed) versus $\kappa$-corrected (solid, per-channel $\kappa_{\mathrm{PV}}=6.68$ applied; $V_{\mathrm{SSR}}$ diagnostic only). Grey shading indicates the 5\,s task period; amplitudes are estimated as the mean over a fixed response window.}
 \label{fig:realdata_hrf}
 \end{figure}
 
@@ -658,10 +658,10 @@ For Subject~01 (table~\ref{tab:realdata}, figure~\ref{fig:realdata_hrf}) the con
 \textbf{Metric} & \textbf{HbO$_2$} & \textbf{HbR} \\
 \midrule
 Uncorrected window-mean ($\mu$M) & $+0.144$ & $-0.030$ \\
-$\kappa$-corrected window-mean ($\mu$M) & $+0.649$ & $-0.181$ \\
-Net scaling factor & 4.51$\times$ & 6.0$\times$ \\
+$\kappa$-corrected window-mean ($\mu$M) & $+0.646$ & $-0.179$ \\
+Net scaling factor & 4.49$\times$ & 5.9$\times$ \\
 \midrule
-$\kappa_{\mathrm{PV}}$ (mean per-channel, applied) & \multicolumn{2}{c}{6.71} \\
+$\kappa_{\mathrm{PV}}$ (mean per-channel, applied) & \multicolumn{2}{c}{6.68} \\
 $V_{\mathrm{SSR}}(760\,\mathrm{nm})$ (diagnostic) & \multicolumn{2}{c}{1.97} \\
 $V_{\mathrm{SSR}}(850\,\mathrm{nm})$ (diagnostic) & \multicolumn{2}{c}{2.78} \\
 Contralateral channels ($n$) & \multicolumn{2}{c}{20} \\

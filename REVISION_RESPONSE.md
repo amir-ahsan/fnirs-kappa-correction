@@ -831,3 +831,68 @@ forward-model tables were confirmed bit-identical to the prior production (same 
 new 42 mm convergence/γ rows and the −0.4 % real-data shift changed. Both LaTeX documents recompile
 with no errors, no undefined references, and zero overfull boxes (manuscript 47 pp, guide 52 pp). The
 release manifest was regenerated from the final files.
+
+---
+
+# Round 9 — Response to the *Review of the Updated fNIRS κ-Correction Package* (Aug 7, 2026)
+
+This review judged the package "very close to final," with two high-priority items and a set
+of synchronization edits. All are addressed, and the entire release was regenerated from a
+**single clean committed source tree** (commit `32687ed`) so every frozen artifact carries a
+self-consistent, clean provenance stamp.
+
+**#3 (HIGH) — Git provenance was internally contradictory.** Fixed at the root. Previously
+`mc_production.py` passed `--git_commit 0782d6e` as a label, which overrode only the short SHA
+while the provenance helper independently recorded the real full SHA (`0ae4c87…`) and
+`git_dirty=true`. `code/provenance.py` now **always** determines `git_commit`, `git_commit_full`
+and `git_dirty` automatically from `git rev-parse HEAD`; a `git_commit` passed by a caller is
+treated as an *assertion* and a mismatch against HEAD **raises** (build from a clean checkout
+instead), while a human release name is stored in a separate `release_label` field. The whole
+release was then regenerated from a clean, committed tree: every frozen artifact now records
+`git_commit = git_commit_full[:7] = 32687ed`, `git_dirty = false`, `analysis_round = round9`,
+and the production payload hash is unchanged (`91cfa828…`, the run is deterministic). The
+manifest header now prints the full SHA and the dirty flag so the state is self-evident.
+
+**#4 (HIGH) — The recommended fast-Hankel workflow contradicted the convergence findings.**
+Fixed in both the manuscript and the pedagogical guide. The "practical default" is now a
+precomputed, *converged* Monte-Carlo lookup table for `f_cortex`; when CSF is not modelled in
+the base table, the MC-calibrated `γ(d_SDS, d_CSF)` may be applied within its validated range.
+The manuscript now states explicitly that we do **not** recommend obtaining `f_cortex` from the
+fast fixed-point Hankel transform (citing the frozen homogeneous-limit check: fixed-point
+fluence error ≈1.8 % at 5 mm rising to ≈100 % by 25–30 mm, and non-convergence of the
+sensitivity ratio), and that an analytical route is acceptable only after its sensitivity
+integral is independently demonstrated to be quadrature-converged and benchmarked SDS-by-SDS
+against Monte Carlo. The guide's "Step 4" and "recommended practical default" were rewritten
+the same way.
+
+**#5 — Subject-01 values not fully refreshed.** Synchronized. The Subject-01 detail table
+(Table 4), the narrative, and the Figure 5 caption now read κ_PV = 6.68, HbO₂ 0.144 → 0.646 µM,
+HbR −0.030 → −0.179 µM, net scaling 4.49× (HbO₂) / 5.9× (HbR), matching the frozen JSON. The
+group table was already current.
+
+**#6 — Robustness guidance numbers and superficial-thickness range.** The Practical Guidance
+section now states μ_a ±30 % → κ_PV −35 % to +40 % and μ_s′ ±30 % → −17 % to +12 % (from the
+frozen `robustness_secondary.json`), and the Methods now say superficial thickness was varied
+from 8 to 16 mm (8, 10, 12, 14, 16 mm), with the Results range extended to the full 8–16 mm span.
+
+**#7 — README and pedagogical-guide synchronization.** README group result updated to
+0.913 ± 0.334 µM (HbR −0.341 µM, κ_PV ≈ 6.77) and Subject-01 to 6.68 / 0.646 / −0.179 µM; the
+`requirements-lock.txt` description changed from "pip freeze" to "project-specific dependency
+closure"; the manual build instructions now use `latexmk` (or three `pdflatex` passes); the
+guide's CSF calibration range is 25–42 mm and its fast-Hankel recommendation is removed/qualified.
+
+**#8 — Smaller corrections.** "38 mm matching the median SDS" → "38 mm approximating the
+dataset's long-SDS range (median 37.2 mm, mean 37.9 mm)"; the Future-Directions "one separation"
+→ "one probe geometry spanning a relatively narrow long-SDS range (33.4–40.9 mm)"; the 1 mm CSF
+γ range → ≈1.25–1.44 across the full 25–42 mm two-wavelength grid; `get_f_cortex` now returns
+**full-precision** `f_cortex` (rounding only at display/export) so the quantitative correction
+is not quantised; and `reproduce_all.sh` gained a `RELEASE=1` mode that makes the in-vivo step
+**fatal** (stale real-data outputs can no longer silently survive a release) and regenerates the
+manifest automatically via the new `code/make_release_manifest.py`.
+
+**Verification.** Production re-run at full N on the clean tree (deterministic; payload hash
+unchanged at `91cfa828…`); in-vivo, synthetic, robustness and fluence all regenerated against it
+with uniform `round9` provenance and `git_dirty = false`. Group corrected HbO₂ is
+0.913 ± 0.334 µM (unchanged; the full-precision fix moved values below display precision). Both
+LaTeX documents recompile with no errors, no undefined references, and zero overfull boxes
+(manuscript 48 pp, guide 52 pp). The release manifest was regenerated from the final committed tree.
