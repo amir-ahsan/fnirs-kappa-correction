@@ -1977,3 +1977,26 @@ reference script parses; no numerical values recomputed. 6 automated string chec
 Both documents recompile with zero errors, undefined references, overfull boxes (>20 pt),
 or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
 (self-verifies 44/44) and the flat arXiv zip rebuilt with the two manuscript wording fixes.
+
+# Round 26 — Response to the *Final Terminology Note* (Aug 8, 2026)
+
+A single optional wording change; no Monte Carlo, robustness, synthetic, or real-data
+recomputation, and no change to any result, table value, figure, algorithm, or
+conclusion. Frozen `results/`, all code payloads, the manuscript figures, and the
+executed notebook are byte-identical to the previous iteration.
+
+**Synthetic-analysis step (5) no longer groups $V_{\mathrm{SSR}}$ with the correction
+factors.** The pipeline description that read "computation of the three diagnostic
+correction factors $\kappa_{\mathrm{DPF}}$, $\kappa_{\mathrm{PV}}$, and the per-wavelength
+$V_{\mathrm{SSR}}(\lambda)$\ldots" now reads "computation of the two correction factors
+$\kappa_{\mathrm{DPF}}$ and $\kappa_{\mathrm{PV}} = 1/f_{\mathrm{cortex}}$, together with
+the per-wavelength $V_{\mathrm{SSR}}(\lambda)$ diagnostic\ldots" This removes the last
+instance where $V_{\mathrm{SSR}}$ was linguistically grouped with the applied correction
+factors; the remainder of the sentence already stated that $V_{\mathrm{SSR}}$ is
+diagnostic and not applied.
+
+**Verification.** Frozen `results/`, code, manuscript figures, and notebook
+byte-unchanged; no numerical values recomputed. The manuscript recompiles with zero
+errors, undefined references, overfull boxes (>20 pt), or bookmark warnings (51 pp; guide
+unchanged at 53 pp). The release manifest was regenerated (self-verifies 44/44) and the
+flat arXiv zip rebuilt with the one wording fix.
