@@ -1774,3 +1774,64 @@ cell errors and all cell IDs present. Both documents recompile with zero errors,
 undefined references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp,
 guide 53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat
 arXiv zip rebuilt from the corrected source (Figure 2 updated).
+
+# Round 22 — Response to the *Final Synchronization Review* (Aug 8, 2026)
+
+A small but definite synchronization pass. The SSR algorithmic issue was resolved in
+Round 21; this round fixes the remaining stale values and wording it left behind. No
+Monte Carlo, robustness, real-data, or synthetic recomputation; the frozen `results/`
+directory is byte-identical and Figure 2 is already correct.
+
+Two Round-21 statements were overstated and are corrected here (rather than by rewriting
+the Round-21 entry): that "every $V_{\mathrm{SSR}}$ number was repopulated" (Supplementary
+Table S4 and several guide passages were in fact still stale), and that the diagnostic is
+computed "identically" in the synthetic and real-data pipelines (the same variance-removal
+\emph{definition} is used, but the preprocessing/regression implementations differ).
+
+**1 — Supplementary Table S4 (manuscript) updated.** The $\kappa$-statistics table still
+listed the pre-harmonization $V_{\mathrm{SSR}}(760)=1.199\pm0.054$ and
+$V_{\mathrm{SSR}}(850)=10.339\pm1.571$. These are now $1.017\pm0.005$ and
+$2.454\pm0.057$, matching the main results table and the harmonized diagnostic. (This was
+the principal remaining arXiv/manuscript error; the arXiv `main.tex` is byte-identical to
+the package manuscript, so regenerating fixes both.)
+
+**2 — Formal $R^2_{\mathrm{SS}}$ definition no longer says "bandpass-filtered signals."**
+The Theory-section definition now states that $R^2_{\mathrm{SS}}$ is computed from each
+pipeline's \emph{actual} SSR regression: OLS with an intercept on the unfiltered simulated
+OD (synthetic), and the zero-intercept regression of 0.01--0.1\,Hz bandpass-filtered,
+approximately zero-mean OD (in-vivo). The two "computed identically / evaluated
+identically" claims are reworded to "the same variance-removal definition is used in each
+pipeline's actual SSR regression," noting the implementations differ.
+
+**3 — Remaining stale guide $V_{\mathrm{SSR}}$ values fixed.** The "Short separations
+(25\,mm)" paragraph ($V_{\mathrm{SSR}}(850)\approx9.8\to2.40$), the wavelength-dependence
+discussion ($R^2_{\mathrm{SS}}(850)\approx0.90/V\approx10\to0.59/2.45$;
+$R^2_{\mathrm{SS}}(760)\approx0.16/V\approx1.2\to0.02/1.02$), and the glossary range
+($\sim$1--10 $\to$ $\sim$1--3 for this study: synthetic $\approx$1.0--2.5, experimental
+$\approx$1.6--2.8) were updated to the harmonized values.
+
+**4 — Over-strong $R^2$/$\rho$ explanations softened (guide + notebook).** The guide's
+"$R$ vs.\ $\rho$" discussion now says the large $R^2$ is attributable to the dominant
+shared systemic term "in this constructed two-component example," and states that cortical
+co-removal is \emph{not} set by $R^2$ (it depends on the cortical--systemic covariance,
+relative amplitudes, short-channel composition/cortical sensitivity, preprocessing, and
+regression model). The notebook's "Check Your Understanding" Q4 answer was replaced with
+the same broadened explanation (no longer "the cortical loss is set by $\rho$").
+
+**5 — Deprecated helper made unambiguous.** `compute_V_SSR()` (which still calls the
+band-pass-filtered `_compute_R2_SS_single()`) is now headed "DEPRECATED -- band-limited
+diagnostic only; DO NOT USE for the reported V_SSR," and the misleading "identical to the
+statistic used in the real-data pipeline" claim was removed; the docstring points to
+`perform_ssr()`'s returned $R^2$ as the correct source. Neither function is called by the
+reported pipeline.
+
+**6 — This entry.** Added per the reviewer's request rather than rewriting the Round-21
+response.
+
+**Verification.** Frozen `results/` byte-unchanged; no diagnostic values recomputed (the
+Round-21 regenerated $V_{\mathrm{SSR}}$ stand). 16 automated string checks pass; the
+notebook remains executed (code-cell outputs intact; only the Q4 markdown answer changed)
+and valid JSON. Both documents recompile with zero errors, undefined references, overfull
+boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest
+was regenerated (self-verifies 44/44) and the flat arXiv zip rebuilt so Supplementary
+Table S4 is current in the arXiv source.

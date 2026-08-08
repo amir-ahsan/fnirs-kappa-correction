@@ -837,16 +837,24 @@ def compute_V_SSR(
     band: Tuple[float, float] = (0.01, 0.5)
 ) -> Tuple[Dict[int, float], Dict[int, float], float, float]:
     """
+    DEPRECATED -- band-limited diagnostic only; DO NOT USE for the reported V_SSR.
+
+    This function calls the band-pass-filtered helper _compute_R2_SS_single()
+    (default 0.01-0.5 Hz), so its R² is a band-limited long-short coupling
+    statistic, NOT the R² of the actual SSR operator.  The reported synthetic
+    V_SSR is built directly from the R² that perform_ssr() returns (unfiltered
+    OLS long-on-short with an intercept), which is the exact fraction of
+    long-channel variance removed by the SSR operation the pipeline applies.
+    This function is retained only for reference/backward compatibility; prefer
+    perform_ssr()'s returned R² for any reported diagnostic.
+
     Compute V(SSR) per wavelength at the OD level.
 
     V_SSR(λ) = 1 / (1 - R²_SS(λ))
 
-    where R²_SS(λ) is the ordinary coefficient of determination from the OLS
-    regression of the *uncorrected* long-channel ΔOD(λ) on the short-channel
-    ΔOD(λ) at the same wavelength — i.e. the fraction of long-channel variance
-    removed by the SSR operator.  This is identical to the statistic used in the
-    real-data pipeline (fnirs_kappa_realdata_v2.py) and to the manuscript
-    definition, so the synthetic and real-data V_SSR diagnostics are harmonized.
+    where R²_SS(λ) is the (band-limited) ordinary coefficient of determination
+    from the OLS regression of the *uncorrected* long-channel ΔOD(λ) on the
+    short-channel ΔOD(λ) at the same wavelength.
     It is NOT a task-partialled R², and it must NOT be computed against the
     SSR-corrected long-channel signal — by construction of OLS, the residual of
     the SSR fit is orthogonal to the short-channel regressor, so doing so would

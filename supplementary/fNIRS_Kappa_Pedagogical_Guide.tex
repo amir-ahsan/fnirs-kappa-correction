@@ -587,7 +587,7 @@ Write the long channel as $y = c + s$ (true cortical signal $c$ plus systemic/su
 Here is the crux. $y$ contains $s$, and $x$ \emph{is} (approximately) $s$. So correlating $y$ with $x$ means correlating $(c+s)$ with $s$, and $s$ appears in both, so you get a large $R$ \emph{even if $c$ and $s$ have nothing to do with each other} ($\rho=0$). In words: $R$ mostly measures ``how much of the long channel is systemic,'' while $\rho$ measures ``do the cortical and systemic responses rise and fall together.'' Different questions, different numbers, same formula.
 
 \begin{keyinsight}
-This is exactly why $V_{\mathrm{SSR}}=1/(1-R^2)$ must \emph{not} be read as an amount of cortex to hand back. In real data $R^2\approx0.4$--$0.6$, but that is large because the long channel is \emph{systemic-dominated} (lots of $s$), not because SSR removed that fraction of the cortex. The cortex SSR actually nicks is governed by $\rho$ (small for a well-designed, externally paced task), so a hypothetical $1/(1-R^2)$ amplitude restoration would hand back far more than was lost --- which is precisely why we report $V_{\mathrm{SSR}}$ as a variance diagnostic and never apply it. If you remember one thing: \emph{$R$ is between the two channels you record; $\rho$ is between the two tissue signals you can't separate.}
+This is exactly why $V_{\mathrm{SSR}}=1/(1-R^2)$ must \emph{not} be read as an amount of cortex to hand back. In real data $R^2\approx0.4$--$0.6$; in this constructed two-component example that is large chiefly because the long channel is \emph{systemic-dominated} (lots of $s$), not because SSR removed that fraction of the cortex. The cortex SSR actually removes is \emph{not} set by $R^2$: it depends on the cortical--systemic covariance ($\rho$), the relative signal amplitudes, the short-channel composition and any cortical sensitivity it carries, the preprocessing, and the regression model (and is typically small for a well-designed, externally paced task). A hypothetical $1/(1-R^2)$ amplitude restoration would therefore hand back far more than was lost --- which is precisely why we report $V_{\mathrm{SSR}}$ as a variance diagnostic and never apply it. If you remember one thing: \emph{$R$ is between the two channels you record; $\rho$ is between the two tissue signals you can't separate.}
 \end{keyinsight}
 
 \section{Processing Order: Why OD-Level Corrections Matter}
@@ -1208,7 +1208,7 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 
 \subsection{Physical Interpretation}
 
-\paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is large at 850\,nm ($V_{\mathrm{SSR}}(850)\approx9.8$). \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
+\paragraph{Short separations (25 mm):} Very small cortical sensitivity ($\sim$4\%), requiring a very large partial-volume factor ($\kappa_{\text{PV}} = 23$). The long channel is dominated by superficial signal, so the SSR diagnostic is larger at 850\,nm ($V_{\mathrm{SSR}}(850)\approx2.40$) than at 760\,nm. \emph{This is precisely the regime where the correction fails}: the cortical signal is so small it sits at or below the measurement-noise floor, and multiplying by 23 amplifies the noise. Short separations should be used for SSR, not for quantitative amplitude estimation.
 
 \paragraph{Moderate-to-long separations (35--40 mm):} The cortical fraction rises to $\sim$9--11\%, so $\kappa_{\text{PV}}$ falls to $\sim$9--11 and, crucially, the cortical signal climbs above the noise floor. This is the regime where the correction is reliable (HbO$_2$ RMSE reduced by $\sim$44\% at 38--40~mm; a 30-cohort synthetic sweep is positive in every cohort from 35~mm up). The recommended operating range is SDS~$\gtrsim$~35~mm, strongest at 38--40~mm, with the exact onset set by the instrument noise.
 
@@ -1268,8 +1268,8 @@ A critical finding: the $V_{\mathrm{SSR}}$ diagnostic differs significantly betw
 This pattern is driven by the wavelength-dependent extinction coefficients rather than by penetration depth alone. The systemic (superficial) signal has a characteristic HbO$_2$/HbR composition, and how strongly it appears in the long-channel $\Delta\mathrm{OD}$ (and hence how much of that variance the short channel can explain) depends on the absorption weighting at each wavelength:
 
 \begin{itemize}
-\item At 850~nm, where HbO$_2$ absorption dominates ($\varepsilon_{\mathrm{HbO_2}} > \varepsilon_{\mathrm{HbR}}$), the systemic signal accounts for a large fraction of the long-channel $\Delta\mathrm{OD}$, so the short channel explains most of its variance ($R^2_{\mathrm{SS}} \approx 0.90$, giving $V_{\mathrm{SSR}} \approx 10$).
-\item At 760~nm, where HbR absorption dominates ($\varepsilon_{\mathrm{HbR}} \gg \varepsilon_{\mathrm{HbO_2}}$), the short channel explains comparatively little of the long-channel variance ($R^2_{\mathrm{SS}} \approx 0.16$, giving $V_{\mathrm{SSR}} \approx 1.2$).
+\item At 850~nm, where HbO$_2$ absorption dominates ($\varepsilon_{\mathrm{HbO_2}} > \varepsilon_{\mathrm{HbR}}$), the systemic signal accounts for a larger fraction of the long-channel $\Delta\mathrm{OD}$, so the short channel explains more of its variance ($R^2_{\mathrm{SS}} \approx 0.59$, giving $V_{\mathrm{SSR}} \approx 2.45$).
+\item At 760~nm, where HbR absorption dominates ($\varepsilon_{\mathrm{HbR}} \gg \varepsilon_{\mathrm{HbO_2}}$), the short channel explains comparatively little of the long-channel variance ($R^2_{\mathrm{SS}} \approx 0.02$, giving $V_{\mathrm{SSR}} \approx 1.02$).
 \end{itemize}
 
 Because the contamination structure differs so strongly between the two wavelengths, no single scalar $\bar{V}_{\mathrm{SSR}}$ (and no cross-wavelength mean) is formed; the diagnostic is reported per wavelength.
@@ -1665,7 +1665,7 @@ $f_{\text{cortex}}$ & Cortical sensitivity fraction (converged Monte Carlo) & Di
 \hline
 $\kappa_{\text{DPF}}$ & DPF correction factor & Dimensionless ($\sim 1$) \\
 $\kappa_{\text{PV}}$ & Partial volume correction factor & Dimensionless ($\sim$6--24) \\
-$V_{\mathrm{SSR}}(\lambda)$ & SSR variance-removal diagnostic, $1/(1-R^2_{\mathrm{SS}})$ (reported, never applied) & Dimensionless ($\sim$1--10) \\
+$V_{\mathrm{SSR}}(\lambda)$ & SSR variance-removal diagnostic, $1/(1-R^2_{\mathrm{SS}})$ (reported, never applied) & Dimensionless ($\sim$1--3 in this study: synthetic $\approx$1.0--2.5, experimental $\approx$1.6--2.8) \\
 $\kappa_{\text{applied}}$ & Applied composite, $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$ ($V_{\mathrm{SSR}}$ is a per-wavelength diagnostic, not applied) & Dimensionless \\
 \hline
 $R^2_{\mathrm{SS}}$ & Variance of the uncorrected long-channel $\Delta\mathrm{OD}$ explained by the short channel (SSR fit $R^2$) & Dimensionless (0--1) \\
