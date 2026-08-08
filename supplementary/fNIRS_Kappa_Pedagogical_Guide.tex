@@ -159,15 +159,15 @@ The key numbers from our study:
 \hline
 \textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ & \textbf{What this means} \\
 \hline
-25 & 0.041 & 24 & Only $\sim$4\% of signal from cortex \\
-30 & 0.063 & 16 & Only $\sim$6\% from cortex \\
-35 & 0.086 & 12 & Only $\sim$9\% from cortex \\
-40 & 0.112 & 9 & $\sim$11\% from cortex \\
+25 & 0.042 & 24 & Only $\sim$4\% of signal from cortex \\
+30 & 0.064 & 16 & Only $\sim$6\% from cortex \\
+35 & 0.088 & 11 & Only $\sim$9\% from cortex \\
+40 & 0.110 & 9 & $\sim$11\% from cortex \\
 \hline
 \end{tabular}
 \end{center}
 
-These values come from a converged Monte-Carlo light-transport simulation of the two-layer head (and agree with published whole-head ``atlas'' Monte Carlo). They are an order of magnitude smaller than an under-resolved analytical calculation suggests (a subtle numerical pitfall we discuss in the advanced sections). Since MBLL assumes all tissue is homogeneous, it treats the entire measured OD as coming from a single concentration change, so its estimate is attenuated by $f_{\text{cortex}}$. At 25~mm SDS, MBLL reports only $\sim$4\% of the true cortical concentration change---an underestimation by a factor of $\sim$23.
+These values come from a converged Monte-Carlo light-transport simulation of the two-layer head. They occupy the same low-sensitivity regime as published whole-head ``atlas'' Monte Carlo but are systematically lower---especially at short SDS---so the comparison provides qualitative external consistency (and confirms the order of magnitude of the correction), not an exact quantitative match. They are an order of magnitude smaller than an under-resolved analytical calculation suggests (a subtle numerical pitfall we discuss in the advanced sections). Since MBLL assumes all tissue is homogeneous, it treats the entire measured OD as coming from a single concentration change, so its estimate is attenuated by $f_{\text{cortex}}$. At 25~mm SDS, MBLL reports only $\sim$4\% of the true cortical concentration change---an underestimation by a factor of $\sim$23.
 
 \begin{keyinsight}
 Even with perfect DPF correction and perfect superficial signal removal, MBLL still underestimates cortical concentrations by roughly an order of magnitude, because only a few percent of the channel sensitivity comes from the cortex. The partial-volume correction $\kappa_{\text{PV}} = 1/f_{\text{cortex}}$ is by far the largest factor, ranging from $\sim$9 (long SDS) to $\sim$23 (short SDS). A crucial consequence (developed later): because the cortical signal is so small, at short separations it can fall below the measurement-noise floor, so $\kappa_{\text{PV}}$ then amplifies noise, which is why the correction is recommended at long separations (harmful at 25~mm, consistently beneficial by $\sim$35~mm under the assumed noise, strongest at 38--40~mm; the crossover is instrument-dependent).
@@ -506,13 +506,13 @@ The correction factor is:
 \end{equation}
 
 \begin{workexample}
-Suppose $f_{\text{cortex}}(760) = 0.063$ at 30~mm SDS (the converged Monte-Carlo value). What is $\kappa_{\text{PV}}$?
+Suppose $f_{\text{cortex}}(760) = 0.064$ at 30~mm SDS (the converged Monte-Carlo value). What is $\kappa_{\text{PV}}$?
 
 \begin{equation}
-\kappa_{\text{PV}}(760) = \frac{1}{0.063} = 15.9
+\kappa_{\text{PV}}(760) = \frac{1}{0.064} = 15.6
 \end{equation}
 
-This means that MBLL underestimates the cortical HbO$_2$ change by a factor of $\sim$16. If the true cortical change is 2.5~$\mu$M, MBLL reports only $2.5 / 15.9 \approx 0.16$~$\mu$M. Multiplying by $\kappa_{\text{PV}} = 15.9$ recovers the true value, provided that tiny 0.16~$\mu$M signal is itself above the measurement noise, which (as we will see) it may not be at short separations.
+This means that MBLL underestimates the cortical HbO$_2$ change by a factor of $\sim$16. If the true cortical change is 2.5~$\mu$M, MBLL reports only $2.5 / 15.6 \approx 0.16$~$\mu$M. Multiplying by $\kappa_{\text{PV}} = 15.6$ recovers the true value, provided that tiny 0.16~$\mu$M signal is itself above the measurement noise, which (as we will see) it may not be at short separations.
 \end{workexample}
 
 \paragraph{Intuitive analogy: the group quiz.}
@@ -529,7 +529,7 @@ In this analogy:
 \item The correction factor is $\kappa_{\text{PV}} = 1/f_{\text{cortex}} = 100/80 = 1.25$. Multiplying the group score by $\kappa_{\text{PV}}$ recovers the true score: $80 \times 1.25 = 100$.
 \end{itemize}
 
-Now consider the real fNIRS case at 30~mm SDS, where $f_{\text{cortex}} = 0.063$. This is like a group of \emph{sixteen} students where only one studied: just $\sim$6\% of the answers come from the diligent student, and the rest are random guesses. The observed group score might be only $6/100$, and the correction factor $\kappa_{\text{PV}} = 1/0.063 = 16$ would recover the true individual score: $6 \times 16 \approx 100$. But notice the catch: if the diligent student's $6$ points are barely distinguishable from the lucky guesses of the others (the ``noise''), multiplying by 16 also multiplies that ambiguity. This is exactly why, at short separations where the cortical contribution is so small, the correction can amplify noise instead of signal, and why we apply it only at long separations where the cortical share is larger ($\sim$11\% at 40~mm, $\kappa_{\text{PV}}\approx9$).
+Now consider the real fNIRS case at 30~mm SDS, where $f_{\text{cortex}} = 0.064$. This is like a group of \emph{sixteen} students where only one studied: just $\sim$6\% of the answers come from the diligent student, and the rest are random guesses. The observed group score might be only $6/100$, and the correction factor $\kappa_{\text{PV}} = 1/0.064 \approx 16$ would recover the true individual score: $6 \times 16 \approx 100$. But notice the catch: if the diligent student's $6$ points are barely distinguishable from the lucky guesses of the others (the ``noise''), multiplying by 16 also multiplies that ambiguity. This is exactly why, at short separations where the cortical contribution is so small, the correction can amplify noise instead of signal, and why we apply it only at long separations where the cortical share is larger ($\sim$11\% at 40~mm, $\kappa_{\text{PV}}\approx9$).
 
 \subsection{Factor 3: \texorpdfstring{$V_{\text{SSR}}(\lambda)$}{V\_SSR(lambda)}, the SSR Variance-Removal Diagnostic (reported, not applied)}
 \label{sec:vssr}
@@ -614,7 +614,7 @@ A tempting alternative is to apply all corrections after MBLL inversion, directl
 \begin{workexample}
 Illustrate the problem with concrete numbers. Suppose at 30~mm SDS:
 \begin{itemize}
-\item $f_{\text{cortex}}(760) = 0.063$, $f_{\text{cortex}}(850) = 0.066$ (converged Monte-Carlo values; wavelengths have slightly different sensitivities)
+\item $f_{\text{cortex}}(760) = 0.064$, $f_{\text{cortex}}(850) = 0.063$ (converged Monte-Carlo values; wavelengths have slightly different sensitivities)
 \item True cortical: $\Delta[\text{HbO}_2]_{\text{true}} = +2.5$~$\mu$M, $\Delta[\text{HbR}]_{\text{true}} = -0.8$~$\mu$M
 \item Extinction coefficients (in mm$^{-1}$/$\mu$M): $\varepsilon_{\text{HbO}_2}(760) = 0.0000586$, $\varepsilon_{\text{HbR}}(760) = 0.0001549$, etc.
 \end{itemize}
@@ -623,14 +623,14 @@ Illustrate the problem with concrete numbers. Suppose at 30~mm SDS:
 
 Measured OD (before any correction) from partial volume dilution:
 \begin{align}
-\Delta\text{OD}(760) &= 0.063 \times [\text{extinction terms}] \\
-\Delta\text{OD}(850) &= 0.066 \times [\text{extinction terms}]
+\Delta\text{OD}(760) &= 0.064 \times [\text{extinction terms}] \\
+\Delta\text{OD}(850) &= 0.063 \times [\text{extinction terms}]
 \end{align}
 
 Apply partial volume correction:
 \begin{align}
-\Delta\text{OD}_{\text{corrected}}(760) &= \frac{\Delta\text{OD}(760)}{0.063} = [\text{extinction terms}] \\
-\Delta\text{OD}_{\text{corrected}}(850) &= \frac{\Delta\text{OD}(850)}{0.066} = [\text{extinction terms}]
+\Delta\text{OD}_{\text{corrected}}(760) &= \frac{\Delta\text{OD}(760)}{0.064} = [\text{extinction terms}] \\
+\Delta\text{OD}_{\text{corrected}}(850) &= \frac{\Delta\text{OD}(850)}{0.063} = [\text{extinction terms}]
 \end{align}
 
 MBLL inversion recovers $\Delta[\text{HbO}_2] \approx +2.5$~$\mu$M and $\Delta[\text{HbR}] \approx -0.8$~$\mu$M. \checkmark
@@ -643,7 +643,7 @@ MBLL inversion on uncorrected ODs gives attenuated estimates:
 \Delta[\text{HbR}]_{\text{MBLL}} &\approx -0.23~\mu\text{M}
 \end{align}
 
-Now, to apply correction, one might compute an average $\kappa_{\text{PV}} = (15.9 + 15.2)/2 \approx 15.5$ and multiply both by this scalar. But this is wrong because HbO$_2$ and HbR have different wavelength dependencies:
+Now, to apply correction, one might compute an average $\kappa_{\text{PV}} = (15.6 + 15.8)/2 \approx 15.7$ and multiply both by this scalar. But this is wrong because HbO$_2$ and HbR have different wavelength dependencies:
 
 The extinction coefficients satisfy $\varepsilon_{\text{HbO}_2}(760) / \varepsilon_{\text{HbO}_2}(850) \neq \varepsilon_{\text{HbR}}(760) / \varepsilon_{\text{HbR}}(850)$. The MBLL matrix inverts wavelengths, not chromophores. Applying a scalar post-MBLL correction cannot undo the wavelength-mixing and produces biased estimates.
 \end{workexample}
@@ -953,12 +953,12 @@ And $\kappa_{\text{PV}} = 1 / 0.063 = 15.9$. (Computing this integral reliably i
 The canonical hemodynamic response function (HRF) for a task is modeled as a sum of two gamma distributions:
 
 \begin{equation}
-\text{HRF}(t) = \frac{t^{a_1} e^{-t/b_1}}{b_1^{a_1} \Gamma(a_1)} - c \, \frac{t^{a_2} e^{-t/b_2}}{b_2^{a_2} \Gamma(a_2)}
+\text{HRF}(t) = \frac{t^{a_1-1} e^{-t/b_1}}{b_1^{a_1} \Gamma(a_1)} - c \, \frac{t^{a_2-1} e^{-t/b_2}}{b_2^{a_2} \Gamma(a_2)}
 \end{equation}
 
 Parameters: $a_1 = 6$, $b_1 = 1$~s, $a_2 = 16$, $b_2 = 1$~s, $c = 0.35$ (matching the principal synthetic validation in \texttt{fnirs\_kappa\_synthetic\_validation.py} and the main manuscript; the simplified \texttt{fnirs\_invivo\_demo.py} walkthrough uses a shallower undershoot, $c = 0.1$).
 
-This produces an HRF that rises over 4--6 seconds, peaks around 6 seconds, and then decays over 15--20 seconds.
+This produces an HRF that rises over 4--6 seconds, peaks around 5 seconds (the first gamma term with $a_1=6$, $b_1=1$~s peaks at $t=(a_1-1)b_1=5$~s), and then decays over 15--20 seconds.
 
 For a block-design task (e.g., 20 seconds on, 20 seconds off), the hemodynamic response is the convolution of the block regressor with the HRF.
 
@@ -1064,10 +1064,10 @@ Divide the SSR-cleaned OD by $f_{\text{cortex}}(\lambda)$ at each wavelength:
 \Delta\text{OD}_{\text{PV-corrected}}(\lambda) = \frac{\Delta\text{OD}_{\text{SSR-cleaned}}(\lambda)}{f_{\text{cortex}}(\lambda)}
 \end{equation}
 
-At 30~mm SDS: $f_{\text{cortex}}(760) = 0.063$, $f_{\text{cortex}}(850) = 0.066$ (converged Monte Carlo).
+At 30~mm SDS: $f_{\text{cortex}}(760) = 0.064$, $f_{\text{cortex}}(850) = 0.063$ (converged Monte Carlo).
 
 \begin{equation}
-\kappa_{\text{PV}}(760) = \frac{1}{0.063} = 15.9, \quad \kappa_{\text{PV}}(850) = \frac{1}{0.066} = 15.2
+\kappa_{\text{PV}}(760) = \frac{1}{0.064} = 15.6, \quad \kappa_{\text{PV}}(850) = \frac{1}{0.063} = 15.8
 \end{equation}
 
 \subsection{Step 4: MBLL Inversion on Corrected ODs}
@@ -1095,7 +1095,7 @@ Compute diagnostic factors:
 \end{equation}
 
 \begin{equation}
-\kappa_{\text{PV}} = \frac{1}{f_{\text{cortex}}} \quad \text{mean across wavelengths} = \frac{15.9 + 15.2}{2} = 15.55
+\kappa_{\text{PV}} = \frac{1}{f_{\text{cortex}}} \quad \text{mean across wavelengths} = \frac{15.6 + 15.8}{2} = 15.7
 \end{equation}
 
 \begin{equation}
@@ -1630,7 +1630,7 @@ All \emph{principal} baseline and CSF cortical-sensitivity values used in this s
 \texttt{mc\_production.py} $\rightarrow$ \texttt{fcortex\_production.json} $\rightarrow$
 \texttt{fcortex\_source.py} $\rightarrow$ both pipelines.
 \end{center}
-The only cortical-sensitivity values \emph{not} taken from this file are the two \emph{secondary} robustness sweeps (superficial-thickness and cortical-$\mu_a$/$\mu_s'$ perturbations), which by construction move the geometry/optics away from the production configuration and are produced by a separate versioned artifact (\texttt{mc\_robustness\_sweeps.py} $\rightarrow$ \texttt{results/robustness\_secondary.json}, payload-hash verified; in release mode it is mandatory, and the archived constant arrays are a development-only fallback). No principal analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent, \emph{launch-defined} photon batches (batch id $=$ launch index mod 16, not a seed-level bootstrap); keying the batches by launch index makes batch $b$ draw on the same launched-photon cohort across geometries, so the CSF ratio $\gamma_b=f^{3L}_b/f^{2L}_b$ can be formed batchwise as a \emph{launch-index-matched} cross-check (a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ). The \emph{primary} reported $\gamma$ uncertainty is the conservative independent-propagation standard error; the launch-index-matched batchwise SE agrees with it and is reported as a cross-check; the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
+The only cortical-sensitivity values \emph{not} taken from this file are the two \emph{secondary} robustness sweeps (superficial-thickness and cortical-$\mu_a$/$\mu_s'$ perturbations), which by construction move the geometry/optics away from the production configuration and are produced by a separate versioned artifact (\texttt{mc\_robustness\_sweeps.py} $\rightarrow$ \texttt{results/robustness\_secondary.json}, payload-hash verified; in release mode it is mandatory, and the archived constant arrays are a development-only fallback). No principal analysis script carries a hard-coded sensitivity table or a $760\rightarrow850$ ratio shortcut. The production settings are: anisotropic Henyey--Greenstein scattering $g=0.9$ (with $\mu_s=\mu_s'/(1-g)$), a Fresnel surface, partial-pathlength scoring, $N=2\times10^{6}$ photons per (geometry, wavelength), a converged photon-pathlength cutoff $L_{\max}=1200$~mm and domain depth $z_{\max}=150$~mm (both selected from an observed numerical plateau), and seed~$=1$. Uncertainty on each $f_{\text{cortex}}$ is the spread of the \emph{ratio estimator} across 16 independent, \emph{launch-defined} photon batches (batch id $=$ launch index mod 16, not a seed-level bootstrap); keying the batches by launch index makes batch $b$ draw on the same launched-photon cohort across geometries, so the CSF ratio $\gamma_b=f^{3L}_b/f^{2L}_b$ can be formed batchwise as a \emph{launch-index-matched} cross-check (a launch-index match, not a strict per-photon common-random-number stream, since the vectorized transport diverges once the geometries' active sets differ). The \emph{primary} reported $\gamma$ uncertainty is the zero-covariance propagated standard error; the launch-index-matched batch-ratio SE is reported as a companion cross-check, and neither estimator is uniformly larger across the calibrated grid; the file also stores per-SDS DPF and $N_{\text{eff}}$ (an absorption-weight count only), the wavelength-specific CSF ratios $\gamma(\lambda,\text{SDS})$ at 2~mm and 1~mm CSF thickness, and an $L_{\max}$/$z_{\max}$/annulus convergence sweep. The exact per-layer wavelength-specific optical properties used by the MC are stored in the \texttt{fcortex\_production.json} metadata (760~nm: scalp $\mu_a{=}0.0128$, $\mu_s'{=}1.08$; cortex $\mu_a{=}0.0192$, $\mu_s'{=}0.82$; 850~nm: scalp $\mu_a{=}0.0165$, $\mu_s'{=}0.86$; cortex $\mu_a{=}0.0212$, $\mu_s'{=}0.76$~mm$^{-1}$; CSF $\mu_a{=}0.004$, $\mu_s'{=}0.25$/0.24~mm$^{-1}$).
 
 \section{Appendix B: Glossary of Symbols}
 

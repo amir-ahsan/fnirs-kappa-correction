@@ -30,6 +30,15 @@ export ANALYSIS_ROUND="$ROUND"
 # (e.g. the robustness loader's mandatory payload-hash check).
 export FNIRS_RELEASE="${RELEASE:-0}"
 
+# Release-integrity guard: FAST=1 uses reduced photon counts (a smoke test), while
+# RELEASE=1 regenerates the release manifest from the freshly built tree. Allowing
+# both together could freeze smoke-test artifacts as though they were release
+# results, so refuse the combination outright.
+if [ "${RELEASE:-0}" = "1" ] && [ "${FAST:-0}" = "1" ]; then
+  echo "[fatal] FAST=1 is not allowed in RELEASE mode." >&2
+  exit 1
+fi
+
 if [ "${FAST:-0}" = "1" ]; then
   NPROD=100000; NROB=40000; echo "[FAST] smoke run: N_prod=$NPROD N_rob=$NROB (NOT the frozen values)"
 else

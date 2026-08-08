@@ -190,9 +190,10 @@ def gamma_stats(f2s, f3s):
     The per-batch ratio gamma_b = f3L,b/f2L,b is formed over LAUNCH-DEFINED batches
     (batch b is the same launched-photon cohort in both geometries; launch_idx mod B,
     shared seed), so gamma_b is a launch-index-matched batch estimator. The primary
-    reported SE is the conservative independent-propagation value (quadrature of the
-    two per-geometry standard errors, which assumes no correlation); gamma_se is the
-    launch-index-matched batchwise cross-check."""
+    reported SE is the zero-covariance propagated value (quadrature of the two
+    per-geometry standard errors, which assumes no correlation between the runs);
+    gamma_se is the launch-index-matched batch-ratio SE, reported as a companion
+    cross-check. Neither estimator is uniformly larger across the calibrated grid."""
     f2, f3 = f2s['f_cortex'], f3s['f_cortex']
     b2 = np.array(f2s['batch_estimates']); b3 = np.array(f3s['batch_estimates'])
     pair = np.isfinite(b2) & np.isfinite(b3) & (b2 != 0)

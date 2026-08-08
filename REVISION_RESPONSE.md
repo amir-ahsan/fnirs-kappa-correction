@@ -1382,3 +1382,77 @@ pass. Both documents recompile with zero errors, undefined references, overfull 
 (>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest was
 regenerated (self-verifies 44/44) and the arXiv zip rebuilt flat from the corrected
 source.
+
+# Round 17 — Response to the *Latest Review and Recommendations* (Aug 8, 2026)
+
+Final documentation, guide-synchronization, and release-safety pass. No Monte Carlo or
+in-vivo recomputation; the reviewer confirmed no scientific or numerical issue requires
+another production run, real-data reanalysis, or methodology change, and every item
+below is outside the numerical analysis that generated the published results. Frozen
+artifacts remain production/secondary at `round9` / `32687ed` and in-vivo at `round13` /
+`095c5e3` (production input hash `91cfa828`, unchanged). No reported numerical result
+changes.
+
+**1 — HRF equation corrected in the guide.** The gamma-function HRF was written with
+exponents $t^{a_1}$ and $t^{a_2}$; both the manuscript and the actual `generate_hrf()`
+implementation use $t^{a_1-1}$ and $t^{a_2-1}$. The guide equation now carries the
+$-1$ in both exponents. Consistently, with $a_1=6$, $b_1=1$\,s the first gamma
+component peaks at $t=(a_1-1)b_1=5$\,s, so "peaks around 6 seconds" became "peaks
+around 5 seconds" with the derivation shown. This was a guide-only off-by-one; the
+simulation code was already correct, so no synthetic results change.
+
+**2 — Gamma-uncertainty wording synchronized everywhere.** The guide and the
+`mc_production.py` docstring still called the primary $\gamma$ SE the "conservative
+independent-propagation" value and said the launch-index-matched SE "agrees with it."
+Both now use the manuscript's corrected language: the primary reported uncertainty is
+the zero-covariance propagated SE, the launch-index-matched batch-ratio SE is a
+companion cross-check, and neither estimator is uniformly larger across the calibrated
+grid (e.g. at 760\,nm the zero-covariance SE is larger at 30\,mm but smaller at
+40\,mm). The manuscript Table 3 caption's "gives a consistent SE as a cross-check"
+became "provides a cross-check SE, neither estimator being uniformly larger."
+
+**3 — Guide $f_{\mathrm{cortex}}$ examples re-sourced to the production artifact.**
+Examples labeled as converged Monte-Carlo values used the stale pair
+$f_{\mathrm{cortex}}(760)=0.063$, $f_{\mathrm{cortex}}(850)=0.066$ at 30\,mm. The
+production `fcortex_production.json` gives $0.06418$ and $0.06327$, i.e. rounded
+$0.064$ and $0.063$, with $\kappa_{\mathrm{PV}}\approx15.6$ and $15.8$ (mean $15.7$).
+All such worked examples, the two-wavelength blocks, and the introductory SDS table
+($f_{\mathrm{cortex}}$ and $\kappa_{\mathrm{PV}}$ at 25/30/35/40\,mm) were updated to
+the production values; the stale $0.066$ is removed. (The analytical Kienle/Hankel
+worked integral, explicitly an illustrative $63/1000$ figure flagged as needing
+Monte-Carlo calibration, is left as the pedagogical illustration it is.)
+
+**4 — Guide atlas wording brought into line with the manuscript.** The guide's claim
+that the two-layer values "agree with published whole-head atlas Monte Carlo" is
+replaced with the manuscript's more accurate characterization: they occupy the same
+low-sensitivity regime but are systematically lower, especially at short SDS, so the
+comparison provides qualitative external consistency and confirms the order of
+magnitude of the correction rather than an exact quantitative match.
+
+**5 — FAST=1/RELEASE=1 combination now refused.** `reproduce_all.sh` gained a fatal
+guard near the top: since FAST reduces photon counts (a smoke test) and RELEASE
+regenerates the manifest from the freshly built tree, allowing both could freeze
+smoke-test artifacts as release results. `RELEASE=1 FAST=1 ./reproduce_all.sh` now
+exits 1 with `[fatal] FAST=1 is not allowed in RELEASE mode.` (verified).
+
+**6 — Provenance caption tightened; staging-dir workflow deferred.** Supplementary
+Table S4's caption "single source of truth for all downstream tables and figures"
+became "single source of truth for all principal baseline and CSF cortical
+sensitivities," noting the secondary robustness sweeps come from the separately
+versioned `robustness_secondary.json`. The optional staging-directory release workflow
+(to avoid a transiently dirty tree when regenerating one tracked result) is recorded as
+future workflow hardening; the current frozen release is internally consistent, so it is
+not a defect and is deferred.
+
+**Dataset pin (deferred, unchanged).** Establishing a canonical `DATASET_TREE_SHA256`
+from a checksum-verified Zenodo extraction and regenerating only the real-data artifact
+with `tree_hash_verified_against_pin=true` remains archival hardening the build
+environment cannot perform (Zenodo unreachable here); the artifact truthfully records
+`tree_hash_verified_against_pin=false`.
+
+**Verification.** No recomputation; `results/` untouched. All 21 automated string
+checks pass; the guide HRF equation now matches `generate_hrf()`'s $t^{a-1}$ form;
+`mc_production.py` parses; the FAST/RELEASE guard triggers (exit 1). Both documents
+recompile with zero errors, undefined references, overfull boxes (>20 pt), or bookmark
+warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
+(self-verifies 44/44) and the flat arXiv zip rebuilt from the corrected source.
