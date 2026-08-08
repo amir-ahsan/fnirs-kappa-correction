@@ -1102,11 +1102,11 @@ Compute diagnostic factors:
 V_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
 \end{equation}
 
-At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.16} = \frac{1}{0.84} = 1.19$
+At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.206} = \frac{1}{0.794} = 1.26$
 
-At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.902} = \frac{1}{0.098} = 10.16$
+At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.903} = \frac{1}{0.097} = 10.31$
 
-The two wavelengths differ by nearly an order of magnitude ($1.19$ vs $10.16$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
+Here $R^2_{\mathrm{SS}}(\lambda)$ is the \emph{ordinary} regression $R^2$ of the uncorrected long channel on the short channel (the fraction of long-channel variance removed by SSR), computed identically in the synthetic and real-data pipelines. The two wavelengths differ by nearly an order of magnitude ($1.26$ vs $10.31$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
 
 Applied correction (the $V_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
 \begin{equation}
@@ -1193,18 +1193,18 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 \hline
 \textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}$ & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ \\
 \hline
-25 & 0.043 & 23.50 & 1.17 & 9.83 \\
-30 & 0.064 & 15.69 & 1.19 & 10.16 \\
-35 & 0.086 & 11.57 & 1.22 & 10.54 \\
-38 & 0.100 & 10.04 & 1.22 & 10.65 \\
-40 & 0.108 & 9.22 & 1.21 & 10.52 \\
+25 & 0.043 & 23.50 & 1.23 & 11.62 \\
+30 & 0.064 & 15.69 & 1.25 & 11.17 \\
+35 & 0.086 & 11.57 & 1.28 & 10.34 \\
+38 & 0.100 & 10.04 & 1.28 & 9.72 \\
+40 & 0.108 & 9.22 & 1.27 & 9.12 \\
 \hline
 \end{tabular}
 \end{center}
 
 \noindent (The $f_{\text{cortex}}$ column is the \emph{wavelength-averaged} fraction, i.e.\ the mean of the 760 and 850~nm converged Monte-Carlo values from \texttt{fcortex\_production.json}, so that $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ in the next column is its exact reciprocal; the pipelines themselves use the wavelength-specific fractions. See the single-source-of-truth note in Appendix~A.)
 
-\paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic of residual superficial contamination, never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
+\paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic (of short-channel-coupled long-channel variance and the risk of cortical co-removal, \emph{not} a measure of superficial contamination remaining after SSR), never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
 
 \subsection{Physical Interpretation}
 
@@ -1254,11 +1254,11 @@ A critical finding: the $V_{\mathrm{SSR}}$ diagnostic differs significantly betw
 \hline
 \textbf{SDS (mm)} & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ & \textbf{Ratio} \\
 \hline
-25 & 1.17 & 9.83 & 8.40 \\
-30 & 1.19 & 10.16 & 8.54 \\
-35 & 1.22 & 10.54 & 8.64 \\
-38 & 1.22 & 10.65 & 8.73 \\
-40 & 1.21 & 10.52 & 8.69 \\
+25 & 1.23 & 11.62 & 9.47 \\
+30 & 1.25 & 11.17 & 8.95 \\
+35 & 1.28 & 10.34 & 8.09 \\
+38 & 1.28 & 9.72 & 7.58 \\
+40 & 1.27 & 9.12 & 7.19 \\
 \hline
 \end{tabular}
 \end{center}
@@ -1528,7 +1528,7 @@ Application of the pipeline to the publicly available BIDS-NIRS-Tapping finger-t
 
 \begin{enumerate}
 \item \textbf{Short-separation regression (SSR):} Per-wavelength OD-level regression against the short-channel reference removes systemic (extracerebral) signal components.
-\item \textbf{$V_{\text{SSR}}(\lambda)$ diagnostic:} The regression $R^2$ yields $V_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$ (group means $760$: 1.78, $850$: 2.34 for this dataset). This is \emph{reported as a variance-removal diagnostic of residual superficial contamination but never applied} (see the $V_{\mathrm{SSR}}$ box earlier): $R^2_{\text{SS}}$ cannot identify the cortical component of the removed variance, so it is not converted into an amplitude factor.
+\item \textbf{$V_{\text{SSR}}(\lambda)$ diagnostic:} The regression $R^2$ yields $V_{\text{SSR}}(\lambda) = 1/(1 - R^2_{\text{SS}}(\lambda))$ (group means $760$: 1.78, $850$: 2.34 for this dataset). This is \emph{reported as a variance-removal diagnostic (of short-channel-coupled long-channel variance and the risk of cortical co-removal) but never applied} (see the $V_{\mathrm{SSR}}$ box earlier): $R^2_{\text{SS}}$ cannot identify the cortical component of the removed variance, so it is not converted into an amplitude factor.
 \item \textbf{Partial-volume ($\kappa_{\text{PV}}$) correction (the applied amplitude correction):} The two-layer Monte Carlo gives $f_{\text{cortex}}\approx0.10$ at 38~mm. But a \emph{real} adult head also contains a thin cerebrospinal-fluid (CSF) layer, which scatters light very weakly and ``pipes'' it down toward the cortex (see the CSF section). This raises the cortical fraction by the light-piping factor $\gamma\approx1.5$, to a three-layer value $f_{\text{cortex}}^{\mathrm{3L}}\approx0.15$--$0.16$. Because these are real heads, we use this CSF-augmented value, giving a per-channel $\kappa_{\text{PV}}\approx6.8$ ($760$~nm: $1/0.151\approx6.6$; $850$~nm: $1/0.148\approx6.8$).
 \item \textbf{MBLL inversion:} Standard dual-wavelength conversion from corrected $\Delta$OD to $\Delta[\text{HbO}_2]$ and $\Delta[\text{HbR}]$.
 \end{enumerate}

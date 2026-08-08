@@ -769,12 +769,25 @@ def _compute_R2_SS_single(
     band: Tuple[float, float] = (0.01, 0.5)
 ) -> float:
     """
-    Compute the partial R² of the short channel on the long channel
-    after partialling out the task regressor.
+    Ordinary coefficient of determination (R^2) from the SSR regression of the
+    long-channel dOD on the short-channel dOD, i.e. the fraction of long-channel
+    variance removed by SSR:
 
-    Works on any 1-D signal pair (OD at a single wavelength, or
-    concentration).  Returns R²_SS clipped to [0, 0.99].
+        R2_SS = 1 - Var(residual) / Var(dOD_long),
+
+    where residual = dOD_long - [1, dOD_short] @ beta (OLS).  This is the SAME
+    statistic the real-data pipeline uses (fnirs_kappa_realdata_v2.py) and the
+    definition stated in the manuscript methods, so the synthetic and real-data
+    V_SSR diagnostics are now harmonized.
+
+    Note: this is deliberately NOT a task-partialled (partial) R^2.  The task
+    regressor is accepted for call-signature compatibility but is not used, so
+    the returned value is the ordinary regression R^2 of the actual SSR operator.
+    Works on any 1-D signal pair (OD at a single wavelength, or concentration).
+    Returns R2_SS clipped to [0, 0.99].
     """
+    del task_regressor  # harmonized ordinary R^2 does not partial out the task
+
     nyq = sfreq / 2
     if band[1] >= nyq:
         band = (band[0], nyq * 0.95)
@@ -790,25 +803,18 @@ def _compute_R2_SS_single(
     )
 
     n = len(y_long_f)
-    if task_regressor is not None:
-        task_f = bandpass_filter(task_regressor, sfreq, band[0], band[1])
-        X_reduced = np.column_stack([np.ones(n), task_f])
-    else:
-        X_reduced = np.ones((n, 1))
+    # Ordinary OLS regression of the long channel on the short channel(s) with
+    # an intercept -- exactly the SSR operator, not a task-conditioned model.
+    X = np.column_stack([np.ones(n), y_short_f])
+    beta = pinv(X) @ y_long_f
+    resid = y_long_f - X @ beta
 
-    X_full = np.column_stack([X_reduced, y_short_f])
+    SS_res = float(np.sum(resid**2))
+    SS_tot = float(np.sum((y_long_f - np.mean(y_long_f))**2))
 
-    beta_reduced = pinv(X_reduced) @ y_long_f
-    resid_reduced = y_long_f - X_reduced @ beta_reduced
-    SS_reduced = np.sum(resid_reduced**2)
-
-    beta_full = pinv(X_full) @ y_long_f
-    resid_full = y_long_f - X_full @ beta_full
-    SS_full = np.sum(resid_full**2)
-
-    if SS_reduced > 0:
-        R2_SS = float((SS_reduced - SS_full) / SS_reduced)
-        R2_SS = np.clip(R2_SS, 0, 0.99)
+    if SS_tot > 0:
+        R2_SS = 1.0 - SS_res / SS_tot
+        R2_SS = float(np.clip(R2_SS, 0, 0.99))
     else:
         R2_SS = 0.0
 
@@ -828,16 +834,16 @@ def compute_V_SSR(
 
     V_SSR(λ) = 1 / (1 - R²_SS(λ))
 
-    where R²_SS(λ) is the partial R² of the short-channel ΔOD(λ) on the
-    *uncorrected* long-channel ΔOD(λ), after partialling out the task
-    regressor.  This matches the definition given in the methods section:
-    R²_SS(λ) is the coefficient of determination from the OLS regression
-    of the long-channel ΔOD(λ) on the mean short-channel ΔOD(λ) at the
-    same wavelength.  It must NOT be computed against the SSR-corrected
-    long-channel signal — by construction of OLS, the residual of the
-    SSR fit is orthogonal to the short-channel regressor, so doing so
-    would force R²_SS ≈ 0 and V_SSR ≈ 1 regardless of the true
-    superficial contamination level.
+    where R²_SS(λ) is the ordinary coefficient of determination from the OLS
+    regression of the *uncorrected* long-channel ΔOD(λ) on the short-channel
+    ΔOD(λ) at the same wavelength — i.e. the fraction of long-channel variance
+    removed by the SSR operator.  This is identical to the statistic used in the
+    real-data pipeline (fnirs_kappa_realdata_v2.py) and to the manuscript
+    definition, so the synthetic and real-data V_SSR diagnostics are harmonized.
+    It is NOT a task-partialled R², and it must NOT be computed against the
+    SSR-corrected long-channel signal — by construction of OLS, the residual of
+    the SSR fit is orthogonal to the short-channel regressor, so doing so would
+    force R²_SS ≈ 0 and V_SSR ≈ 1 regardless of the true coupled variance.
 
     Because the absorption and scattering coefficients differ at each
     wavelength, the superficial contamination fraction — and hence the

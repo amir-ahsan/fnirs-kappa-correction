@@ -1602,3 +1602,92 @@ the notebook is valid JSON. Both documents recompile with zero errors, undefined
 references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide
 53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat arXiv
 zip rebuilt from the corrected source.
+
+# Round 20 — Response to the *SSR-Harmonization Review* (Aug 8, 2026)
+
+This round resolves one real methodological inconsistency (the definition of the
+$R^2_{\mathrm{SS}}$ / $V_{\mathrm{SSR}}$ diagnostic differed between the synthetic and
+real-data pipelines) and completes a dedicated scientific cleanup of the beginner
+notebook. Per the reviewer, the $V_{\mathrm{SSR}}$ diagnostic and the tables/figure
+containing it were regenerated, but the production Monte Carlo, CSF calibration,
+robustness sweeps, and the corrected HbO$_2$/HbR results were **not** rerun. The
+frozen `results/` artifacts (production/secondary `round9`/`32687ed`, in-vivo
+`round13`/`095c5e3`, multiseed `round9`, production input hash `91cfa828`) are
+byte-unchanged; $V_{\mathrm{SSR}}$ is never applied, so no central result changes.
+
+**1 — $R^2_{\mathrm{SS}}$/$V_{\mathrm{SSR}}$ harmonized to the ordinary regression $R^2$.**
+The synthetic pipeline's `_compute_R2_SS_single()` computed a task-partialled
+\emph{partial} $R^2$, whereas the manuscript and `fnirs_kappa_realdata_v2.py` use the
+ordinary $R^2 = 1 - \mathrm{Var(residual)}/\mathrm{Var}(\Delta\mathrm{OD}_{\mathrm{long}})$
+of the SSR regression. The synthetic function was rewritten to the ordinary $R^2$ (task
+regressor no longer partialled), so all three (manuscript definition, synthetic,
+real-data) now match and ``fraction of variance removed by SSR'' is literally true. The
+synthetic diagnostic was regenerated: $V_{\mathrm{SSR}}(760)$ = 1.23/1.25/1.28/1.28/1.27
+and $V_{\mathrm{SSR}}(850)$ = 11.62/11.17/10.34/9.72/9.12 at 25/30/35/38/40\,mm (means
+$\approx$1.26 and $\approx$10.4), reproducing the reviewer's independent ordinary-$R^2$
+values. The synthetic results table (manuscript), the guide Summary Table and the guide
+$V_{\mathrm{SSR}}$-by-wavelength table, the README console table and aggregate, the
+prose approximations (Methods, Results, Discussion, Conclusions), and
+\texttt{figure2\_summary.png} (panel E, the only figure showing $V_{\mathrm{SSR}}$) were
+updated. The RMSE columns, $\kappa_{\mathrm{PV}}$, per-subject MAE, and all figures not
+showing $V_{\mathrm{SSR}}$ (figures 1 and 3, pixel-identical) are unchanged. A latent
+inconsistency was also fixed: the Methods step-5 text that described $R^2_{\mathrm{SS}}$
+as evaluated from the \emph{SSR-corrected} long channel now correctly states it is the
+ordinary $R^2$ of the \emph{uncorrected} long channel on the short channel.
+
+**2 — Two SSR interpretation statements corrected.** (a) ``When cortical and systemic
+signals are statistically independent $\ldots R^2_{\mathrm{SS}}\approx0$'' was wrong:
+$R^2_{\mathrm{SS}}$ can be large whenever the long and short channels share superficial
+systemic variance. The text now says $V_{\mathrm{SSR}}\approx1$ only when the short-
+channel regressor explains little additional long-channel variance. (b) ``The simulated
+short channel is purely superficial, so SSR removes no cortical signal'' does not follow;
+the synthetic results text and the table caption now state that cortical--systemic
+covariance can still let SSR remove task-related variance (noting the regular 10\,s block
+period overlaps the 0.10\,Hz Mayer-wave component), so $V_{\mathrm{SSR}}$ is a
+variance-removal diagnostic, not a measure of cortical loss.
+
+**3 — What $V_{\mathrm{SSR}}$ diagnoses, reworded.** ``Diagnostic/proxy for residual
+superficial contamination'' overstated what $1/(1-R^2_{\mathrm{SS}})$ measures. Manuscript
+and guide now call it a variance-removal diagnostic (of short-channel-coupled long-channel
+variance and the risk of cortical co-removal), explicitly not a measure of superficial
+contamination remaining after SSR.
+
+**4 — Beginner notebook scientific cleanup.** (i) The opening ``~70\% brain / 30\%
+superficial'' is corrected to the study's ~4--11\% cortical (superficial ~89--96\%), and
+the MBLL description now cites its homogeneous/pathlength assumption rather than ``light
+only travels through the brain''; (ii) the toy $f_{\mathrm{cortex}}=0.35$ example is
+clearly labeled a generic illustrative value, not the study's result ($\kappa_{\mathrm{PV}}\approx$9--23);
+(iii) the DPF example's reversed verbal interpretation is fixed (too-small a DPF
+\emph{overestimates} concentration; $\kappa_{\mathrm{DPF}}=0.9286<1$ corrects downward);
+(iv) the stale thickness constants are replaced by loading `robustness_secondary.json`
+(current {8:0.219,10:0.123,12:0.0597,14:0.0314,16:0.0168}); (v) the robustness
+\emph{conclusion} is reversed to match the study---superficial depth is the dominant
+modeled uncertainty ($\kappa_{\mathrm{PV}}\approx$4.56/16.74/59.66 at 8/12/16\,mm), not
+``robust/modest''; (vi) the wrong $\kappa_{\mathrm{PV}}\approx1+\text{corr}\times f$
+cell is replaced with $\kappa_{\mathrm{PV}}=1/f_{\mathrm{cortex}}$; (vii) the toy
+optical-property section now reads `robustness_secondary.json` and reports the actual
+sensitivities (cortical $\mu_a$ $\pm$30\%: $\kappa_{\mathrm{PV}}$ $\approx-35\%$ to
+$+40\%$; $\mu_s'$ $\pm$30\%: $\approx-17\%$ to $+12\%$); (viii) the diffusion equation is
+corrected to $-D\nabla^2\Phi + \mu_a\Phi = S$. All code cells parse and the notebook is
+valid JSON. An optional notebook-execution smoke test (`RUN_NOTEBOOK=1`, fatal in
+RELEASE mode) was added to `reproduce_all.sh`, since static JSON/syntax checks alone did
+not catch these scientific inconsistencies.
+
+**5 — `mc_robustness_sweeps.py` documentation synchronized.** The header no longer claims
+the independently regenerated secondary values agree with the archived sweep at a
+``sub-percent-to-few-percent'' level; it now states the secondary baseline differs
+modestly from production (~7\% at 30\,mm/760\,nm: 0.0597 vs 0.0642), so the sweeps are
+relative-sensitivity experiments, not substitute production baselines.
+
+**6 — Optional archival items (deferred, unchanged).** The canonical
+`DATASET_TREE_SHA256` pin and staged-release workflow remain optional future hardening;
+the real-data artifact records `tree_hash_verified_against_pin=false` truthfully.
+
+**Verification.** Frozen `results/` JSON byte-unchanged; the regenerated synthetic RMSE
+columns, $\kappa_{\mathrm{PV}}$, and MAE match the frozen values exactly (only
+$V_{\mathrm{SSR}}$ changed). 24 automated string checks pass; all notebook code cells
+parse; the notebook is valid JSON; the harmonized $V_{\mathrm{SSR}}$ reproduces the
+reviewer's independent ordinary-$R^2$ figures. Both documents recompile with zero errors,
+undefined references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp,
+guide 53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat
+arXiv zip rebuilt from the corrected source (figure2 updated).

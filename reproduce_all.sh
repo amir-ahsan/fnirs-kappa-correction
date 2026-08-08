@@ -128,6 +128,27 @@ print(f"[manifest] {ok} files match; {bad} changed/missing "
       f"(changes are expected after regenerating with a different seed/round).")
 PY
 
+# Optional beginner-notebook execution smoke test. Static JSON/Python-syntax checks
+# do not catch scientific inconsistencies in the notebook, so this executes it end to
+# end when requested. It is OFF by default (the analytical sensitivity maps are slow);
+# enable with RUN_NOTEBOOK=1. In RELEASE mode a failure here is fatal.
+if [ "${RUN_NOTEBOOK:-0}" = "1" ]; then
+  echo "== Notebook smoke test (execute supplementary/fnirs_kappa_beginner_notebook.ipynb) =="
+  if command -v jupyter >/dev/null 2>&1; then
+    if ( cd supplementary && jupyter nbconvert --to notebook --execute \
+           --ExecutePreprocessor.timeout=1200 --output /tmp/_nb_smoke.ipynb \
+           fnirs_kappa_beginner_notebook.ipynb >/tmp/nb_smoke.log 2>&1 ); then
+      echo "[notebook] executed cleanly."
+    else
+      echo "[notebook] execution FAILED (see /tmp/nb_smoke.log)." >&2
+      [ "${RELEASE:-0}" = "1" ] && exit 1
+    fi
+  else
+    echo "[notebook] jupyter not available; skipping notebook smoke test."
+    [ "${RELEASE:-0}" = "1" ] && { echo "[fatal] RELEASE mode requires jupyter for the notebook smoke test." >&2; exit 1; }
+  fi
+fi
+
 if [ "${RELEASE:-0}" = "1" ]; then
   echo "== RELEASE: regenerate manifest from the freshly built tree =="
   python code/make_release_manifest.py

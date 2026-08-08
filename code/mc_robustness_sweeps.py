@@ -13,9 +13,12 @@ Monte Carlo (mc_2layer.run, anisotropic Henyey-Greenstein g=0.9), storing the
 RAW per-configuration cortical fractions together with full provenance (seed,
 photon count, geometry, optical properties, code commit, command, timestamp).
 It writes results/robustness_secondary.json, which the synthetic-validation
-plotting reads.  Because it is a fresh, independent Monte-Carlo run, the values
-agree with the archived sweep used for the figure at the sub-percent-to-few-
-percent level expected between independent MC runs.
+plotting reads.  Because it is a fresh, independent Monte-Carlo run with its own
+photon count and random stream, its baseline differs modestly from the production
+value (about 7% at 30 mm / 760 nm: 0.0597 vs 0.0642).  These sweeps are therefore
+used as RELATIVE sensitivity experiments (how f_cortex/kappa_PV move with thickness
+and optical properties), NOT as substitute production baselines; the production
+baselines come only from mc_production.py -> fcortex_production.json.
 
   (A) Superficial-thickness sweep: f_cortex and kappa_PV = 1/f_cortex at a fixed
       SDS = 30 mm as the superficial layer thickness varies 8..16 mm (cortex
