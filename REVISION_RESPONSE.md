@@ -1309,3 +1309,76 @@ checks pass. Both documents recompile with zero errors, undefined references, ov
 boxes (>20 pt), or bookmark warnings (manuscript 50 pp, guide 53 pp). The release
 manifest was regenerated (self-verifies 44/44) and the arXiv zip rebuilt from the
 corrected source so there is one definitive final manuscript version.
+
+# Round 16 — Response to the *Package (10) Review and Recommendations* (Aug 8, 2026)
+
+Final editorial and packaging quality-control pass. No Monte Carlo or in-vivo
+recomputation; the reviewer explicitly found no remaining problem warranting another
+production run, real-data reanalysis, or methodology change. Frozen artifacts remain
+production/secondary at `round9` / `32687ed` and in-vivo at `round13` / `095c5e3`
+(production input hash `91cfa828`, unchanged). None of these changes alter numerical
+results.
+
+**1 — arXiv zip flattened.** The previous `fNIRS_Kappa_arXiv_upload.zip` contained an
+outer `fNIRS_Kappa_arXiv/` directory, so `main.tex`'s `figures/figure1_timeseries.png`
+paths only resolved if arXiv happened to compile from inside that subdirectory. The zip
+is now packaged flat---`main.tex` at the archive root with `figures/` directly beside
+it and no wrapper directory---so it builds regardless of arXiv's chosen working
+directory. The README was updated to state this explicitly. The arXiv source itself was
+already correct; this was purely an archive-layout fix.
+
+**2 — Atlas comparison softened to qualitative external consistency.** The slab Monte
+Carlo ($f_{\mathrm{cortex}}=0.042,0.064,0.088,0.110$) sits in the same low band as the
+Colin27 atlas ($\approx0.08,0.10,0.11,0.13$) but is systematically lower (by
+$\approx48\%,36\%,20\%,15\%$ at 25/30/35/40 mm). The claim that this "concordance … is
+what gives us confidence in $\kappa_{\mathrm{PV}}\approx9$–23" is replaced with wording
+that the comparison provides qualitative external consistency and supports the order of
+magnitude of the correction rather than quantitatively validating the exact
+slab-derived values, noting the atlas's different anatomy and compartment definitions.
+
+**3 — "Physically independent" → "separable components targeting distinct mechanisms."**
+The Methods now say the applied correction "decomposes into two separable components
+targeting distinct physical mechanisms," and that the factors "target distinct physical
+mechanisms and so can be estimated separately." A caveat was added: separability of the
+OD-level operations does not imply statistical independence of their uncertainties—DPF
+and $f_{\mathrm{cortex}}$ share the same tissue geometry and optical properties, so
+their forward-model uncertainties may covary and this correlation is not jointly
+propagated here.
+
+**4 — $\gamma$ uncertainty no longer called uniformly "conservative."** The
+independent-batch-SE propagation is now named the "zero-covariance propagated SE." The
+text notes neither estimator dominates (e.g. at 760 nm/40 mm the zero-covariance SE
+$\approx0.0445$ is smaller than the batch-ratio SE $\approx0.0579$, larger elsewhere),
+so the propagation is not uniformly conservative; a reader wanting a conservative
+displayed uncertainty may take the larger of the two per configuration. No scientific
+conclusion changes.
+
+**5 — Sentence-level fixes.** The pedagogical guide's broken parenthetical in the
+Monte-Carlo $f_{\mathrm{cortex}}$ paragraph is repaired: the parenthesis now closes
+after "advanced sections)," the MBLL-homogeneity sentence stands on its own, and the
+25 mm figure reads "…reports only $\sim$4\% of the true cortical concentration
+change---an underestimation by a factor of $\sim$23." In the manuscript, the
+introductory phrase "Hemodynamic changes are localized in the cortex" became "The
+neural task-evoked component of interest is localized primarily in cortex," consistent
+with the later treatment of task-correlated extracerebral physiology.
+
+**6 — 35 mm recommendation made explicitly conditional.** The one remaining categorical
+practical-guidance sentence now reads: "For the fixed OD-noise level evaluated here, we
+therefore do \emph{not} recommend the correction below $\sim$35 mm; other instruments
+should determine their own crossover from their measured channel noise/SNR rather than
+adopting $\sim$35 mm as a universal design rule." This prevents readers from turning the
+noise-conditional operating regime into a universal fNIRS design rule.
+
+**Optional archival item (deferred).** As in Round 15, establishing a canonical
+`DATASET_TREE_SHA256` from a checksum-verified Zenodo extraction and regenerating only
+the real-data artifact with `tree_hash_verified_against_pin=true` remains a future
+archival-hardening step; it requires a network-verified Zenodo download the build
+environment cannot perform, and the reviewer classifies it as hardening, not a
+submission blocker. The frozen artifact truthfully records the analyzed tree fingerprint
+and that it was not verified against a canonical pin.
+
+**Verification.** No recomputation; `results/` untouched. All 18 automated string checks
+pass. Both documents recompile with zero errors, undefined references, overfull boxes
+(>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest was
+regenerated (self-verifies 44/44) and the arXiv zip rebuilt flat from the corrected
+source.

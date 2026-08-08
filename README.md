@@ -163,9 +163,12 @@ latexmk -pdf main.tex    # iterates pdflatex until refs/labels converge
 ```
 
 This produces `main.pdf`. To submit, upload the contents of `manuscript/`
-(i.e. `main.tex` and the `figures/` folder) as the arXiv source. Suggested
-categories: **physics.med-ph** (primary), cross-list **physics.optics** and
-**q-bio.NC**.
+(i.e. `main.tex` and the `figures/` folder) as the arXiv source. The provided
+`fNIRS_Kappa_arXiv_upload.zip` is packaged **flat** for exactly this reason:
+`main.tex` sits at the archive root with `figures/` directly beside it (no outer
+wrapper directory), so it compiles regardless of the working directory arXiv
+chooses. Suggested categories: **physics.med-ph** (primary), cross-list
+**physics.optics** and **q-bio.NC**.
 
 ---
 

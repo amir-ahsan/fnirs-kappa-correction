@@ -22,8 +22,8 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `1c941fc2d0be0abea275e87cb5a86649e7a5f227f1cf095da98812bcc504d4c0` | 1045 | `CITATION.cff` |
 | `9d020d65a2756c2fc42cbbfdd7d88151cefcc1407cd1dad6814e73f5807f7d05` | 1083 | `LICENSE` |
 | `0050fc32fc270930da596b499b58e5bda4da0f3a2ce2827e95938a7e52d99672` | 953 | `LICENSE-manuscript.md` |
-| `8d199c5c4c021d03da47e8765514ea2d22f6eb03b30039ac7c6cd1ed92858b3b` | 16535 | `README.md` |
-| `da9d338873c63b63e0ebb47b9bfcd4d6f5c83acf10a1eef07101090aa10c798e` | 90929 | `REVISION_RESPONSE.md` |
+| `3977860df484591248819840b5db63328f298927c41ab1d3f7b66fb60dd52ff9` | 16792 | `README.md` |
+| `9ae283eb28bfbf63c753907a8d0a270cf6f7dab2f0524fe617493bbe4b21dfdb` | 95925 | `REVISION_RESPONSE.md` |
 | `1f9705d3eba85093b106f62b46e08bc7e10c9bf44c95bbc396bf85a1f39fa75b` | 6985 | `code/fcortex_source.py` |
 | `7584b084574a784641b943ae7acd5b17a66a1248d376c45b6d718115c461d9a5` | 20815 | `code/fnirs_invivo_demo.py` |
 | `546eb0b81f3dc9a652063a31da30f06450e0c9f58c6cddaf3b6255cb39c8b4a6` | 14625 | `code/fnirs_kappa_group_analysis.py` |
@@ -45,8 +45,8 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `1830309e44230290c6c25ebacb6ee6ee36f3b1447c3600317b4686337b9852a5` | 96158 | `manuscript/figures/figure5_realdata_hrf.png` |
 | `8eee074082111c72b5f38b02b3668209c37a488afbdebe51276387c7c6fcfc22` | 35028 | `manuscript/figures/figure6_realdata_summary.png` |
 | `e86640dc8f9999189a8c9570c21f7d1acd8b94c4c6ff6bdce3767351e0f3f73e` | 178654 | `manuscript/figures/figure7_group_block_average.png` |
-| `d5ee4be62e9b1ade4b40eadb509cf13f6bf7b67479e6b2f7e78b145a1ca83d84` | 1995212 | `manuscript/main.pdf` |
-| `72806e62d6bcae690648d665cc586206b4f4d78a3b2a94af2241c6cfe08815de` | 187895 | `manuscript/main.tex` |
+| `96359143e8a2ba7922026b8289cb04d5215798c01c262dd37ae991cc6c0eedff` | 1997080 | `manuscript/main.pdf` |
+| `2086aba17d8747c7a4f0bcb283d3105bb1b6edeff0816c6681de3c02763cf0e5` | 189427 | `manuscript/main.tex` |
 | `06434b2a0e7d6f30f91d96b9f54058b625d2a760db5419fa4a292768404ea393` | 5939 | `reproduce_all.sh` |
 | `f50e014ad9afaa7cd8a0d1c79b91d516570ac87e72ce4c8d052f862ba7d793a1` | 2687 | `requirements-lock.txt` |
 | `90a1b0c629cceb68fb0900439a672b99a931e6f3ecba9ae2c8da9938a02eb9b0` | 1962 | `requirements.txt` |
@@ -59,8 +59,8 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `a2a44c3fcb81d2dfeab110d62196502bd4b8c02907feafdfd3716d5c84f1f3e4` | 2149 | `results/multiseed_operating_regime.json` |
 | `0bf6e42d58260bde0e0e36d17049706528aa9c55f9e0f6fd035e53268798b523` | 33348 | `results/realdata_v2_summary.json` |
 | `372b515b10c2ee116f713434d0553196d32d4e9f377b1b34f36def874fee018b` | 4964 | `results/robustness_secondary.json` |
-| `328c1b6bec9dc91ad86109254d914a272bfad079abb21c78e96bde418f161da3` | 439735 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.pdf` |
-| `af63fc68575b807faf991463c01586f57fea85de0e228fbf15ca9de007d737f8` | 117264 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.tex` |
+| `b8c5e0118265d134dd280aeb8a29b81c544a16492529d76adcd3bcd5d716c720` | 439723 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.pdf` |
+| `4c3e733812dfe0d9543eca298c5e371d60b6428a872ff02a1429943fa556d70f` | 117266 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.tex` |
 | `928e138ed7d676fca0a6ecdcd61ec4a4c3556479b0b27865a617d350b2db00df` | 152680 | `supplementary/fnirs_kappa_beginner_notebook.ipynb` |
 
 ## Reproduce everything
