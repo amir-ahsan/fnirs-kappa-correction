@@ -1106,7 +1106,7 @@ At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.017} = \frac{1}{0.983} = 1.02
 
 At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.593} = \frac{1}{0.407} = 2.46$
 
-Here $R^2_{\mathrm{SS}}(\lambda)$ is the \emph{ordinary} regression $R^2$ of the uncorrected long channel on the short channel (the fraction of long-channel variance removed by SSR), computed identically in the synthetic and real-data pipelines. The two wavelengths differ substantially ($1.02$ vs $2.46$, roughly $2.4\times$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
+Here $R^2_{\mathrm{SS}}(\lambda)$ is the \emph{ordinary} regression $R^2$ of the uncorrected long channel on the short channel (the fraction of long-channel variance removed by SSR). The same variance-removal definition is used in the synthetic and real-data pipelines, but the preprocessing and regression implementations differ: the synthetic analysis uses unfiltered OD with an intercept, whereas the in-vivo analysis uses 0.01--0.1\,Hz bandpass-filtered, approximately zero-mean OD with a zero-intercept regression. The two wavelengths differ substantially ($1.02$ vs $2.46$, roughly $2.4\times$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
 
 Applied correction (the $V_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
 \begin{equation}

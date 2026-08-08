@@ -16,7 +16,7 @@ data acquired from a publicly available finger-tapping experiment:
 
     1. Short-separation regression (SSR) at the OD level, performed
        independently for each wavelength.
-    2. SSR-attenuation diagnostic: V_SSR(lam) = 1 / (1 - R^2_SS(lam)),
+    2. SSR variance-removal diagnostic: V_SSR(lam) = 1 / (1 - R^2_SS(lam)),
        estimated per wavelength from the regression statistics and REPORTED
        as a diagnostic of the long-channel variance removed by (coupled to)
        the short-channel regression, NOT of superficial contamination

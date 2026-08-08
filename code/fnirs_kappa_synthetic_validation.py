@@ -769,24 +769,19 @@ def _compute_R2_SS_single(
     band: Tuple[float, float] = (0.01, 0.5)
 ) -> float:
     """
-    Ordinary coefficient of determination (R^2) from the SSR regression of the
-    long-channel dOD on the short-channel dOD, i.e. the fraction of long-channel
-    variance removed by SSR:
+    DEPRECATED - band-limited long-short coupling diagnostic only. This helper
+    does not reproduce the reported synthetic V_SSR or the in-vivo SSR
+    implementation.
 
-        R2_SS = 1 - Var(residual) / Var(dOD_long),
+    It band-pass filters the signals to `band` (default 0.01-0.5 Hz) before an
+    OLS long-on-short regression, so its R^2 is a band-limited coupling statistic,
+    NOT the R^2 of the actual SSR operator. The reported synthetic V_SSR is built
+    directly from the R^2 returned by perform_ssr() (unfiltered OLS long-on-short
+    with an intercept); the in-vivo pipeline uses a 0.01-0.1 Hz, zero-intercept
+    regression. This function is retained only for reference/backward
+    compatibility and is not called by the reported pipeline.
 
-    where residual = dOD_long - [1, dOD_short] @ beta (OLS).  This is the SAME
-    statistic the real-data pipeline uses (fnirs_kappa_realdata_v2.py) and the
-    definition stated in the manuscript methods, so the synthetic and real-data
-    V_SSR diagnostics are now harmonized.
-
-    DEPRECATED / NOT USED FOR THE REPORTED DIAGNOSTIC.  This helper band-pass
-    filters the signals to `band` (default 0.01-0.5 Hz) before regressing, so its
-    R^2 is a band-limited long-short coupling statistic, NOT the R^2 of the actual
-    SSR operator.  The reported synthetic V_SSR is now built directly from the R^2
-    returned by perform_ssr() (unfiltered OLS long-on-short), matching the
-    real-data pipeline and the manuscript definition.  This function is retained
-    only for reference/backward compatibility.
+        R2_SS = 1 - Var(residual) / Var(dOD_long).
 
     Note: this is deliberately NOT a task-partialled (partial) R^2.  The task
     regressor is accepted for call-signature compatibility but is not used.
@@ -1298,8 +1293,10 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
             # long-on-short regression (with intercept) that produced the
             # SSR-corrected signal, so V_SSR(λ) = 1/(1-R2_SS(λ)) is exactly the
             # fraction of long-channel variance removed by SSR at that
-            # wavelength.  This is the SAME statistic the real-data pipeline
-            # reports.  It is a per-wavelength DIAGNOSTIC and is NOT applied
+            # wavelength.  This uses the SAME variance-removal definition the
+            # real-data pipeline reports (the in-vivo preprocessing/regression
+            # differs: 0.01-0.1 Hz filter, zero-intercept).  It is a per-wavelength
+            # DIAGNOSTIC and is NOT applied
             # (only kappa_PV is applied at the OD level); no cross-wavelength
             # mean or composite kappa_total is formed because the 760/850 nm
             # values differ substantially and their mean is not meaningful.

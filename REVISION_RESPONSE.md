@@ -1835,3 +1835,55 @@ and valid JSON. Both documents recompile with zero errors, undefined references,
 boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest
 was regenerated (self-verifies 44/44) and the flat arXiv zip rebuilt so Supplementary
 Table S4 is current in the arXiv source.
+
+# Round 23 — Response to the *Final Consistency Review* (Aug 8, 2026)
+
+Four narrowly-defined editorial/source-documentation corrections; no Monte Carlo,
+robustness, synthetic, or real-data recomputation. Frozen `results/` and the manuscript
+figures are byte-identical to the previous iteration. These finish the wording items the
+Round-22 response slightly overstated as complete.
+
+**1 — Guide worked example "computed identically" removed.** The worked-example sentence
+still said $R^2_{\mathrm{SS}}$ is "computed identically in the synthetic and real-data
+pipelines," contradicting the corrected manuscript. It now reads: the same
+variance-removal definition is used in both pipelines, but the implementations differ
+(synthetic: unfiltered OD with an intercept; in-vivo: 0.01--0.1\,Hz bandpass-filtered,
+approximately zero-mean OD with a zero-intercept regression).
+
+**2 — Deprecated `_compute_R2_SS_single()` docstring de-contradicted.** Its opening no
+longer claims its band-limited $R^2$ is "the SAME statistic the real-data pipeline uses"
+or "matching the real-data pipeline." The docstring now begins "DEPRECATED - band-limited
+long-short coupling diagnostic only. This helper does not reproduce the reported synthetic
+V_SSR or the in-vivo SSR implementation," then explains the band-pass and points to
+`perform_ssr()`'s $R^2$ as the reported source. The nearby pipeline comment was likewise
+softened from "the SAME statistic the real-data pipeline reports" to "the same
+variance-removal definition … (the in-vivo preprocessing/regression differs)."
+
+**3 — Manuscript $\kappa$-properties table row for $V_{\mathrm{SSR}}$ modernized.** The
+row no longer reads "SSR signal attenuation (diagnostic)" with a "1.0--10+" typical
+range. It now reads "SSR variance removal / short-channel-coupled variance (diagnostic)",
+estimation "per-wavelength OD regression $R^2$", and range "$\geq$1; this study
+$\sim$1.0--2.8", consistent with the rest of the manuscript (an inverse residual-variance
+ratio, not an amplitude-attenuation factor). This is the only Round-23 change that
+touches the arXiv manuscript.
+
+**4 — Notebook R-vs-$\rho$ toy conclusion generalized, and re-executed.** The saved
+output no longer states categorically that "a big $R^2$ means the long channel is
+systemic-dominated." It now says that in this constructed example the large $R^2$ arises
+from the dominant shared systemic term, but that in general a large $R^2_{\mathrm{SS}}$
+means only that the short-channel regressor explains a large fraction of long-channel
+variance and does not by itself establish systemic dominance or quantify cortical loss.
+The notebook was executed once more so the saved output matches the source (22/22 code
+cells executed, all with outputs, zero errors, all cell IDs present).
+
+**Also (terminology):** the non-primary `fnirs_kappa_realdata_analysis.py` header now
+calls $V_{\mathrm{SSR}}$ an "SSR variance-removal diagnostic" rather than an
+"SSR-attenuation diagnostic."
+
+**Verification.** Frozen `results/` and manuscript figures byte-unchanged; no numerical
+values recomputed. 10 automated string checks pass; the notebook re-executes with zero
+cell errors, all outputs saved, and all cell IDs present, and its corrected R-vs-$\rho$
+output is now stored. Both documents recompile with zero errors, undefined references,
+overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release
+manifest was regenerated (self-verifies 44/44) and the flat arXiv zip rebuilt with the
+updated $\kappa$-properties table.
