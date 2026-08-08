@@ -18,7 +18,9 @@ data acquired from a publicly available finger-tapping experiment:
        independently for each wavelength.
     2. SSR-attenuation diagnostic: V_SSR(lam) = 1 / (1 - R^2_SS(lam)),
        estimated per wavelength from the regression statistics and REPORTED
-       as a diagnostic of residual superficial contamination. It is NOT
+       as a diagnostic of the long-channel variance removed by (coupled to)
+       the short-channel regression, NOT of superficial contamination
+       remaining after SSR. It is NOT
        applied to the data, and no cross-wavelength mean or kappa_total is
        formed: applying V_SSR on top of the (correctly large) kappa_PV
        would double-count the dilution, and the per-wavelength values differ
@@ -1047,7 +1049,8 @@ def main() -> None:
     # V_SSR would re-inject the systemic signal SSR was meant to remove, and
     # together with the corrected (large) kappa_PV drove the corrected amplitude
     # to a non-physiological ~11 uM.  We therefore report V_SSR as a
-    # diagnostic of residual superficial contamination but do NOT apply it,
+    # diagnostic of long-channel variance removed by/coupled to the short-channel
+    # regression (not of residual superficial contamination) but do NOT apply it,
     # consistent with the synthetic pipeline (where only kappa_PV is applied).
     # See KAPPA_PV_ATLAS_CHECK.md (Rec. 2) and CHANGELOG_FIXES.md.
     print("[7] V_SSR reported as diagnostic (NOT applied; see Step 8) ...")

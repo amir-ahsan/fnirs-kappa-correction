@@ -1042,7 +1042,7 @@ Regress the short-channel OD against the long-channel OD at each wavelength inde
 \Delta\text{OD}_{\text{long, SSR-cleaned}}(\lambda) = \Delta\text{OD}_{\text{long}}(\lambda) - \beta(\lambda) \times \Delta\text{OD}_{\text{short}}(\lambda)
 \end{equation}
 
-Compute the regression coefficient $\beta(\lambda)$ by minimizing the residual variance. A measure of systemic contamination is:
+Compute the regression coefficient $\beta(\lambda)$ by minimizing the residual variance. The fraction of long-channel variance removed by (coupled to) the short-channel regression is the ordinary $R^2$:
 
 \begin{equation}
 R^2_{\mathrm{SS}}(\lambda) = 1 - \frac{\text{Var}[\Delta\text{OD}_{\text{long, SSR-cleaned}}]}{\text{Var}[\Delta\text{OD}_{\text{long}}]}
@@ -1050,11 +1050,11 @@ R^2_{\mathrm{SS}}(\lambda) = 1 - \frac{\text{Var}[\Delta\text{OD}_{\text{long, S
 
 For our synthetic data:
 \begin{itemize}
-\item $R^2_{\mathrm{SS}}(760) = 0.658$
-\item $R^2_{\mathrm{SS}}(850) = 0.712$
+\item $R^2_{\mathrm{SS}}(760) = 0.017$
+\item $R^2_{\mathrm{SS}}(850) = 0.593$
 \end{itemize}
 
-These values indicate that SSR removes about 65--71\% of the signal variance due to shared superficial contamination.
+These values indicate that SSR removes about 2\% of the long-channel variance at 760\,nm and about 59\% at 850\,nm. The removed variance reflects short-channel-coupled long-channel variance (systemic variance, cortical--systemic covariance, noise, and any short-channel cortical sensitivity), not solely superficial contamination.
 
 \subsection{Step 3: Partial Volume Correction (OD Level)}
 
@@ -1102,11 +1102,11 @@ Compute diagnostic factors:
 V_{\mathrm{SSR}}(\lambda) = \frac{1}{1 - R^2_{\mathrm{SS}}(\lambda)}
 \end{equation}
 
-At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.206} = \frac{1}{0.794} = 1.26$
+At 760~nm: $V_{\mathrm{SSR}}(760) = \frac{1}{1 - 0.017} = \frac{1}{0.983} = 1.02$
 
-At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.903} = \frac{1}{0.097} = 10.31$
+At 850~nm: $V_{\mathrm{SSR}}(850) = \frac{1}{1 - 0.593} = \frac{1}{0.407} = 2.46$
 
-Here $R^2_{\mathrm{SS}}(\lambda)$ is the \emph{ordinary} regression $R^2$ of the uncorrected long channel on the short channel (the fraction of long-channel variance removed by SSR), computed identically in the synthetic and real-data pipelines. The two wavelengths differ by nearly an order of magnitude ($1.26$ vs $10.31$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
+Here $R^2_{\mathrm{SS}}(\lambda)$ is the \emph{ordinary} regression $R^2$ of the uncorrected long channel on the short channel (the fraction of long-channel variance removed by SSR), computed identically in the synthetic and real-data pipelines. The two wavelengths differ substantially ($1.02$ vs $2.46$, roughly $2.4\times$), so \emph{no cross-wavelength mean is formed}: their average would not be a physically meaningful quantity. $V_{\mathrm{SSR}}(\lambda)$ is reported per wavelength as a variance-removal diagnostic only.
 
 Applied correction (the $V_{\mathrm{SSR}}$ diagnostics are \emph{not} multiplied in):
 \begin{equation}
@@ -1193,18 +1193,18 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 \hline
 \textbf{SDS (mm)} & $f_{\text{cortex}}$ & $\kappa_{\text{PV}}$ & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ \\
 \hline
-25 & 0.043 & 23.50 & 1.23 & 11.62 \\
-30 & 0.064 & 15.69 & 1.25 & 11.17 \\
-35 & 0.086 & 11.57 & 1.28 & 10.34 \\
-38 & 0.100 & 10.04 & 1.28 & 9.72 \\
-40 & 0.108 & 9.22 & 1.27 & 9.12 \\
+25 & 0.043 & 23.50 & 1.01 & 2.40 \\
+30 & 0.064 & 15.69 & 1.02 & 2.46 \\
+35 & 0.086 & 11.57 & 1.02 & 2.48 \\
+38 & 0.100 & 10.04 & 1.02 & 2.47 \\
+40 & 0.108 & 9.22 & 1.02 & 2.46 \\
 \hline
 \end{tabular}
 \end{center}
 
 \noindent (The $f_{\text{cortex}}$ column is the \emph{wavelength-averaged} fraction, i.e.\ the mean of the 760 and 850~nm converged Monte-Carlo values from \texttt{fcortex\_production.json}, so that $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ in the next column is its exact reciprocal; the pipelines themselves use the wavelength-specific fractions. See the single-source-of-truth note in Appendix~A.)
 
-\paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic (of short-channel-coupled long-channel variance and the risk of cortical co-removal, \emph{not} a measure of superficial contamination remaining after SSR), never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
+\paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic (of short-channel-coupled long-channel variance and the risk of cortical co-removal, \emph{not} a measure of superficial contamination remaining after SSR), never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ substantially (roughly $2$--$2.5\times$), so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
 
 \subsection{Physical Interpretation}
 
@@ -1254,11 +1254,11 @@ A critical finding: the $V_{\mathrm{SSR}}$ diagnostic differs significantly betw
 \hline
 \textbf{SDS (mm)} & $V_{\mathrm{SSR}}(760)$ & $V_{\mathrm{SSR}}(850)$ & \textbf{Ratio} \\
 \hline
-25 & 1.23 & 11.62 & 9.47 \\
-30 & 1.25 & 11.17 & 8.95 \\
-35 & 1.28 & 10.34 & 8.09 \\
-38 & 1.28 & 9.72 & 7.58 \\
-40 & 1.27 & 9.12 & 7.19 \\
+25 & 1.01 & 2.40 & 2.37 \\
+30 & 1.02 & 2.46 & 2.43 \\
+35 & 1.02 & 2.48 & 2.44 \\
+38 & 1.02 & 2.47 & 2.42 \\
+40 & 1.02 & 2.46 & 2.41 \\
 \hline
 \end{tabular}
 \end{center}
@@ -1502,7 +1502,7 @@ Assuming $d_{\text{sup}} = 8$~mm when the true value is 12~mm would \emph{under}
 \begin{caution}
 \textbf{Pitfall 5: Treating the SSR $R^2$ as an amplitude correction, or averaging it across wavelengths.}
 
-$V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph{variance} ratio, not an amplitude factor (the residual-to-original standard-deviation ratio is $\sqrt{1-R^2_{\mathrm{SS}}}$, still not a task-response amplitude ratio), and its value differs by nearly an order of magnitude between 760 and 850~nm, so a cross-wavelength average is meaningless.
+$V_{\mathrm{SSR}}(\lambda)=1/(1-R^2_{\mathrm{SS}})$ is an inverse residual-\emph{variance} ratio, not an amplitude factor (the residual-to-original standard-deviation ratio is $\sqrt{1-R^2_{\mathrm{SS}}}$, still not a task-response amplitude ratio), and its value differs substantially (roughly a factor of $2.5$) between 760 and 850~nm, so a cross-wavelength average is meaningless.
 
 \textbf{Fix}: Report $V_{\mathrm{SSR}}(\lambda)$ per wavelength as a variance-removal \emph{diagnostic} and never multiply it into the recovered concentration; apply only $\kappa_{\text{DPF}}\times\kappa_{\text{PV}}$.
 \end{caution}
@@ -1562,7 +1562,7 @@ These problems work through the core ideas of the framework. Try each before rea
 \textit{Solution:} (a)~$0.10\times1.5=0.15$. (b)~$\kappa_{\text{PV}}$ drops from $1/0.10=10$ to $1/0.15\approx6.7$. (c)~Down: a smaller $\kappa_{\text{PV}}$ multiplies the signal by less, so the recovered amplitude decreases (in the paper, the two-layer $\approx1.4~\mu$M upper bound drops to the CSF-augmented $\approx0.9~\mu$M).
 
 \paragraph{4. $R$ vs.\ $\rho$.} A subject's long and short channels have $R^2_{\text{SS}}=0.64$. A classmate concludes that SSR must have removed 64\% of the \emph{cortical} signal. Are they right?\\
-\textit{Solution:} No. $R^2_{\text{SS}}=0.64$ means the short channel explains 64\% of the \emph{long-channel} variance, mostly because the long channel is dominated by the same systemic signal the short channel sees. The cortical loss is set by $\rho$ (the cortical--systemic correlation), not by $R^2$, and is usually much smaller. This is exactly why $V_{\text{SSR}}=1/(1-R^2)$ is reported as a variance-removal diagnostic and never applied as an amplitude restoration.
+\textit{Solution:} No. $R^2_{\text{SS}}=0.64$ means the short channel explains 64\% of the \emph{long-channel} variance, mostly because the long channel is dominated by the same systemic signal the short channel sees. The cortical loss is not set by $R^2$; it depends on the cortical--systemic covariance, the signal amplitudes, the short-channel composition, the preprocessing, and the regression model, and is usually much smaller. This is exactly why $V_{\text{SSR}}=1/(1-R^2)$ is reported as a variance-removal diagnostic and never applied as an amplitude restoration.
 
 \paragraph{5. Wavelength bookkeeping.} Why must $\kappa_{\text{PV}}(\lambda)$ be applied to each wavelength's $\Delta$OD \emph{before} the MBLL inversion, rather than to the final $\Delta[\text{HbO}_2]$?\\
 \textit{Solution:} The MBLL inversion mixes the two wavelengths to separate HbO$_2$ from HbR. Because $f_{\text{cortex}}$ differs at 760 and 850~nm, the correction is wavelength-specific; applying it \emph{after} the inversion would discard the per-wavelength information and could not properly disentangle the two chromophores (Section~\ref{sec:order} on processing order).
@@ -1571,7 +1571,7 @@ These problems work through the core ideas of the framework. Try each before rea
 \textit{Solution:} No. Converged Monte Carlo and atlas studies (e.g.\ Strangman et al.\ 2013) put the brain sensitivity fraction at $\sim$4--8\% at 25--30~mm, an order of magnitude smaller. A value of $0.55$ is a red flag for an under-converged analytical calculation (the trap discussed in the numerical cautionary tale).
 
 \paragraph{7. Putting it together.} In one paragraph, summarize the full corrected pipeline for a single long channel: what is removed, what is multiplied in, what is only reported, and why the result is trustworthy only at long SDS.\\
-\textit{Solution:} Band-pass the optical density; regress out the short channel (SSR) to remove systemic contamination; multiply the SSR-cleaned $\Delta$OD by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ (CSF-augmented) at each wavelength to undo partial-volume dilution; invert with the MBLL using wavelength-specific DPFs. $V_{\text{SSR}}$ is computed and reported as a variance-removal diagnostic of residual contamination but \emph{not} applied. The result is trustworthy at long SDS (consistently beneficial by $\sim$35~mm, strongest at 38--40~mm), because there the cortical signal is above the noise floor; at short SDS the same correction amplifies noise. The exact onset is set by the instrument noise.
+\textit{Solution:} Band-pass the optical density; regress out the short channel (SSR) to remove systemic contamination; multiply the SSR-cleaned $\Delta$OD by $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ (CSF-augmented) at each wavelength to undo partial-volume dilution; invert with the MBLL using wavelength-specific DPFs. $V_{\text{SSR}}$ is computed and reported as a diagnostic of the long-channel variance removed by/coupled to the short-channel regression but \emph{not} applied. The result is trustworthy at long SDS (consistently beneficial by $\sim$35~mm, strongest at 38--40~mm), because there the cortical signal is above the noise floor; at short SDS the same correction amplifies noise. The exact onset is set by the instrument noise.
 
 \newpage
 \appendix

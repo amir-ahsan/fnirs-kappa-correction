@@ -1691,3 +1691,86 @@ reviewer's independent ordinary-$R^2$ figures. Both documents recompile with zer
 undefined references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp,
 guide 53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat
 arXiv zip rebuilt from the corrected source (figure2 updated).
+
+# Round 21 — Response to the *Exact SSR-Operation Review* (Aug 8, 2026)
+
+This round completes the SSR-diagnostic harmonization (a preprocessing mismatch remained
+after Round 20) and finishes the notebook. Per the reviewer's preferred minimal fix, the
+reported synthetic $V_{\mathrm{SSR}}$ is now constructed from the $R^2$ returned by the
+\emph{actual} SSR operation (`perform_ssr()`), so it is exactly the fraction of
+long-channel variance removed by SSR. Only the diagnostic, its tables/figure, and the
+accompanying text changed; the production Monte Carlo, CSF calibration, robustness
+sweeps, corrected HbO$_2$/HbR waveforms, RMSE, and the 0.913$\pm$0.334\,$\mu$M real-data
+result are unchanged (frozen `results/` JSON byte-unchanged).
+
+**1 — $V_{\mathrm{SSR}}$ built from the actual SSR operator.** Round 20 changed the
+synthetic diagnostic to an ordinary $R^2$ but still band-pass filtered (0.01--0.5\,Hz)
+before regressing, whereas `perform_ssr()` operates on the \emph{unfiltered} OD with an
+intercept. The pipeline now captures the $R^2$ that `perform_ssr()` already returns and
+sets $V_{\mathrm{SSR}}(\lambda)=1/(1-R^2)$ directly, so ``fraction of variance removed by
+SSR'' is literally true and matches the real-data pipeline's statistic. The band-passed
+helper `_compute_R2_SS_single()`/`compute_V_SSR()` is retained but marked DEPRECATED
+(no longer used for the reported diagnostic). The regenerated synthetic values reproduce
+the reviewer's independent figures exactly: $V_{\mathrm{SSR}}(760)$ = 1.01/1.02/1.02/1.02/1.02
+and $V_{\mathrm{SSR}}(850)$ = 2.40/2.46/2.48/2.47/2.46 at 25/30/35/38/40\,mm (means
+$1.017\pm0.005$ and $2.454\pm0.057$; $R^2_{\mathrm{SS}}\approx0.02$ and $0.59$). The
+synthetic 850\,nm value ($\approx2.45$) is now consistent with the real-data 850\,nm
+value ($2.34\pm0.39$).
+
+**2 — Every $V_{\mathrm{SSR}}$ number repopulated from that single result.** The
+manuscript synthetic table \emph{and its ``Overall'' row} (previously 1.20/10.34), the
+means and $R^2_{\mathrm{SS}}$ narrative in the $V_{\mathrm{SSR}}$-diagnostic subsection,
+the Results and Discussion/Conclusions approximations, the README console table and
+aggregate (previously 1.261$\pm$0.052 / 10.395$\pm$1.110), the guide Summary Table and
+$V_{\mathrm{SSR}}$-by-wavelength table, and Figure 2 panel E were all regenerated to the
+new values. Because the 850\,nm value fell from $\approx$10 to $\approx$2.45, the
+``differ by nearly an order of magnitude'' framing was corrected throughout to ``differ
+substantially (roughly 2--2.5$\times$)''; per-wavelength reporting is still justified.
+
+**3 — Guide worked example reconciled.** Step 2 and Step 5 now use the \emph{same}
+$R^2_{\mathrm{SS}}$ values (760: 0.017$\to V$=1.02; 850: 0.593$\to V$=2.46). Step 2 no
+longer calls $R^2$ ``a measure of systemic contamination''; it is described as the
+fraction of long-channel variance removed by/coupled to the short-channel regression,
+which may include systemic variance, cortical--systemic covariance, noise, and any
+short-channel cortical sensitivity. Question 4 no longer says cortical loss is ``set by
+$\rho$'' (it depends on covariance, signal amplitudes, short-channel composition,
+preprocessing, and the regression model). Question 7 no longer calls $V_{\mathrm{SSR}}$ a
+diagnostic of ``residual contamination.''
+
+**4 — Figure 2 panel E relabeled.** The panel title is now ``Applied factors ($\kappa$)
+and V$_{\mathrm{SSR}}$ diagnostic by SDS'' and the y-axis ``Dimensionless factor /
+diagnostic'' (was ``$\kappa$ Components by SDS'' / ``Correction Factor ($\kappa$)''), so
+$V_{\mathrm{SSR}}$ is not visually presented as a correction factor. Regenerated with the
+new values in the same run.
+
+**5 — Notebook: release check, execution, cell IDs, wording.** `reproduce_all.sh` now
+runs the notebook smoke test when `RUN_NOTEBOOK=1` \emph{or} `RELEASE=1`, so a formal
+release cannot skip it. The notebook was executed end-to-end (nbconvert) and the clean
+executed version saved (22 code cells, all with outputs, zero errors); the six cells
+lacking IDs were given IDs (no more MissingIDFieldWarning). The residual sentence saying
+that after SSR ``some superficial contamination remains'' before introducing $R^2$ was
+corrected to state that $R^2$ measures the fraction of long-channel variance removed
+by/coupled to the short-channel regression, not the contamination remaining.
+
+**6 — Final SSR terminology sweep.** The non-primary `fnirs_kappa_realdata_analysis.py`
+no longer describes $V_{\mathrm{SSR}}$ as a diagnostic of ``residual superficial
+contamination'' (now: variance removed by/coupled to the short-channel regression). In
+the manuscript Limitations, the statement that task-evoked systemics ``would raise $R^2$,
+flagging channels where cortical and systemic signals are correlated'' is softened: a
+high $R^2_{\mathrm{SS}}$ does not by itself establish cortical--systemic correlation,
+because shared superficial variance can make it large even when the components are
+independent.
+
+**Optional archival items (deferred, unchanged).** The canonical `DATASET_TREE_SHA256`
+pin and staged-release workflow remain optional future hardening; the real-data artifact
+records `tree_hash_verified_against_pin=false` truthfully.
+
+**Verification.** Frozen `results/` JSON byte-unchanged; the regenerated synthetic
+RMSE/$\kappa_{\mathrm{PV}}$/MAE match the frozen values exactly (only $V_{\mathrm{SSR}}$
+changed), and the new diagnostic reproduces the reviewer's independent
+actual-SSR-operation figures (means 1.017 / 2.454). Figures 1 and 3 are pixel-identical;
+only Figure 2 changed. 24 automated string checks pass; the notebook executes with zero
+cell errors and all cell IDs present. Both documents recompile with zero errors,
+undefined references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp,
+guide 53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat
+arXiv zip rebuilt from the corrected source (Figure 2 updated).

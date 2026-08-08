@@ -780,9 +780,16 @@ def _compute_R2_SS_single(
     definition stated in the manuscript methods, so the synthetic and real-data
     V_SSR diagnostics are now harmonized.
 
+    DEPRECATED / NOT USED FOR THE REPORTED DIAGNOSTIC.  This helper band-pass
+    filters the signals to `band` (default 0.01-0.5 Hz) before regressing, so its
+    R^2 is a band-limited long-short coupling statistic, NOT the R^2 of the actual
+    SSR operator.  The reported synthetic V_SSR is now built directly from the R^2
+    returned by perform_ssr() (unfiltered OLS long-on-short), matching the
+    real-data pipeline and the manuscript definition.  This function is retained
+    only for reference/backward compatibility.
+
     Note: this is deliberately NOT a task-partialled (partial) R^2.  The task
-    regressor is accepted for call-signature compatibility but is not used, so
-    the returned value is the ordinary regression R^2 of the actual SSR operator.
+    regressor is accepted for call-signature compatibility but is not used.
     Works on any 1-D signal pair (OD at a single wavelength, or concentration).
     Returns R2_SS clipped to [0, 0.99].
     """
@@ -1228,10 +1235,15 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
             # at the SAME wavelength, preserving Beer-Lambert linearity.
             # ------------------------------------------------------------------
             ssr_OD_dict: Dict[int, np.ndarray] = {}
+            ssr_R2_dict: Dict[int, float] = {}
             for wl in wavelengths:
                 short_OD_wl = short_ch['delta_OD'][wl]   # same-wavelength OD
-                ssr_OD, _ = perform_ssr(ch_data['delta_OD'][wl], short_OD_wl)
+                ssr_OD, ssr_r2 = perform_ssr(ch_data['delta_OD'][wl], short_OD_wl)
                 ssr_OD_dict[wl] = ssr_OD
+                # Capture the R^2 of the ACTUAL SSR regression (unfiltered OD,
+                # OLS with intercept) so the reported V_SSR is exactly the
+                # fraction of long-channel variance removed by this operation.
+                ssr_R2_dict[wl] = float(np.clip(ssr_r2, 0.0, 0.99))
 
             # ------------------------------------------------------------------
             # Step 3: Wavelength-specific PV correction at OD level
@@ -1272,29 +1284,19 @@ def run_analysis_pipeline(data: Dict, n_s: int = 500) -> pd.DataFrame:
             f_cortex_computed = float(
                 np.mean(list(f_cortex_computed_dict.values()))
             )
-            # R²_SS(λ) is computed from the *uncorrected* long-channel
-            # ΔOD(λ) regressed on the short-channel ΔOD(λ) at the same
-            # wavelength.  Using the SSR-corrected signal here would be
-            # incorrect: the SSR residual is OLS-orthogonal to the short
-            # regressor by construction, so R²_SS would collapse to ≈0
-            # and V_SSR to ≈1 regardless of the true superficial
-            # contamination.  Because μ_a and μ_s' differ at each
-            # wavelength the superficial contamination fraction is
-            # wavelength-dependent, making a per-wavelength computation
-            # the physically rigorous approach.
-            # V_SSR is computed and reported PER WAVELENGTH only.  The
-            # cross-wavelength arithmetic mean (and any kappa_total built from
-            # it) is intentionally NOT formed: the per-wavelength values differ
-            # substantially (e.g. 760 vs 850 nm), so their mean is not a
-            # physically meaningful quantity.  V_SSR is a diagnostic and is
-            # not applied to the data (only kappa_PV is applied at the OD level).
-            V_SSR_dict, R2_SS_dict, _V_SSR_mean, _R2_SS_mean = compute_V_SSR(
-                ch_data['delta_OD'],
-                short_ch['delta_OD'],
-                wavelengths,
-                task_regressor,
-                sfreq
-            )
+            # V_SSR is built DIRECTLY from the R^2 returned by the actual SSR
+            # operation (perform_ssr above): R2_SS(λ) is the ordinary
+            # coefficient of determination of the same unfiltered OLS
+            # long-on-short regression (with intercept) that produced the
+            # SSR-corrected signal, so V_SSR(λ) = 1/(1-R2_SS(λ)) is exactly the
+            # fraction of long-channel variance removed by SSR at that
+            # wavelength.  This is the SAME statistic the real-data pipeline
+            # reports.  It is a per-wavelength DIAGNOSTIC and is NOT applied
+            # (only kappa_PV is applied at the OD level); no cross-wavelength
+            # mean or composite kappa_total is formed because the 760/850 nm
+            # values differ substantially and their mean is not meaningful.
+            R2_SS_dict = {wl: ssr_R2_dict[wl] for wl in wavelengths}
+            V_SSR_dict = {wl: 1.0 / (1.0 - R2_SS_dict[wl]) for wl in wavelengths}
 
             # ------------------------------------------------------------------
             # Compute errors
@@ -1412,8 +1414,8 @@ def plot_results(df: pd.DataFrame, save_path: Optional[str] = None):
     ax.set_xticks(x)
     ax.set_xticklabels([f'{s}mm' for s in sds_unique])
     ax.set_xlabel('Source-Detector Separation', fontsize=12)
-    ax.set_ylabel('Correction Factor (κ)', fontsize=12)
-    ax.set_title('(E) κ Components by SDS', fontsize=14)
+    ax.set_ylabel('Dimensionless factor / diagnostic', fontsize=12)
+    ax.set_title('(E) Applied factors ($\\kappa$) and V$_{SSR}$ diagnostic by SDS', fontsize=14)
     ax.legend()
     ax.axhline(1, color='gray', linestyle='--', alpha=0.5)
     ax.grid(True, alpha=0.3, axis='y')

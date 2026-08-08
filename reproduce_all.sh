@@ -128,11 +128,12 @@ print(f"[manifest] {ok} files match; {bad} changed/missing "
       f"(changes are expected after regenerating with a different seed/round).")
 PY
 
-# Optional beginner-notebook execution smoke test. Static JSON/Python-syntax checks
-# do not catch scientific inconsistencies in the notebook, so this executes it end to
-# end when requested. It is OFF by default (the analytical sensitivity maps are slow);
-# enable with RUN_NOTEBOOK=1. In RELEASE mode a failure here is fatal.
-if [ "${RUN_NOTEBOOK:-0}" = "1" ]; then
+# Beginner-notebook execution smoke test. Static JSON/Python-syntax checks do not catch
+# scientific inconsistencies in the notebook, so this executes it end to end. It runs
+# when RUN_NOTEBOOK=1 OR RELEASE=1, so a formal release can never skip it (the analytical
+# sensitivity maps are slow, which is why it is otherwise off by default). In RELEASE
+# mode a failure -- or a missing jupyter -- is fatal.
+if [ "${RUN_NOTEBOOK:-0}" = "1" ] || [ "${RELEASE:-0}" = "1" ]; then
   echo "== Notebook smoke test (execute supplementary/fnirs_kappa_beginner_notebook.ipynb) =="
   if command -v jupyter >/dev/null 2>&1; then
     if ( cd supplementary && jupyter nbconvert --to notebook --execute \

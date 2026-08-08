@@ -237,11 +237,11 @@ reproduces (verified):
 
 | SDS (mm) | f_cortex | kappa_PV | V_SSR(760) | V_SSR(850) | RMSE_MBLL | RMSE_corr |
 |---------:|---------:|---------:|-----------:|-----------:|----------:|----------:|
-| 25 | 0.043 | 23.50 | 1.23 | 11.62 | 2.107 | 3.370 |
-| 30 | 0.064 | 15.69 | 1.25 | 11.17 | 2.065 | 2.153 |
-| 35 | 0.086 | 11.57 | 1.28 | 10.34 | 2.017 | 1.502 |
-| 38 | 0.100 | 10.04 | 1.28 |  9.72 | 1.989 | 1.199 |
-| 40 | 0.108 |  9.22 | 1.27 |  9.12 | 1.968 | 1.097 |
+| 25 | 0.043 | 23.50 | 1.01 |  2.40 | 2.107 | 3.370 |
+| 30 | 0.064 | 15.69 | 1.02 |  2.46 | 2.065 | 2.153 |
+| 35 | 0.086 | 11.57 | 1.02 |  2.48 | 2.017 | 1.502 |
+| 38 | 0.100 | 10.04 | 1.02 |  2.47 | 1.989 | 1.199 |
+| 40 | 0.108 |   9.22 | 1.02 |  2.46 | 1.968 | 1.097 |
 
 (The `f_cortex` column is the wavelength-averaged fraction — the mean of the 760 and
 850 nm converged Monte-Carlo values — so `kappa_PV` is its exact reciprocal; the
@@ -249,7 +249,7 @@ pipelines use the wavelength-specific fractions.)
 
 Overall HbO₂ RMSE 2.030 → 2.044 µM (pooled −0.7%, dominated by the harmful 25 mm
 regime; at ≥ 38 mm the reduction is 40–44%); kappa_PV = 14.00 ± 5.35;
-V_SSR(760) = 1.261 ± 0.052, V_SSR(850) = 10.395 ± 1.110 (ordinary regression R²_SS,
+V_SSR(760) = 1.017 ± 0.005, V_SSR(850) = 2.454 ± 0.057 (ordinary regression R²_SS,
 harmonized with the real-data pipeline; diagnostic only, not applied).
 HbR overall RMSE 0.657 → 0.226 µM (65.6%). Per-subject MAE 1.83 ± 0.38 µM.
 
