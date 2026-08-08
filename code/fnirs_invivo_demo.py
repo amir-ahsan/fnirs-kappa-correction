@@ -12,9 +12,9 @@ experiment's irregular inter-onset intervals or its control condition.
 This parallel design enables a qualitative comparison between the simulated
 pipeline demonstration and the subsequent real-data analysis.
 
-Based on: Sagara N and Ahsan A, "A diffusion-theory framework for
-quantifying and correcting partial volume bias in functional
-near-infrared spectroscopy" (submitted to Neurophotonics, 2026)
+Based on: Sagara N and Ahsan A, "Partial-volume correction in continuous-wave
+fNIRS: operating regime, a Monte-Carlo convergence caveat, and a reproducible
+pipeline" (submitted to Neurophotonics, 2026)
 
 Dependencies: numpy, matplotlib (no scipy required)
 """

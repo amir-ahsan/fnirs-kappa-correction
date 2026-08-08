@@ -24,6 +24,11 @@ cd "$ROOT"
 ROUND="${ANALYSIS_ROUND:-local}"
 COMMIT="${GIT_COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
 export ANALYSIS_ROUND="$ROUND"
+# Unify the release-mode flag: this script uses RELEASE=1, while the Python
+# loaders test FNIRS_RELEASE=1. Export the latter from the former so that
+# `RELEASE=1 ./reproduce_all.sh` also activates the loaders' strict requirements
+# (e.g. the robustness loader's mandatory payload-hash check).
+export FNIRS_RELEASE="${RELEASE:-0}"
 
 if [ "${FAST:-0}" = "1" ]; then
   NPROD=100000; NROB=40000; echo "[FAST] smoke run: N_prod=$NPROD N_rob=$NROB (NOT the frozen values)"

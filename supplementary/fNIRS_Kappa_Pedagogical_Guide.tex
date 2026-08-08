@@ -142,7 +142,7 @@ This $\sim$17\% difference means that if a processing pipeline uses a single sca
 
 This is the largest and most consequential bias. The human head is layered: scalp ($\sim$3--5~mm), skull ($\sim$5--8~mm), cerebrospinal fluid ($\sim$1--3~mm), and cortex ($\sim$2--4~mm of grey matter). When light passes from source to detector, it samples all these layers.
 
-Task-evoked hemodynamic changes occur almost exclusively in the active cortex. The superficial layers (scalp, skull) show continuous systemic physiology (cardiac pulsations, respiration, blood pressure oscillations) but essentially no task-related changes.
+The neural task-evoked response of interest originates in the active cortex. The superficial layers (scalp, skull) show continuous systemic physiology (cardiac pulsations, respiration, blood pressure oscillations) and can additionally carry \emph{task-correlated} extracerebral responses (e.g., task-evoked changes in scalp blood flow)---which is exactly why short-separation regression is used to estimate and remove the superficial contribution rather than assuming the scalp is inert.
 
 The measured optical density is therefore a \emph{weighted average} of cortical and superficial contributions:
 
@@ -1678,7 +1678,7 @@ $\beta(\lambda)$ & SSR regression coefficient & Dimensionless \\
 
 \begin{enumerate}
 
-\item Sagara N, Ahsan A. A diffusion-theory framework for quantifying and correcting partial volume bias in functional near-infrared spectroscopy. \textit{Neurophotonics}. 2026 (submitted).
+\item Sagara N, Ahsan A. Partial-volume correction in continuous-wave fNIRS: operating regime, a Monte-Carlo convergence caveat, and a reproducible pipeline. \textit{Neurophotonics}. 2026 (submitted).
 \begin{quote}
 The research paper on which this pedagogical guide is based. Presents and validates the complete $\kappa$-correction framework with synthetic fNIRS data across four source--detector separations and 10 subjects.
 \end{quote}

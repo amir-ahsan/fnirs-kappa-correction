@@ -314,6 +314,23 @@ def main():
     # downloads and MD5-verifies from Zenodo otherwise. Either way it populates
     # rd.ACQUISITION_PROVENANCE so the frozen summary records the TRUE per-run history.
     root = rd.download_dataset(root)
+    # Optional strict archival-release gate. In strict release mode
+    # (FNIRS_RELEASE=1) we refuse to ship an in-vivo summary built on a dataset
+    # whose bytes were never authenticated against a canonical source: require
+    # either a Zenodo MD5 match (zenodo_md5_verified) or a content tree-hash that
+    # verified against a supplied canonical pin (tree_hash_verified_against_pin).
+    # Development/CI runs (FNIRS_RELEASE unset/0) are unaffected -- the sandbox
+    # reconstructs the dataset from raw GitHub, which cannot satisfy either check.
+    if os.environ.get("FNIRS_RELEASE") == "1":
+        prov = getattr(rd, "ACQUISITION_PROVENANCE", {}) or {}
+        if not (prov.get("zenodo_md5_verified") or
+                prov.get("tree_hash_verified_against_pin")):
+            raise RuntimeError(
+                "strict release mode (FNIRS_RELEASE=1): dataset provenance is "
+                "unverified. Require zenodo_md5_verified or "
+                "tree_hash_verified_against_pin (supply a canonical DATASET_SHA256 "
+                "or DATASET_TREE_SHA256 pin) before building a release in-vivo "
+                f"summary. Current acquisition provenance: {prov}")
     rows = []
     for sub in ["01", "02", "03", "04", "05"]:
         r = analyze_subject(root, sub)

@@ -28,9 +28,9 @@ Institution: Irvine Valley College
 Date: February 2026
 
 Reference:
-    Sagara N and Ahsan A (2026). "A diffusion-theory framework for
-    quantifying and correcting partial volume bias in functional
-    near-infrared spectroscopy." Neurophotonics.
+    Sagara N and Ahsan A (2026). "Partial-volume correction in continuous-wave
+    fNIRS: operating regime, a Monte-Carlo convergence caveat, and a reproducible
+    pipeline." Neurophotonics (submitted).
 """
 
 # =============================================================================

@@ -7,9 +7,9 @@ fnirs_kappa_realdata_analysis.py
 Real-data demonstration of the kappa-correction framework for functional
 near-infrared spectroscopy (fNIRS). This script accompanies the manuscript:
 
-    Sagara N and Ahsan A (2026). "A diffusion-theory framework for
-    quantifying and correcting partial volume bias in functional
-    near-infrared spectroscopy." Neurophotonics.
+    Sagara N and Ahsan A (2026). "Partial-volume correction in continuous-wave
+    fNIRS: operating regime, a Monte-Carlo convergence caveat, and a reproducible
+    pipeline." Neurophotonics (submitted).
 
 The pipeline applies four processing stages to optical-density (OD)
 data acquired from a publicly available finger-tapping experiment:

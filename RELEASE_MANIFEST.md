@@ -23,13 +23,13 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `9d020d65a2756c2fc42cbbfdd7d88151cefcc1407cd1dad6814e73f5807f7d05` | 1083 | `LICENSE` |
 | `0050fc32fc270930da596b499b58e5bda4da0f3a2ce2827e95938a7e52d99672` | 953 | `LICENSE-manuscript.md` |
 | `8d199c5c4c021d03da47e8765514ea2d22f6eb03b30039ac7c6cd1ed92858b3b` | 16535 | `README.md` |
-| `8491ac0663496c49b339910dae90eccfe7d4683020c5668cde63005b7814338d` | 81018 | `REVISION_RESPONSE.md` |
+| `f4d461d5ed7ade8f4fa7d7ba944af98c8419f5f14ba97a51928554ff0cbbfd3e` | 86454 | `REVISION_RESPONSE.md` |
 | `1f9705d3eba85093b106f62b46e08bc7e10c9bf44c95bbc396bf85a1f39fa75b` | 6985 | `code/fcortex_source.py` |
-| `19dfa80eb2eb154cff49449e7a047d7e26e73614986b7145c205c4840b260015` | 20804 | `code/fnirs_invivo_demo.py` |
+| `7584b084574a784641b943ae7acd5b17a66a1248d376c45b6d718115c461d9a5` | 20815 | `code/fnirs_invivo_demo.py` |
 | `546eb0b81f3dc9a652063a31da30f06450e0c9f58c6cddaf3b6255cb39c8b4a6` | 14625 | `code/fnirs_kappa_group_analysis.py` |
-| `4b3709c4f5bc9d812be4cbe975ad2a268f98bfadbc1406d9a6626deda7a8166a` | 46495 | `code/fnirs_kappa_realdata_analysis.py` |
-| `19d0ef8c09de5de1c82fc793821286937327206d79098a9f65215867ad496e89` | 28391 | `code/fnirs_kappa_realdata_v2.py` |
-| `0239dddacb3fb5bf538736a6874cd0a51b6a42b8f51f7a65ba16d1280ac4378c` | 107785 | `code/fnirs_kappa_synthetic_validation.py` |
+| `76c45fe8c45a1f30a9a8bcba687b9500fc872054733b5bbf50d72177b832e92b` | 46518 | `code/fnirs_kappa_realdata_analysis.py` |
+| `b9fd8616c397a79e73fab2f2dba19e96a46e1adc23565b43d1520e9a8c88c435` | 29575 | `code/fnirs_kappa_realdata_v2.py` |
+| `b05ebc24cf5ed2ed160940dd128f6e4dc909b7159fc3e128b723216921ca572e` | 107808 | `code/fnirs_kappa_synthetic_validation.py` |
 | `42eae86326cf757b6f1a9ac956db772671de75efa1b2f53870621e083bf20a2c` | 5013 | `code/make_release_manifest.py` |
 | `35e1fe777e0dc3657b5ba313579674cd6eb99d418b00614b5f1f583f16c919be` | 9364 | `code/mc_2layer.py` |
 | `4544749aabea9c2834e72610cdeaba2195b5c11594a76ba959407b203b484dfe` | 9408 | `code/mc_csf.py` |
@@ -45,9 +45,9 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `1830309e44230290c6c25ebacb6ee6ee36f3b1447c3600317b4686337b9852a5` | 96158 | `manuscript/figures/figure5_realdata_hrf.png` |
 | `8eee074082111c72b5f38b02b3668209c37a488afbdebe51276387c7c6fcfc22` | 35028 | `manuscript/figures/figure6_realdata_summary.png` |
 | `e86640dc8f9999189a8c9570c21f7d1acd8b94c4c6ff6bdce3767351e0f3f73e` | 178654 | `manuscript/figures/figure7_group_block_average.png` |
-| `53895befafab3aebbeb9dde703aae3cfd23110c4210b814b99922c7b0e866f81` | 1992975 | `manuscript/main.pdf` |
-| `65a54e43d0603fc24b08322a0fd528026e3520a5471fbe1606630314ebafe399` | 186176 | `manuscript/main.tex` |
-| `990ef24d25ccaa30ca9401675fad9a9c5263f20926f08619adf3fefc88562aff` | 5608 | `reproduce_all.sh` |
+| `912045f04041f96ffd89b5a676316399b51e690e926513c02a980d63598c6204` | 1994758 | `manuscript/main.pdf` |
+| `7583c85f9224edacb9384d9fc1626b2b241adab4cec6a35d6db34d0734baa73c` | 187647 | `manuscript/main.tex` |
+| `06434b2a0e7d6f30f91d96b9f54058b625d2a760db5419fa4a292768404ea393` | 5939 | `reproduce_all.sh` |
 | `f50e014ad9afaa7cd8a0d1c79b91d516570ac87e72ce4c8d052f862ba7d793a1` | 2687 | `requirements-lock.txt` |
 | `90a1b0c629cceb68fb0900439a672b99a931e6f3ecba9ae2c8da9938a02eb9b0` | 1962 | `requirements.txt` |
 | `2e06607221e8e81db393b5eb73f915f6c69e9ef95ba2844ab8f60441472fa0db` | 2701 | `results/fcortex_production.csv` |
@@ -59,8 +59,8 @@ All artifacts share the uniform provenance schema written by `code/provenance.py
 | `a2a44c3fcb81d2dfeab110d62196502bd4b8c02907feafdfd3716d5c84f1f3e4` | 2149 | `results/multiseed_operating_regime.json` |
 | `0bf6e42d58260bde0e0e36d17049706528aa9c55f9e0f6fd035e53268798b523` | 33348 | `results/realdata_v2_summary.json` |
 | `372b515b10c2ee116f713434d0553196d32d4e9f377b1b34f36def874fee018b` | 4964 | `results/robustness_secondary.json` |
-| `c6a93b1e353dad1a0be17c7a4a60bdbac7fa1bfed107f5b900cdba6166f60b9e` | 437782 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.pdf` |
-| `222036fb28aeea55ba08c2c2a01dab42ae93e4f6c25451ca0f5cc2b31b0fe9f8` | 115809 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.tex` |
+| `f977e97df3cc618378b2a978d736dffda0c1e57092e6d0ace789f4e06621d75c` | 437983 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.pdf` |
+| `f524e7fc6c860c3cd1650b705b2e72ce709b59811da4f743f6da91c870c1ec41` | 116051 | `supplementary/fNIRS_Kappa_Pedagogical_Guide.tex` |
 | `928e138ed7d676fca0a6ecdcd61ec4a4c3556479b0b27865a617d350b2db00df` | 152680 | `supplementary/fnirs_kappa_beginner_notebook.ipynb` |
 
 ## Reproduce everything
