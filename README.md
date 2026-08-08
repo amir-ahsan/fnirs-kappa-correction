@@ -250,7 +250,9 @@ pipelines use the wavelength-specific fractions.)
 Overall HbO₂ RMSE 2.030 → 2.044 µM (pooled −0.7%, dominated by the harmful 25 mm
 regime; at ≥ 38 mm the reduction is 40–44%); kappa_PV = 14.00 ± 5.35;
 V_SSR(760) = 1.017 ± 0.005, V_SSR(850) = 2.454 ± 0.057 (ordinary regression R²_SS,
-harmonized with the real-data pipeline; diagnostic only, not applied).
+using the same variance-removal definition as the real-data pipeline — though the
+synthetic and in-vivo preprocessing/regression implementations differ; diagnostic only,
+not applied).
 HbR overall RMSE 0.657 → 0.226 µM (65.6%). Per-subject MAE 1.83 ± 0.38 µM.
 
 **Runtime:** the core pipeline (main tables) finishes in well under a minute; the

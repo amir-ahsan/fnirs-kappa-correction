@@ -1887,3 +1887,51 @@ output is now stored. Both documents recompile with zero errors, undefined refer
 overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide 53 pp). The release
 manifest was regenerated (self-verifies 44/44) and the flat arXiv zip rebuilt with the
 updated $\kappa$-properties table.
+
+# Round 24 — Response to the *Final Editorial Review* (Aug 8, 2026)
+
+Four editorial wording refinements; no Monte Carlo, robustness, synthetic, or real-data
+recomputation, and no change to any number, figure, result, method, or conclusion. Frozen
+`results/`, the manuscript figures, and the executed notebook are byte-identical to the
+previous iteration.
+
+**1 — $V_{\mathrm{SSR}}$ no longer grouped with the applied "correction factors."** The
+$\kappa$-properties table caption, which read "Summary of $\kappa$ correction factor
+properties. Each factor targets a distinct source of MBLL bias\ldots," now reads "Summary
+of the applied correction-factor and SSR-diagnostic properties. The applied factors
+$\kappa_{\mathrm{DPF}}$ and $\kappa_{\mathrm{PV}}$ address distinct transport biases, while
+$V_{\mathrm{SSR}}$ is a separately estimated regression diagnostic (not a correction
+factor and not applied)." The framework paragraph that grouped
+$\kappa_{\mathrm{DPF}},\kappa_{\mathrm{PV}},V_{\mathrm{SSR}}$ as factors that "target
+distinct physical mechanisms" and spoke of validating "each correction" now says the
+applied factors $\kappa_{\mathrm{DPF}}$ and $\kappa_{\mathrm{PV}}$ target distinct
+transport biases while the per-wavelength $V_{\mathrm{SSR}}$ characterizes the separate
+SSR regression step (a diagnostic, not an applied correction), each evaluable separately.
+
+**2 — Guide Question 4 no longer infers systemic dominance from $R^2$ alone.** The clause
+"mostly because the long channel is dominated by the same systemic signal the short
+channel sees" (only guaranteed in the constructed $R$-vs-$\rho$ example) is removed; the
+answer now reads "$R^2_{\mathrm{SS}}=0.64$ means the short-channel regression explains
+64\% of the long-channel variance. It does not identify the composition of that explained
+variance or tell us what fraction was cortical." The remaining discussion (covariance,
+amplitudes, short-channel composition, preprocessing, regression model) is unchanged.
+
+**3 — "75\% of the amplitude" $\to$ "75\% of the standard deviation" in the guide.** In
+the $V_{\mathrm{SSR}}$ worked example, $\sqrt{1-0.44}\approx0.75$ is now paraphrased as
+"leaving a residual standard deviation (RMS fluctuation) about 75\% of the original,"
+preventing a reader from reading 0.75 as the retained cortical HRF amplitude.
+
+**4 — Cross-pipeline $V_{\mathrm{SSR}}$ comparisons made explicitly descriptive.** The
+manuscript sentence "(now close to the real-data 850\,nm value)" now reads "is numerically
+similar to the in-vivo value, although the two diagnostics are pipeline-specific because
+their preprocessing and regression implementations differ." In the README, "harmonized
+with the real-data pipeline" became "using the same variance-removal definition as the
+real-data pipeline --- though the synthetic and in-vivo preprocessing/regression
+implementations differ."
+
+**Verification.** Frozen `results/`, manuscript figures, and notebook byte-unchanged; no
+numerical values recomputed. 7 automated string checks pass. Both documents recompile with
+zero errors, undefined references, overfull boxes (>20 pt), or bookmark warnings
+(manuscript 51 pp, guide 53 pp). The release manifest was regenerated (self-verifies
+44/44) and the flat arXiv zip rebuilt with the updated table caption and framework
+wording.
