@@ -3,8 +3,10 @@
 LEGACY / NOT USED FOR THE MANUSCRIPT TABLES.
 
 This earlier uncertainty/provenance driver has been SUPERSEDED by
-mc_production.py, which is the single source of truth for every f_cortex and CSF
-ratio reported in the manuscript (written to fcortex_production.json with schema
+mc_production.py, which is the single source of truth for every principal baseline
+and CSF cortical sensitivity reported in the manuscript (the deliberately separate
+geometry/optical-property robustness sweeps live in robustness_secondary.json;
+written to fcortex_production.json with schema
 version, provenance, launch-defined paired batches, and a payload hash).
 mc_uncertainty.py is retained only for historical reference; it is not imported
 by any analysis script and must not be used to regenerate the manuscript numbers.

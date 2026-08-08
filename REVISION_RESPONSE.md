@@ -1536,3 +1536,69 @@ All automated string checks pass; `mc_production.py` and
 recompile with zero errors, undefined references, overfull boxes (>20 pt), or bookmark
 warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
 (self-verifies 44/44) and the flat arXiv zip rebuilt from the corrected source.
+
+# Round 19 — Response to the *Latest Iteration Review* (Aug 8, 2026)
+
+Final conceptual-wording and documentation-synchronization pass: two local manuscript
+corrections plus small guide/notebook/source-comment edits. No Monte Carlo or in-vivo
+recomputation; the reviewer found no issue warranting another production run, real-data
+reanalysis, or study redesign. Frozen artifacts remain production/secondary at `round9`
+/ `32687ed` and in-vivo at `round13` / `095c5e3` (production input hash `91cfa828`,
+unchanged); `results/` untouched. No numerical result changes.
+
+**1 — Scalar-$\kappa$/SSR clarification (manuscript).** The scalar
+$\Delta C_{\mathrm{corrected}}=\kappa_{\mathrm{applied}}\Delta C_{\mathrm{MBLL}}$ was
+described as the "net effect of all corrections," but SSR is a subtractive regression
+($\mathbf{y}_{\mathrm{SSR}}=\mathbf{y}_{\mathrm{long}}-\hat\beta\,\mathbf{y}_{\mathrm{short}}$)
+and is not contained in $\kappa_{\mathrm{applied}}=\kappa_{\mathrm{DPF}}\kappa_{\mathrm{PV}}$.
+Equation~(2) is now explicitly a \emph{schematic} summary of the multiplicative
+transport correction only; the text states the scalar does not represent SSR (an
+additive OD-level regression before the wavelength-specific matrix inversion), with the
+matrix formulation given as the exact operator. The Processing-Order paragraph now says
+the two applied factors parameterise the multiplicative transport corrections while
+$V_{\mathrm{SSR}}$ is a separate diagnostic of the preceding regression step.
+
+**2 — "Independent 16-batch standard errors" reworded (manuscript body + Table 3
+caption).** Because the 2L and 3L runs share the seed and launch-index-matched cohorts,
+the estimates are not independent; the wording now reads "propagated from the separately
+estimated 16-batch standard errors of $f^{2L}$ and $f^{3L}$ under a zero-covariance
+assumption," clarifying that zero covariance is a propagation choice, not an
+independence claim.
+
+**3 — Guide early "key numbers" table labeled 760 nm (documentation).** The introductory
+SDS table (0.042, 0.064, 0.088, 0.110 at 25/30/35/40\,mm) lists the single-wavelength
+\emph{760\,nm} production fractions, not wavelength averages; the column header is now
+"$f_{\mathrm{cortex}}$ (760\,nm)" with a note that these are kept single-wavelength so
+the simple 4/6/9/11\% examples stay clean, while the later Summary Table uses the
+wavelength-averaged fractions. Correction to the record: the Round-17/18 notes should be
+read with this clarification---the early "key numbers" table holds the 760\,nm fractions
+(now explicitly labeled), whereas only the later Summary Table (Round 18) was changed to
+the wavelength-averaged values; the early table was relabeled, not averaged.
+
+**4 — Beginner notebook residual sync (documentation).** A "Key Findings" bullet still
+read "Real-data validation" and is now "Real-data proof-of-concept." The two-layer
+no-CSF upper bound and CSF-model bracket are updated to the manuscript/frozen values
+($\approx$1.4\,$\mu$M upper bound; $\approx$0.9--1.4\,$\mu$M bracket), including the
+matching quiz answer. The over-broad closing "fNIRS measurements are always biased
+without correction" is replaced with "Standard MBLL concentration amplitudes are
+affected by pathlength, partial-volume, and superficial-physiology biases."
+
+**5 — Source-comment cleanup in two non-primary scripts.** `mc_uncertainty.py` (legacy)
+now calls `mc_production.py` the source of "every principal baseline and CSF cortical
+sensitivity" (noting the separate `robustness_secondary.json` sweeps) rather than "every
+f_cortex." In `fnirs_invivo_demo.py`, the sampling/timing comments that said "matched to
+BIDS-NIRS-Tapping" now say "inspired by selected BIDS-NIRS-Tapping acquisition
+parameters" (a regular block design, not a temporal reproduction), consistent with the
+file header. No code behavior changes.
+
+**6 — Optional archival items (deferred, unchanged).** The canonical
+`DATASET_TREE_SHA256` pin from a checksum-verified Zenodo extraction and a staged-release
+generation workflow remain optional future hardening, not submission blockers; the
+real-data artifact truthfully records `tree_hash_verified_against_pin=false`.
+
+**Verification.** No recomputation; `results/` untouched (frozen hashes unchanged). All
+20 automated string checks pass; `mc_uncertainty.py` and `fnirs_invivo_demo.py` parse;
+the notebook is valid JSON. Both documents recompile with zero errors, undefined
+references, overfull boxes (>20 pt), or bookmark warnings (manuscript 51 pp, guide
+53 pp). The release manifest was regenerated (self-verifies 44/44) and the flat arXiv
+zip rebuilt from the corrected source.

@@ -57,12 +57,13 @@ SDS_SHORT = 10.0   # mm
 F_CORTEX = {wl: _fcs.f_cortex_2L(SDS_LONG, wl) for wl in (760, 850)}
 F_CORTEX_SHORT = 0.05  # short channel: almost entirely superficial (illustrative)
 
-# Sampling and timing — matched to BIDS-NIRS-Tapping paradigm
-FS = 7.8125         # Hz (matching BIDS-NIRS-Tapping acquisition rate)
+# Sampling and timing — inspired by selected BIDS-NIRS-Tapping acquisition parameters
+# (a regular block design, NOT a temporal reproduction of the real irregular paradigm)
+FS = 7.8125         # Hz (inspired by the BIDS-NIRS-Tapping acquisition rate)
 DURATION = 660.0    # seconds (60 blocks x 5s on + 5s off, plus padding)
 N_BLOCKS = 60
-BLOCK_ON = 5.0      # seconds (matching BIDS-NIRS-Tapping task duration)
-BLOCK_OFF = 5.0     # seconds (matching BIDS-NIRS-Tapping rest duration)
+BLOCK_ON = 5.0      # seconds (inspired by the BIDS-NIRS-Tapping task duration)
+BLOCK_OFF = 5.0     # seconds (inspired by the BIDS-NIRS-Tapping rest duration)
 
 # Hemodynamic amplitudes (motor cortex, finger tapping)
 HBO2_PEAK = 2.5     # uM
@@ -134,7 +135,8 @@ def run_simulation():
     t = np.arange(n_samples) / FS
 
     # --- Step 1: Create block-design stimulus ---
-    # Matched to BIDS-NIRS-Tapping: 60 blocks of 5 s task / 5 s rest
+    # Inspired by selected BIDS-NIRS-Tapping acquisition parameters: 60 regular blocks
+    # of 5 s task / 5 s rest (not a temporal reproduction of the real irregular paradigm)
     print("[1/8] Creating block-design stimulus (finger tapping)...")
     stimulus = np.zeros(n_samples)
     pad = 30.0  # initial rest (buffer before first block)
