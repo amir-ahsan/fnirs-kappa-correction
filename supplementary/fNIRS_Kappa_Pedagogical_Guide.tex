@@ -361,19 +361,19 @@ More usefully, for changes around a baseline:
 This is the crucial distinction:
 
 \begin{itemize}
-\item \textbf{Task-evoked signals} occur only in active cortex. When a subject performs a cognitive task, $\Delta c_{\text{cort}} \neq 0$ but $\Delta c_{\text{sup}} \approx 0$ (there is no localized task-related hemodynamic response in superficial layers).
+\item \textbf{Task-evoked signals.} The neural task-evoked response of interest originates in cortex, so $\Delta c_{\text{cort}} \neq 0$. Superficial tissues, however, can exhibit systemic \emph{and} task-correlated extracerebral responses (e.g., task-evoked changes in scalp blood flow), so in general $\Delta c_{\text{sup}}$ need not be zero. Setting $\Delta c_{\text{sup}} \approx 0$ in the idealized derivation below is a \emph{pedagogical} simplification used to isolate the partial-volume attenuation term; in real data, short-separation regression (SSR) is used to estimate and reduce the superficial contribution rather than assuming it away.
 
 \item \textbf{Systemic signals} occur everywhere. Cardiac pulsations, respiration, and slow blood pressure fluctuations cause concentration changes throughout the head. Both $\Delta c_{\text{cort}}$ and $\Delta c_{\text{sup}}$ are nonzero, but they reflect system-wide physiology, not localized brain activation.
 \end{itemize}
 
-For task-evoked changes, equation (\ref{eq:od_layers}) becomes:
+In the idealized case $\Delta c_{\text{sup}} \approx 0$, equation (\ref{eq:od_layers}) reduces to:
 
 \begin{equation}
 \Delta\text{OD}_{\text{task}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon_{\text{cort}}(\lambda) \cdot \Delta c_{\text{cort}}(\lambda)
 \label{eq:od_task}
 \end{equation}
 
-The superficial term drops out.
+and the superficial term drops out. This is the clean case that isolates the partial-volume factor; when $\Delta c_{\text{sup}} \neq 0$ (the realistic situation), SSR is applied first to suppress the superficial contribution before the partial-volume correction.
 
 \subsection{What MBLL Assumes}
 
@@ -487,7 +487,7 @@ This is the dominant correction. From our analysis:
 \Delta\text{OD}_{\text{measured}}(\lambda) = f_{\text{cortex}}(\lambda) \cdot \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda) + f_{\text{sup}}(\lambda) \cdot \varepsilon_{\text{sup}}(\lambda) \cdot \Delta c_{\text{sup}}(\lambda)
 \end{equation}
 
-For task-evoked signals, the superficial term is negligible. To recover the true cortical concentration, divide the measured OD by $f_{\text{cortex}}$:
+In the idealized case where the superficial term is negligible (or has already been suppressed by SSR), the true cortical concentration is recovered by dividing the measured OD by $f_{\text{cortex}}$:
 
 \begin{equation}
 \Delta\text{OD}_{\text{corrected}}(\lambda) = \frac{\Delta\text{OD}_{\text{measured}}(\lambda)}{f_{\text{cortex}}(\lambda)} = \varepsilon(\lambda) \cdot \Delta c_{\text{cort}}(\lambda) + \frac{f_{\text{sup}}(\lambda)}{f_{\text{cortex}}(\lambda)} \cdot \varepsilon_{\text{sup}}(\lambda) \cdot \Delta c_{\text{sup}}(\lambda)
@@ -940,7 +940,7 @@ And $\kappa_{\text{PV}} = 1 / 0.063 = 15.9$. (Computing this integral reliably i
 \end{workexample}
 
 \begin{keyinsight}
-\textbf{A numerical cautionary tale.} The two-layer Jacobian is computed via a Hankel (Bessel) transform, evaluated as a sum over spatial frequencies $s$. The integrand contains a term $e^{\alpha(s)\,z}$ that \emph{grows} with $s$; at the large $s$ needed to resolve the source/detector, it overflows and is then cancelled against a decaying term. The fluence itself is fine, but the depth-weighted \emph{ratio} $f_{\text{cortex}}$ is not: as you add more quadrature points it drifts ($0.0005 \to 0.62 \to 0.29 \to 0.19 \to 0.10 \to 0.085$\,\ldots), only slowly approaching the true $\sim$0.06--0.09. An ``apparently converged'' value at a fixed coarse setting (e.g.\ $0.285$) can be an order of magnitude too high. The lesson: always check convergence of the \emph{quantity you actually report}, not just the underlying field, and cross-check an analytical kernel against Monte Carlo. We use a converged two-layer Monte Carlo (\texttt{mc\_2layer.py}) for all $f_{\text{cortex}}$ values in this guide.
+\textbf{A numerical cautionary tale.} The two-layer Jacobian is computed via a Hankel (Bessel) transform, evaluated as a sum over spatial frequencies $s$. The integrand contains a term $e^{\alpha(s)\,z}$ that \emph{grows} with $s$; at the large $s$ needed to resolve the source/detector, it overflows and is then cancelled against a decaying term. The fluence itself is fine, but the depth-weighted \emph{ratio} $f_{\text{cortex}}$ is not: as you add more quadrature points it drifts ($0.0005 \to 0.62 \to 0.29 \to 0.19 \to 0.10 \to 0.085$\,\ldots). The sequence moves toward the Monte Carlo sensitivity band ($\sim$0.06--0.09 at this geometry) as resolution increases, but the supplied fixed-point calculation has \emph{not} been demonstrated to be quadrature-converged, so this trend is suggestive rather than a proof that the analytical kernel converges to the Monte Carlo result. An ``apparently converged'' value at a fixed coarse setting (e.g.\ $0.285$) can be an order of magnitude too high. The lesson: always check convergence of the \emph{quantity you actually report}, not just the underlying field, and cross-check an analytical kernel against Monte Carlo. We use a converged two-layer Monte Carlo (\texttt{mc\_2layer.py}) for all $f_{\text{cortex}}$ values in this guide.
 \end{keyinsight}
 
 \newpage
@@ -956,7 +956,7 @@ The canonical hemodynamic response function (HRF) for a task is modeled as a sum
 \text{HRF}(t) = \frac{t^{a_1} e^{-t/b_1}}{b_1^{a_1} \Gamma(a_1)} - c \, \frac{t^{a_2} e^{-t/b_2}}{b_2^{a_2} \Gamma(a_2)}
 \end{equation}
 
-Parameters: $a_1 = 6$, $b_1 = 1$~s, $a_2 = 16$, $b_2 = 1$~s, $c = 0.1$.
+Parameters: $a_1 = 6$, $b_1 = 1$~s, $a_2 = 16$, $b_2 = 1$~s, $c = 0.35$ (matching the principal synthetic validation in \texttt{fnirs\_kappa\_synthetic\_validation.py} and the main manuscript; the simplified \texttt{fnirs\_invivo\_demo.py} walkthrough uses a shallower undershoot, $c = 0.1$).
 
 This produces an HRF that rises over 4--6 seconds, peaks around 6 seconds, and then decays over 15--20 seconds.
 

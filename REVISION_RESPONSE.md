@@ -1246,3 +1246,66 @@ checks pass and all four edited Python files parse. Both documents recompile wit
 zero errors, undefined references, overfull boxes (>20 pt), or bookmark warnings
 (manuscript 50 pp, guide 52 pp). The release manifest was regenerated (self-verifies
 44/44) and the arXiv zip rebuilt from the corrected source.
+
+# Round 15 — Response to the *Final Guide-Consistency / Archival Review* (Aug 8, 2026)
+
+This round completes the pedagogical guide's alignment with the corrected main
+manuscript and applies one small manuscript caption refinement. It is entirely
+editorial; no Monte Carlo or in-vivo recomputation was performed. Frozen artifacts
+remain production/secondary at `round9` / `32687ed` and in-vivo at `round13` /
+`095c5e3` (production input hash `91cfa828`, unchanged).
+
+**1 — Guide: superficial task-related physiology corrected (most important item).**
+The guide's derivation section still asserted that task-evoked signals "occur only in
+active cortex," set $\Delta c_{\text{sup}}\approx0$ as a physical fact, said there was
+"no localized task-related hemodynamic response in superficial layers," and that "the
+superficial term drops out"/"is negligible." These contradicted the corrected
+manuscript (and the Round-14 REVISION_RESPONSE claim that the guide was updated). The
+guide now states that the neural task-evoked response of interest originates in cortex
+but that superficial tissues can exhibit systemic *and* task-correlated extracerebral
+responses, so $\Delta c_{\text{sup}}$ need not be zero; setting it to zero in the
+derivation is labeled an *idealized pedagogical* simplification used to isolate the
+partial-volume term, with SSR applied in real data to suppress the superficial
+contribution. The three downstream sentences (the equation lead-in, "the superficial
+term drops out," and the $\kappa_{\text{PV}}$-section "the superficial term is
+negligible") were reworded to the same idealized-case framing. The clean derivation is
+preserved without the incorrect physiological assertion.
+
+**2 — Guide: synthetic HRF undershoot synchronized to the validation study.** The
+"Synthetic Data Generation" section gave the undershoot parameter $c=0.1$, which
+belongs to the simplified `fnirs_invivo_demo.py` walkthrough, not the principal
+synthetic validation. It now reads $c=0.35$ — matching
+`fnirs_kappa_synthetic_validation.py` and the main manuscript — with a parenthetical
+noting that the simplified demo uses the shallower $c=0.1$.
+
+**3 — Guide: Hankel-convergence sentence made equally careful.** The guide previously
+said the fixed-point sequence was "only slowly approaching the true $\sim$0.06--0.09,"
+which overstated convergence. It now says the sequence moves toward the Monte Carlo
+sensitivity band as resolution increases, but that the supplied fixed-point
+calculation has *not* been demonstrated quadrature-converged, so the trend is
+suggestive rather than a proof of convergence to the Monte Carlo result — matching the
+manuscript's rigor.
+
+**4 — Archival refinements.** (a) *Dataset tree-hash pin (deferred enhancement, not a
+blocker).* The reviewer recommends obtaining a canonical digest from a verified Zenodo
+extraction, setting `DATASET_TREE_SHA256`, and rerunning only the real-data pipeline so
+`tree_hash_verified_against_pin=true`. This requires a network-verified Zenodo download,
+which the build environment cannot perform (the dataset here is reconstructed from raw
+GitHub), so it is deliberately deferred: the shipped historical artifact honestly
+records that its pre-extracted tree was content-fingerprinted but *not* verified against
+a canonical pin (`tree_hash_verified_against_pin=false`), and the new strict
+`FNIRS_RELEASE=1` gate correctly refuses to mint a formal release under that condition.
+The scientific result is unchanged and the production MC need not be rerun; this is a
+reproducibility-hardening step for a future release built from a verified Zenodo
+extraction. (b) *Supplementary Table S1 caption made computationally precise.* "…excluded,
+exactly reproducing a run at that $L_{\max}$" is replaced with "…excluded, implementing
+the same $L_{\max}$ censoring criterion post hoc," with an added note that an
+independently re-run vectorized simulation need not be seedwise path-identical once
+trajectories terminate at different times — a criterion match rather than a byte-for-byte
+reproduction.
+
+**Verification.** No recomputation; `results/` untouched. All 16 automated string
+checks pass. Both documents recompile with zero errors, undefined references, overfull
+boxes (>20 pt), or bookmark warnings (manuscript 50 pp, guide 53 pp). The release
+manifest was regenerated (self-verifies 44/44) and the arXiv zip rebuilt from the
+corrected source so there is one definitive final manuscript version.
