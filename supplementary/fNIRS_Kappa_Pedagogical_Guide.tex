@@ -1195,14 +1195,14 @@ Runtime: For 3000 time points, this takes $\sim$1 ms in Python/NumPy on a modern
 \hline
 25 & 0.043 & 23.50 & 1.17 & 9.83 \\
 30 & 0.064 & 15.69 & 1.19 & 10.16 \\
-35 & 0.088 & 11.57 & 1.22 & 10.54 \\
-38 & 0.101 & 10.04 & 1.22 & 10.65 \\
-40 & 0.110 & 9.22 & 1.21 & 10.52 \\
+35 & 0.086 & 11.57 & 1.22 & 10.54 \\
+38 & 0.100 & 10.04 & 1.22 & 10.65 \\
+40 & 0.108 & 9.22 & 1.21 & 10.52 \\
 \hline
 \end{tabular}
 \end{center}
 
-\noindent (Values are the converged Monte-Carlo fractions from \texttt{fcortex\_production.json}; see the single-source-of-truth note in Appendix~A.)
+\noindent (The $f_{\text{cortex}}$ column is the \emph{wavelength-averaged} fraction, i.e.\ the mean of the 760 and 850~nm converged Monte-Carlo values from \texttt{fcortex\_production.json}, so that $\kappa_{\text{PV}}=1/f_{\text{cortex}}$ in the next column is its exact reciprocal; the pipelines themselves use the wavelength-specific fractions. See the single-source-of-truth note in Appendix~A.)
 
 \paragraph{Note on $V_{\mathrm{SSR}}$.} Across the study \emph{only $\kappa_{\text{PV}}$ (and $\kappa_{\text{DPF}}$) is applied to the data}; $V_{\mathrm{SSR}}(\lambda)$ is reported \emph{per wavelength} as a variance-removal diagnostic of residual superficial contamination, never multiplied into the corrected signal. It is listed separately at 760 and 850~nm because the two differ by nearly an order of magnitude, so no cross-wavelength mean (and no composite $\kappa_{\text{total}}$) is formed. This holds for both the synthetic validation and the real finger-tapping analysis later in this guide, for the reason given in the $V_{\mathrm{SSR}}$ box above ($R^2_{\mathrm{SS}}$ cannot identify the cortical component of the removed variance).
 

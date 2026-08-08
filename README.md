@@ -58,8 +58,10 @@ amplifies noise. This threshold is noise-conditional, not universal.
 
 ### Single source of truth for f_cortex
 
-Every cortical sensitivity fraction in the paper — synthetic *and* in-vivo — comes
-from **one** file:
+Every **principal baseline and CSF cortical sensitivity** used in the synthetic and
+in-vivo pipelines comes from **one** versioned production file (the secondary
+geometry/optical-property robustness sweeps live in the separately versioned
+`results/robustness_secondary.json`, as described below):
 
 ```
 code/mc_production.py   →   fcortex_production.json   →   fcortex_source.py   →   both pipelines
@@ -237,9 +239,13 @@ reproduces (verified):
 |---------:|---------:|---------:|-----------:|-----------:|----------:|----------:|
 | 25 | 0.043 | 23.50 | 1.17 |  9.83 | 2.107 | 3.370 |
 | 30 | 0.064 | 15.69 | 1.19 | 10.16 | 2.065 | 2.153 |
-| 35 | 0.088 | 11.57 | 1.22 | 10.54 | 2.017 | 1.502 |
-| 38 | 0.101 | 10.04 | 1.22 | 10.65 | 1.989 | 1.199 |
-| 40 | 0.110 |  9.22 | 1.21 | 10.52 | 1.968 | 1.097 |
+| 35 | 0.086 | 11.57 | 1.22 | 10.54 | 2.017 | 1.502 |
+| 38 | 0.100 | 10.04 | 1.22 | 10.65 | 1.989 | 1.199 |
+| 40 | 0.108 |  9.22 | 1.21 | 10.52 | 1.968 | 1.097 |
+
+(The `f_cortex` column is the wavelength-averaged fraction — the mean of the 760 and
+850 nm converged Monte-Carlo values — so `kappa_PV` is its exact reciprocal; the
+pipelines use the wavelength-specific fractions.)
 
 Overall HbO₂ RMSE 2.030 → 2.044 µM (pooled −0.7%, dominated by the harmful 25 mm
 regime; at ≥ 38 mm the reduction is 40–44%); kappa_PV = 14.00 ± 5.35;

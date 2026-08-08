@@ -910,13 +910,14 @@ def generate_synthetic_fnirs_data(
     """
     Generate synthetic fNIRS data with known ground truth.
 
-    The synthetic paradigm is INSPIRED BY the BIDS-NIRS-Tapping dataset (it parameterizes
-    selected acquisition features; the real experiment has irregular inter-onset
-    intervals and a control condition, which this idealized block design does not reproduce)
-    (Luke et al., 2021) used in the real-data validation: 5 subjects,
-    60 tapping blocks (5 s on, 5 s rest), sampling rate 7.8125 Hz,
-    wavelengths 760 and 850 nm.  This parallel design enables direct
-    quantitative comparison between synthetic and experimental results.
+    The synthetic paradigm is LOOSELY INSPIRED BY the BIDS-NIRS-Tapping dataset
+    (Luke et al., 2021) used in the real-data proof-of-concept, but it intentionally
+    uses 60 regular 5-s-on / 5-s-off blocks for controlled validation. It is NOT a
+    temporal reproduction of the experimental paradigm: the real dataset has three
+    conditions, ~90 trials, and irregular inter-onset intervals, which this idealized
+    regular block design does not reproduce. Shared parameters are 5 subjects,
+    sampling rate 7.8125 Hz, and wavelengths 760 and 850 nm. The design is used for
+    qualitative pipeline comparison rather than direct quantitative design matching.
 
     The synthetic data includes:
     1. True cortical activation (HbO ↑, HbR ↓)
@@ -947,7 +948,8 @@ def generate_synthetic_fnirs_data(
     t = np.arange(n_samples) / sfreq
 
     # Task design: block design with 5s on, 5s off
-    # (matched to BIDS-NIRS-Tapping paradigm: 60 blocks of 5 s task / 5 s rest)
+    # (idealized regular block design loosely inspired by BIDS-NIRS-Tapping: 60 blocks
+    #  of 5 s task / 5 s rest; NOT a temporal reproduction of the real irregular paradigm)
     block_duration = 5.0
     task_onsets = np.arange(30, duration_s - 30, 2 * block_duration)
 

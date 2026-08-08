@@ -1456,3 +1456,83 @@ checks pass; the guide HRF equation now matches `generate_hrf()`'s $t^{a-1}$ for
 recompile with zero errors, undefined references, overfull boxes (>20 pt), or bookmark
 warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
 (self-verifies 44/44) and the flat arXiv zip rebuilt from the corrected source.
+
+# Round 18 — Response to the *Updated Study Review* (Aug 8, 2026)
+
+Final consistency pass across two manuscript phrases and peripheral
+documentation/notebook/source comments. No Monte Carlo or in-vivo recomputation; the
+reviewer found no issue requiring another production run, experimental reanalysis, or
+new study. Frozen artifacts remain production/secondary at `round9` / `32687ed` and
+in-vivo at `round13` / `095c5e3` (production input hash `91cfa828`, unchanged). No
+scientific conclusion or reported numerical result changes. The frozen Round-9
+production JSON was deliberately left untouched (item 6 changes source only, so future
+runs emit the improved metadata while the historical artifact's hash stays frozen).
+
+**1 — 850-nm CSF-ratio statement corrected (manuscript).** The blanket claim that the
+850-nm $\gamma$ ratios are "within uncertainty" of the 760-nm values is not true across
+the whole grid under the paper's own zero-covariance SE convention: at 25\,mm,
+$\gamma_{760}=1.84\pm0.03$ vs $\gamma_{850}=1.74\pm0.02$ differ by $|\Delta\gamma|\approx0.11$
+against a combined SE $\approx0.04$ ($\approx2.8$ SEs). The text now states the 850-nm
+ratios are broadly similar over most of the calibrated grid but that at 25\,mm the
+wavelength difference exceeds the combined zero-covariance Monte Carlo SE.
+
+**2 — "Independently" → "separately" (manuscript).** The $\kappa$-factor properties
+table caption's "can be estimated independently" became "can be estimated separately,"
+completing the conceptual correction (the factors target distinct mechanisms but their
+forward-model uncertainties may covary).
+
+**3 — Guide/README summary tables re-paired (documentation).** Both tables mixed
+760-nm $f_{\mathrm{cortex}}$ entries with $\kappa_{\mathrm{PV}}$ values that were the
+reciprocal of the wavelength-\emph{averaged} fractions, so the columns were not
+mathematically paired. The $f_{\mathrm{cortex}}$ column is now the wavelength-averaged
+value matching the manuscript synthetic summary (0.043, 0.064, 0.086, 0.100, 0.108 at
+25/30/35/38/40\,mm), with $\kappa_{\mathrm{PV}}$ its exact reciprocal, and a note added
+to both that the column is wavelength-averaged while the pipelines use the
+wavelength-specific fractions.
+
+**4 — Beginner notebook synchronized (documentation).** The experimental section is
+retitled "Real-Data Proof-of-Concept" (no simultaneous ground truth); the dataset is
+described as spanning SDS $\sim$33.4--40.9\,mm (centered near 38\,mm); Subject 01 is
+updated to the frozen `realdata_v2_summary.json` values (HbO$_2$ $+0.144\to+0.646\,\mu$M,
+$\kappa_{\mathrm{PV}}\approx6.68$, HbR $-0.030\to-0.179\,\mu$M) and the group mean to
+$0.91\pm0.33\,\mu$M; the CSF statement is updated to $\gamma_{760}\approx1.37$--$1.84$
+(a 37--84\% increase) for the full 25--42\,mm grid. Two misleading pedagogical
+statements were fixed: "MBLL assumes average $f_{\mathrm{cortex}}$" became "standard
+MBLL assumes homogeneous tissue sensitivity," and "each applied factor is $\geq1$" was
+corrected to note that $\kappa_{\mathrm{PV}}\geq1$ but $\kappa_{\mathrm{DPF}}$ can be
+above or below 1.
+
+**5 — Synthetic-validation source comments synchronized (source).** The
+`fnirs_kappa_synthetic_validation.py` docstring no longer claims the synthetic
+paradigm enables "direct quantitative comparison" or is "matched to" the BIDS paradigm.
+It now states the design is loosely inspired by BIDS-NIRS-Tapping, intentionally uses
+60 regular 5-s-on/5-s-off blocks for controlled validation, is not a temporal
+reproduction (the real dataset has three conditions, ~90 trials, irregular IOIs), and
+is used for qualitative pipeline comparison. The inline schedule comment was updated to
+match. No code behavior changes.
+
+**6 — mc_production.py metadata string updated (source only).** The `csf_note` emitted
+into future production artifacts no longer ends with "the two SEs agree within a
+16-batch estimate"; it now states the zero-covariance propagated SE is the primary
+reported uncertainty, the launch-index-matched batch-ratio SE is a companion
+cross-check, and neither estimator is uniformly larger across the calibrated
+configurations. The frozen Round-9 JSON is intentionally not regenerated, so its hash
+and provenance stay frozen.
+
+**README single-source-of-truth opening tightened.** "Every cortical sensitivity
+fraction in the paper --- synthetic and in-vivo --- comes from one file" became "Every
+principal baseline and CSF cortical sensitivity used in the synthetic and in-vivo
+pipelines comes from one versioned production file," noting the secondary robustness
+sweeps live in `robustness_secondary.json`.
+
+**Dataset pin (deferred, unchanged).** The canonical `DATASET_TREE_SHA256` pin from a
+checksum-verified Zenodo extraction remains optional archival hardening the build
+environment cannot perform; the artifact records `tree_hash_verified_against_pin=false`
+truthfully.
+
+**Verification.** No recomputation; `results/` untouched (frozen JSON hashes unchanged).
+All automated string checks pass; `mc_production.py` and
+`fnirs_kappa_synthetic_validation.py` parse; the notebook is valid JSON. Both documents
+recompile with zero errors, undefined references, overfull boxes (>20 pt), or bookmark
+warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
+(self-verifies 44/44) and the flat arXiv zip rebuilt from the corrected source.
