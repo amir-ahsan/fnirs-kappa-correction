@@ -1935,3 +1935,45 @@ zero errors, undefined references, overfull boxes (>20 pt), or bookmark warnings
 (manuscript 51 pp, guide 53 pp). The release manifest was regenerated (self-verifies
 44/44) and the flat arXiv zip rebuilt with the updated table caption and framework
 wording.
+
+# Round 25 — Response to the *Final Wording-Consistency Review* (Aug 8, 2026)
+
+Four local wording/documentation corrections; no Monte Carlo, robustness, synthetic, or
+real-data recomputation, and no change to any result, table value, figure, algorithm, or
+conclusion. Frozen `results/`, the 14 code payloads' numerical behavior, the manuscript
+figures, and the executed notebook are byte-identical to the previous iteration.
+
+**1 — Removed the remaining "harmonized with the real-data pipeline" phrasing (manuscript
+Results).** The Results prose describing the synthetic $R^2_{\mathrm{SS}}$ now reads
+"using the same variance-removal definition as the real-data analysis, although the
+preprocessing and regression implementations differ," and the synthetic results table
+caption's shorter "as in the real-data pipeline" is qualified the same way, consistent
+with the Theory section's now-careful synthetic-vs-in-vivo distinction.
+
+**2 — Guide real-data worked example no longer infers systemic dominance from $R^2$.**
+"At 850\,nm the systemic oscillations dominate the long-channel variance, so
+$R^2_{\mathrm{SS}}(850)\approx0.57$\ldots" now reads "At 850\,nm the short-channel
+regressor explains about 57\% of the long-channel variance, giving
+$R^2_{\mathrm{SS}}(850)\approx0.57$ and $V_{\mathrm{SSR}}(850)\approx2.34$ (the
+composition of that explained variance cannot be identified from $R^2$ alone)," matching
+the corrected Question 4.
+
+**3 — Early manuscript phrase no longer calls $V_{\mathrm{SSR}}$ an "attenuation."** In
+the multiplicative-correction subsection, "the short-separation-regression attenuation
+$V_{\mathrm{SSR}}(\lambda)$" became "the short-separation-regression variance-removal
+diagnostic $V_{\mathrm{SSR}}(\lambda)$," consistent with the paper's established point
+that $V_{\mathrm{SSR}}$ is not an amplitude-attenuation factor.
+
+**4 — Reference-script `compute_kappa_ssr()` docstring corrected.** In the non-primary
+`fnirs_kappa_realdata_analysis.py`, the docstring that called the output "the SSR
+attenuation correction factor [that] compensates for cortical signal inadvertently
+removed" and "SSR correction factors" now states that $V_{\mathrm{SSR}}=1/(1-R^2_{\mathrm{SS}})$
+is an inverse residual-variance ratio reported for diagnostic purposes only --- not an
+amplitude-restoration factor and not applied. The function name is unchanged for
+backward compatibility.
+
+**Verification.** Frozen `results/`, manuscript figures, and notebook byte-unchanged; the
+reference script parses; no numerical values recomputed. 6 automated string checks pass.
+Both documents recompile with zero errors, undefined references, overfull boxes (>20 pt),
+or bookmark warnings (manuscript 51 pp, guide 53 pp). The release manifest was regenerated
+(self-verifies 44/44) and the flat arXiv zip rebuilt with the two manuscript wording fixes.

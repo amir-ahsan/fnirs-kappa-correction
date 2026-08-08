@@ -539,12 +539,12 @@ def ssr_per_wavelength(
 
 
 def compute_kappa_ssr(r_squared: NDArray) -> NDArray:
-    """Compute per-channel V_SSR from R^2 values.
+    """Compute the per-channel V_SSR diagnostic from R^2.
 
-    The SSR attenuation correction factor compensates for cortical
-    signal inadvertently removed by short-separation regression:
-
-        V_SSR = 1 / (1 - R^2_SS)
+    V_SSR = 1 / (1 - R^2_SS) is an inverse residual-variance ratio reported for
+    diagnostic purposes only; it is NOT an amplitude-restoration factor and is
+    not applied to the data. R^2_SS is the fraction of long-channel variance
+    removed by (coupled to) the short-channel regression.
 
     Parameters
     ----------
@@ -553,9 +553,10 @@ def compute_kappa_ssr(r_squared: NDArray) -> NDArray:
 
     Returns
     -------
-    kappa_ssr : NDArray, shape (n_channels,)
-        Per-channel SSR correction factors. Clamped to [1, 50] to
-        avoid numerical instability when R^2 approaches 1.
+    v_ssr : NDArray, shape (n_channels,)
+        Per-channel V_SSR diagnostic values. Clamped to [1, 50] to
+        avoid numerical instability when R^2 approaches 1. Reported only,
+        never applied.
     """
     kappa = 1.0 / (1.0 - np.clip(r_squared, 0.0, 0.98))
     return np.clip(kappa, 1.0, 50.0)
